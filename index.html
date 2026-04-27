@@ -1,0 +1,2578 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>じぶん電気 提案書作成ツール</title>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --dg: #1B4332; --mg: #2D6A4F; --lg: #52B788;
+  --ac: #95D5B2; --pg: #D8F3DC; --or: #EA580C;
+  --bg: #F0F7F4; --card: #fff; --border: #D1E8DC;
+  --text: #1a1a1a; --muted: #6B7280; --danger: #991B1B;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; }
+
+/* ── レイアウト ── */
+.app { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+.sidebar { background: var(--dg); color: #fff; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+.main { overflow-y: auto; }
+
+/* ── サイドバー ── */
+.sidebar-logo { padding: 24px 20px 16px; border-bottom: 1px solid rgba(255,255,255,.12); }
+.sidebar-logo .brand { font-size: 22px; font-weight: 700; color: var(--ac); letter-spacing: .03em; }
+.sidebar-logo .sub { font-size: 11px; color: rgba(255,255,255,.5); margin-top: 4px; }
+.sidebar-nav { padding: 12px 0; flex: 1; }
+.nav-section { padding: 8px 20px 4px; font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.35); font-weight: 600; }
+.nav-btn { width: 100%; text-align: left; padding: 10px 20px; background: none; border: none; color: rgba(255,255,255,.75); font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all .15s; font-family: inherit; }
+.nav-btn:hover { background: rgba(255,255,255,.08); color: #fff; }
+.nav-btn.active { background: rgba(82,183,136,.2); color: var(--ac); border-left: 3px solid var(--ac); }
+.nav-btn .icon { font-size: 15px; width: 20px; text-align: center; }
+.history-list { padding: 0 12px 12px; flex: 1; }
+.history-item { background: rgba(255,255,255,.06); border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; cursor: pointer; transition: all .15s; border: 1px solid transparent; }
+.history-item:hover { background: rgba(255,255,255,.12); border-color: rgba(82,183,136,.3); }
+.history-item .h-name { font-size: 13px; font-weight: 600; color: #fff; }
+.history-item .h-date { font-size: 10px; color: rgba(255,255,255,.4); margin-top: 2px; }
+.history-item .h-bill { font-size: 11px; color: var(--ac); margin-top: 3px; }
+.history-empty { text-align: center; padding: 20px 16px; color: rgba(255,255,255,.3); font-size: 12px; }
+.del-btn { float: right; background: none; border: none; color: rgba(255,255,255,.3); cursor: pointer; font-size: 14px; padding: 0 0 0 6px; }
+.del-btn:hover { color: #f87171; }
+
+/* ── メインエリア ── */
+.main-header { background: var(--dg); padding: 20px 32px; display: flex; align-items: center; justify-content: space-between; }
+.main-header h1 { color: #fff; font-size: 18px; font-weight: 700; }
+.main-header .sub { color: var(--ac); font-size: 13px; margin-top: 2px; }
+.gen-btn { background: var(--lg); color: var(--dg); border: none; border-radius: 8px; padding: 12px 28px; font-size: 15px; font-weight: 700; cursor: pointer; transition: all .2s; font-family: inherit; display: flex; align-items: center; gap: 8px; }
+.gen-btn:hover { background: var(--ac); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+.gen-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+.form-body { padding: 24px 32px; }
+.section-card { background: var(--card); border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; border: 1px solid var(--border); }
+.section-title { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--mg); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--pg); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 14px; color: var(--muted); font-weight: 500; }
+.field input[type=text], .field input[type=number] {
+  border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 12px;
+  font-size: 15px; background: #fff; color: var(--text); font-family: inherit;
+  transition: border-color .15s;
+}
+.field input:focus { outline: none; border-color: var(--lg); box-shadow: 0 0 0 3px rgba(82,183,136,.15); }
+.field select { border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 15px; background: #fff; color: var(--text); font-family: inherit; transition: border-color .15s; }
+.field select:focus { outline: none; border-color: var(--lg); box-shadow: 0 0 0 3px rgba(82,183,136,.15); }
+.slider-row { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+.slider-row label { font-size: 14px; color: var(--muted); min-width: 100px; font-weight: 500; }
+.slider-row input[type=range] { flex: 1; accent-color: var(--mg); }
+.slider-val { font-size: 15px; font-weight: 700; color: var(--mg); min-width: 38px; text-align: right; }
+.toggle-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.toggle-row input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--mg); cursor: pointer; }
+.toggle-row label { font-size: 15px; font-weight: 600; color: var(--text); cursor: pointer; }
+.loan-fields { display: none; }
+.loan-fields.on { display: block; }
+
+/* ── プレビューカード ── */
+.preview-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 16px; }
+.prev-card { background: var(--pg); border-radius: 12px; padding: 20px 16px; text-align: center; border: 1px solid var(--border); }
+.prev-card .p-label { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.prev-card .p-val { font-size: 44px; font-weight: 800; color: var(--dg); line-height: 1.1; }
+.prev-card.orange .p-val { color: var(--or); }
+.bar-compare { margin-top: 14px; }
+.bar-row { margin-bottom: 8px; }
+.bar-label { font-size: 13px; color: var(--muted); margin-bottom: 3px; }
+.bar-track { height: 28px; background: #e5e7eb; border-radius: 6px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 6px; display: flex; align-items: center; padding-left: 10px; font-size: 14px; font-weight: 700; color: #fff; transition: width .4s ease; }
+.bar-fill.or { background: var(--or); }
+.bar-fill.gr { background: var(--mg); }
+.diff-banner { background: var(--dg); border-radius: 10px; padding: 12px 16px; margin-top: 12px; display: flex; align-items: center; justify-content: space-between; }
+.diff-banner .d-label { font-size: 15px; color: var(--ac); }
+.diff-banner .d-val { font-size: 22px; font-weight: 700; color: #fff; }
+
+/* ── ローンプレビュー ── */
+.loan-preview { background: var(--pg); border-radius: 10px; padding: 14px 16px; margin-top: 14px; border: 1px solid var(--border); }
+.loan-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 15px; }
+.loan-row span:first-child { color: var(--muted); }
+.loan-row span:last-child { font-weight: 600; color: var(--text); }
+.loan-row.tot span:last-child { color: var(--mg); font-size: 17px; }
+.loan-row.pos span:last-child { color: var(--mg); }
+.loan-row.neg span:last-child { color: var(--or); }
+.loan-divider { border: none; border-top: 1px solid var(--border); margin: 6px 0; }
+.cum-chart-wrap { margin-top: 14px; background: #fff; border-radius: 10px; padding: 14px; border: 1px solid var(--border); }
+.cum-chart-wrap .ct { font-size: 13px; color: var(--muted); margin-bottom: 10px; font-weight: 600; }
+canvas#mini-chart { height: 150px !important; }
+.legend { display: flex; gap: 16px; margin-top: 8px; }
+.legend span { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+.legend b { display: inline-block; width: 22px; height: 4px; border-radius: 2px; }
+
+/* ── 進捗 ── */
+.progress-overlay { position: fixed; inset: 0; background: rgba(27,67,50,.85); display: none; align-items: center; justify-content: center; z-index: 100; flex-direction: column; gap: 16px; }
+.progress-overlay.show { display: flex; }
+.progress-box { background: #fff; border-radius: 16px; padding: 32px 48px; text-align: center; }
+.progress-box .p-title { font-size: 18px; font-weight: 700; color: var(--dg); margin-bottom: 8px; }
+.progress-box .p-sub { font-size: 13px; color: var(--muted); }
+.spinner { width: 48px; height: 48px; border: 4px solid var(--pg); border-top-color: var(--mg); border-radius: 50%; animation: spin .8s linear infinite; margin: 16px auto 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── トースト ── */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--dg); color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 14px; transform: translateY(80px); opacity: 0; transition: all .3s; z-index: 200; display: flex; align-items: center; gap: 8px; }
+#scroll-top-btn { display: none; position: fixed; bottom: 80px; right: 20px; width: 52px; height: 52px; border-radius: 50%; background: var(--mg); color: #fff; border: none; font-size: 22px; cursor: pointer; box-shadow: 0 3px 10px rgba(0,0,0,.25); z-index: 9999; align-items: center; justify-content: center; -webkit-tap-highlight-color: rgba(0,0,0,0); touch-action: manipulation; }
+@media (max-width: 900px) { #scroll-top-btn { display: flex; } }
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { background: var(--mg); }
+.toast.error { background: var(--danger); }
+.hearing-row { display:flex; align-items:center; justify-content:space-between; padding:9px 12px; background:var(--pg); border-radius:8px; border:1px solid var(--border); }
+.hearing-lbl { font-size:14px; font-weight:600; color:var(--text); }
+.hearing-btns { display:flex; gap:4px; }
+.htgl { padding:5px 16px; border-radius:6px; border:1.5px solid var(--border); background:#fff; color:var(--muted); font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:all .15s; }
+.htgl.active { background:var(--mg); color:#fff; border-color:var(--mg); }
+
+.tab-btn { flex:1; padding:11px 16px; background:#fff; border:none; border-bottom:3px solid transparent; cursor:pointer; font-size:15px; font-weight:700; font-family:inherit; color:var(--muted); transition:all .15s; }
+.tab-btn.active { color:var(--mg); border-bottom-color:var(--mg); background:var(--pg); }
+.form-locked .section-card,
+.form-locked #pkg-area,
+.form-locked #result-area { opacity:.25; pointer-events:none; user-select:none; }
+@media (max-width: 900px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; }
+  .grid3 { grid-template-columns: 1fr 1fr; }
+  .preview-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 768px) {
+  .preview-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 520px) {
+  .grid2 { grid-template-columns: 1fr; }
+  .grid3 { grid-template-columns: 1fr; }
+  body { font-size: 16px; }
+  .field label { font-size: 15px; }
+  .field input[type=text], .field input[type=number], .field select { font-size: 16px; padding: 12px 14px; }
+  .htgl { font-size: 14px; padding: 7px 18px; }
+  .hearing-lbl { font-size: 15px; }
+  .tab-btn { font-size: 15px; }
+  .prev-card .p-label { font-size: 13px; }
+  .prev-card .p-val { font-size: 32px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ── サイドバー ── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="brand">じぶん電気</div>
+    <div class="sub">提案書作成ツール</div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section">メニュー</div>
+    <button class="nav-btn active" onclick="showSection('form')">
+      <span class="icon">📝</span> 新規作成
+    </button>
+    <button class="nav-btn" onclick="showSection('history')">
+      <span class="icon">📋</span> お客様履歴
+    </button>
+    <div class="nav-section" style="margin-top:12px">操作</div>
+    <button class="nav-btn" onclick="clearForm()">
+      <span class="icon">🔄</span> フォームをリセット
+    </button>
+  </div>
+  <!-- 履歴プレビュー（サイドバー内） -->
+  <div style="padding: 0 12px 8px; border-top: 1px solid rgba(255,255,255,.1); margin-top: 8px;">
+    <div class="nav-section" style="padding-left:8px; margin-bottom:6px;">最近の履歴</div>
+    <div id="sidebar-history"></div>
+  </div>
+</aside>
+
+<!-- ── メイン ── -->
+<main class="main">
+  <div class="main-header">
+    <div>
+      <h1 id="main-title">お客様情報を入力してください</h1>
+      <div class="sub">入力内容をもとにPPTXを自動生成します</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+        <button class="gen-btn" onclick="generatePPTX('model')" style="background:#1d4ed8;color:#fff;">
+          <span>🔬</span> モデルケース版を出力
+        </button>
+        <button class="gen-btn" onclick="generatePPTX('real')">
+          <span>👤</span> 実データ版を出力
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 入力フォーム ── -->
+  <div class="form-body" id="section-form">
+
+    <div style="display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px">
+      <button class="tab-btn" id="tab-hypothesis" onclick="switchTab('hypothesis')">🔬 仮説モデル入力</button>
+      <button class="tab-btn active" id="tab-customer" onclick="switchTab('customer')" style="border-left:1px solid var(--border)">👤 お客様ヒアリング入力</button>
+    </div>
+    <div id="tab-cust-banner" style="padding:10px 14px;background:var(--pg);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;font-size:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <b style="color:var(--mg)">👤 お客様ヒアリング入力</b>
+      <span style="color:var(--muted)">実際のお客様条件による個別試算</span>
+      <button onclick="copyHypToCustomer()" style="margin-left:auto;padding:4px 10px;border-radius:6px;border:1px solid var(--mg);background:#fff;color:var(--mg);font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap">仮説値をコピーして初期化</button>
+    </div>
+    <div id="tab-hyp-banner" style="display:none;padding:10px 14px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;margin-bottom:12px;font-size:12px;align-items:center;gap:8px;flex-wrap:wrap">
+      <b style="color:#1d4ed8">🔬 仮説モデル入力</b>
+      <span style="color:#1e40af">一般的なご家庭モデルの説明用</span>
+      <span id="hyp-lock-badge" style="padding:2px 8px;border-radius:12px;background:#fef2f2;color:#dc2626;font-size:11px;font-weight:700">🔒 ロック中</span>
+      <span id="hyp-unlock-badge" style="display:none;padding:2px 8px;border-radius:12px;background:#f0fdf4;color:#15803d;font-size:11px;font-weight:700">🔓 編集解除済み</span>
+      <button onclick="resetToDefaults()" style="margin-left:auto;padding:4px 10px;border-radius:6px;border:1px solid #1d4ed8;background:#fff;color:#1d4ed8;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap">デフォルト値に戻す</button>
+      <button id="hyp-relock-btn" onclick="lockModel()" style="display:none;padding:4px 10px;border-radius:6px;border:1px solid #dc2626;background:#fff;color:#dc2626;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap">🔒 再ロック</button>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">📋 冒頭ヒアリング</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="hearing-row">
+          <span class="hearing-lbl">📄 電気料金明細</span>
+          <div class="hearing-btns">
+            <button id="htgl-hasBill-n" class="htgl active" onclick="setHearing('hasBill',false)">なし</button>
+            <button id="htgl-hasBill-y" class="htgl" onclick="setHearing('hasBill',true)">あり</button>
+          </div>
+        </div>
+        <div class="hearing-row">
+          <span class="hearing-lbl">☀️ 太陽光（PV）</span>
+          <div class="hearing-btns">
+            <button id="htgl-hasPV-n" class="htgl active" onclick="setHearing('hasPV',false)">なし</button>
+            <button id="htgl-hasPV-y" class="htgl" onclick="setHearing('hasPV',true)">あり</button>
+          </div>
+        </div>
+        <div class="hearing-row">
+          <span class="hearing-lbl">🔋 蓄電池</span>
+          <div class="hearing-btns">
+            <button id="htgl-hasBattery-n" class="htgl active" onclick="setHearing('hasBattery',false)">なし</button>
+            <button id="htgl-hasBattery-y" class="htgl" onclick="setHearing('hasBattery',true)">あり</button>
+          </div>
+        </div>
+        <div class="hearing-row">
+          <span class="hearing-lbl">🏡 オール電化</span>
+          <div class="hearing-btns">
+            <button id="htgl-isAllElectric-n" class="htgl active" onclick="setHearing('isAllElectric',false)">なし</button>
+            <button id="htgl-isAllElectric-y" class="htgl" onclick="setHearing('isAllElectric',true)">あり</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">👤 お客様情報</div>
+      <div class="grid2" style="margin-bottom:12px">
+        <div class="field"><label>お客様名</label><input type="text" id="cn" value="○○様" oninput="calc()"></div>
+        <div class="field"><label>家族構成</label>
+          <select id="fm" onchange="onFamilyChange()">
+            <option value="1人暮らし">1人暮らし</option>
+            <option value="2人暮らし（夫婦・カップル）">2人暮らし（夫婦・カップル）</option>
+            <option value="3人家族（夫婦＋子ども1人）">3人家族（夫婦＋子ども1人）</option>
+            <option value="4人家族（夫婦＋子ども2人）" selected>4人家族（夫婦＋子ども2人）</option>
+            <option value="5人以上の大家族">5人以上の大家族</option>
+            <option value="2世帯住宅（親世代同居）">2世帯住宅（親世代同居）</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>生活スタイル・備考</label>
+        <select id="ls-preset" onchange="onLifestyleChange()" style="margin-bottom:6px">
+          <option value="away" selected>日中ほぼ不在（共働き・外出多め）</option>
+          <option value="home">日中在宅が多い（在宅ワーク・主婦）</option>
+          <option value="night">夜間に消費が集中</option>
+          <option value="even">昼夜バランスよく使用</option>
+          <option value="allelectric">オール電化（昼夜問わず多用）</option>
+          <option value="custom">その他（任意入力）</option>
+        </select>
+        <input type="text" id="ls" value="日中は共働きで外出多め・夜間使用が中心" oninput="calc()" placeholder="生活スタイルの詳細（任意）">
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">⚡ 電気使用状況</div>
+      <div class="field" style="margin-bottom:10px">
+        <label>電力会社・料金プラン <span style="font-size:10px;color:var(--mg);margin-left:4px">選択すると単価を自動反映（手動上書き可）</span></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+          <input type="text" id="utility-company" placeholder="電力会社名（任意）例：○○電力" style="flex:1;min-width:140px;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:14px;background:#fff;font-family:inherit">
+        </div>
+        <select id="kyuden-plan" onchange="onKyudenPlanChange()">
+          <option value="">手動入力</option>
+          <optgroup label="▼ 標準家庭プラン（目安単価）">
+            <option value="30">従量電灯B・C / スタンダードプラン（目安 30円/kWh）</option>
+            <option value="32">プレミアム・エコプラン / 新電力標準（目安 32円/kWh）</option>
+            <option value="29">ガス・電気セット割引プラン（目安 29円/kWh）</option>
+          </optgroup>
+          <optgroup label="▼ 九州電力 従量電灯">
+            <option value="30">従量電灯B（目安 30円/kWh）</option>
+          </optgroup>
+          <optgroup label="▼ 九州電力 時間帯別・太陽光向け（概算）">
+            <option value="kyushu_kiji">季時別電灯（概算単価 31円/kWh）</option>
+            <option value="kyushu_ohisama">おひさま昼トクプラン（概算単価 30円/kWh）</option>
+          </optgroup>
+          <optgroup label="▼ 九州電力 オール電化（生活スタイル別概算）">
+            <option value="kyushu_denka_night">電化でナイト・セレクト（生活スタイル別概算単価）</option>
+          </optgroup>
+          <optgroup label="▼ 請求書から平均単価算出（複雑な料金体系）">
+            <option value="avg:smart_gas">時間帯別・季節別プラン（請求書から平均算出）</option>
+            <option value="avg:denka">オール電化・エコキュート（請求書から平均算出）</option>
+            <option value="avg:other">その他複雑プラン（請求書から平均算出）</option>
+          </optgroup>
+        </select>
+        <div id="estimated-price-disp" style="display:none;margin-top:5px;padding:5px 10px;border-radius:6px;background:var(--pg);border:1px solid var(--border);font-size:12px;color:var(--mg);font-weight:600"></div>
+      </div>
+      <!-- 実効平均単価 入力エリア（実効平均単価プラン選択時のみ表示） -->
+      <div id="avg-rate-section" style="display:none;margin-bottom:10px;padding:12px 14px;background:var(--pg);border-radius:8px;border:1px solid var(--border)">
+        <div style="font-size:12px;font-weight:700;color:var(--mg);margin-bottom:4px">📋 請求書から平均単価を算出</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">電気料金の請求書をもとに、1kWhあたりの平均単価を算出して単価欄に反映します</div>
+        <div class="grid2" style="margin-bottom:8px">
+          <div class="field">
+            <label>月間使用量（kWh）<span style="font-size:10px;color:var(--mg);margin-left:4px">請求書・検針票を参照</span></label>
+            <input type="number" id="monthly-kwh" min="1" step="10" placeholder="例：667" oninput="calcAvgUnitPrice()">
+          </div>
+          <div style="display:flex;align-items:center;font-size:13px;color:var(--muted);padding-top:20px">
+            → 平均単価：<b id="avg-unit-disp" style="color:var(--mg);margin-left:4px">-</b>
+          </div>
+        </div>
+        <details>
+          <summary style="font-size:11px;color:var(--muted);cursor:pointer;margin-bottom:6px">明細内訳から算出（任意・より正確）</summary>
+          <div class="grid2" style="margin-top:8px">
+            <div class="field"><label>基本料金（円）</label><input type="number" id="br-basic" min="0" step="10" placeholder="0" oninput="calcAvgUnitPrice()"></div>
+            <div class="field"><label>電力量料金（円）</label><input type="number" id="br-denki" min="0" step="10" placeholder="0" oninput="calcAvgUnitPrice()"></div>
+            <div class="field"><label>燃料費調整額（円）</label><input type="number" id="br-nenryo" min="0" step="10" placeholder="0" oninput="calcAvgUnitPrice()"></div>
+            <div class="field"><label>再エネ賦課金（円）</label><input type="number" id="br-saiene" min="0" step="10" placeholder="0" oninput="calcAvgUnitPrice()"></div>
+          </div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px">※請求書の明細を入力した場合は明細合計÷使用量で算出。未入力時は上記「月間電気代」÷使用量で簡易算出。</div>
+        </details>
+      </div>
+      <div class="grid2" style="margin-bottom:4px">
+        <div class="field"><label>月間電気代（円）</label><input type="number" id="mb" value="20000" min="1000" max="200000" step="1000" oninput="calc()"></div>
+        <div class="field"><label>月間使用量（kWh）<span id="mkwh-label-note" style="font-size:10px;margin-left:4px;color:var(--muted)"></span></label><input type="number" id="mkwh" value="667" min="1" max="5000" step="10" oninput="calc()"></div>
+      </div>
+      <div id="billing-guide" style="display:none;margin-bottom:8px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);font-size:12px"></div>
+      <div style="margin-bottom:12px;padding:6px 12px;background:#f8fffe;border-radius:8px;border:1px solid var(--border);font-size:12px;color:var(--muted)">
+        現在の平均単価（自動計算・税込）：<b id="up-auto" style="color:var(--dg)">-</b>
+        <span style="font-size:10px;margin-left:6px;color:var(--muted)">※再エネ賦課金・燃料費調整額含む実質単価</span>
+      </div>
+      <!-- 年間電気代・年間消費電力量の自動表示 -->
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;padding:8px 12px;background:#f8fffe;border-radius:8px;border:1px solid var(--border);font-size:13px">
+        <span style="color:var(--muted)">年間電気代：<b id="annual-bill-disp" style="color:var(--dg)">-</b></span>
+        <span style="color:var(--muted)">年間消費電力量：<b id="annual-kwh-disp" style="color:var(--dg)">-</b></span>
+      </div>
+      <div class="field" style="max-width:320px;margin-bottom:14px">
+        <label>電気代の年間上昇率（%）<span style="font-size:10px;color:var(--mg);margin-left:4px">不明な場合は0のまま</span></label>
+        <input type="number" id="er" value="0" min="0" max="10" step="0.1" oninput="calc()">
+        <div id="er-note" style="display:none;font-size:11px;color:var(--or);margin-top:4px">
+          ⚠️ 電気代の上昇予測はあくまで試算です。実際の上昇率は料金改定により異なります。
+        </div>
+      </div>
+      <div id="daytime-auto-note" style="display:none;margin-bottom:8px;padding:8px 12px;background:var(--pg);border-radius:8px;border:1px solid var(--border);font-size:12px;color:var(--mg)">
+        <span id="daytime-auto-text"></span>
+        <span style="color:var(--muted);margin-left:8px;font-size:11px">↓ 下の値を手動で上書きできます</span>
+      </div>
+      <div class="grid2" style="margin-top:4px">
+        <div class="field">
+          <label>昼間 直接使用量（kWh/年）<span style="font-size:10px;color:var(--mg);margin-left:4px">太陽光→直接消費</span></label>
+          <input type="number" id="dc" value="2310" min="0" max="15000" step="10" oninput="calc()">
+          <span id="dc-monthly-hint" style="font-size:11px;color:var(--muted)"></span>
+        </div>
+        <div class="field">
+          <label>蓄電池で賄う量（kWh/年）<span style="font-size:10px;color:var(--mg);margin-left:4px">夜間・曇天時に放電</span></label>
+          <input type="number" id="bc" value="2520" min="0" max="15000" step="10" oninput="calc()">
+          <span id="bc-monthly-hint" style="font-size:11px;color:var(--muted)"></span>
+        </div>
+      </div>
+      <!-- ── 結果エリア（入力直後のひとまとまりブロック） ── -->
+      <div id="result-area" style="margin-top:12px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+        <div id="daytime-rate-disp" style="padding:6px 10px;background:var(--pg);border-radius:6px;font-size:12px;color:var(--mg);font-weight:600"></div>
+        <div id="self-kpi"></div>
+        <div id="surplus-disp" style="display:none;padding:12px 14px;background:#f0fdf4;border-radius:8px;border-left:4px solid #16a34a">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">📤 余剰電力量（年間発電 − 自家消費）</div>
+          <div><span id="surplus-big" style="font-size:26px;font-weight:900;color:#15803d">-</span></div>
+          <div id="surplus-sub" style="font-size:11px;color:var(--muted);margin-top:2px"></div>
+        </div>
+        <div id="bk-remain-disp" style="display:none;padding:12px 14px;background:var(--pg);border-radius:8px;border-left:4px solid var(--mg)">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">🔋 蓄電池の残容量余地（年間）</div>
+          <div><span id="bk-remain-big" style="font-size:26px;font-weight:900;color:var(--mg)">-</span></div>
+          <div id="bk-remain-sub" style="font-size:11px;color:var(--muted);margin-top:2px"></div>
+        </div>
+        <div id="bk-error" style="display:none;padding:12px 14px;border-radius:8px;background:#FEF2F2;border-left:4px solid #DC2626;font-size:13px;font-weight:700;color:#B91C1C">
+          ⚠️ 蓄電池の放電量設定が上限を超えています<br>
+          <span style="font-size:12px;font-weight:400;margin-top:4px;display:inline-block">蓄電池容量（kWh）×365日を超える放電量は物理的に不可能です。「蓄電池で賄う量（kWh/年）」または「蓄電池容量（kWh）」を見直してください。</span>
+        </div>
+        <div id="remain-disp" style="display:none;padding:12px 14px;background:#fffbeb;border-radius:8px;border-left:4px solid #f59e0b">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">☀️ 自家消費としてまだ活用できる余地</div>
+          <div><span id="remain-kwh-big" style="font-size:26px;font-weight:900;color:#d97706">-</span></div>
+          <div id="remain-sub-text" style="font-size:11px;color:var(--muted);margin-top:2px"></div>
+        </div>
+        <div id="self-detail" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">☀️ システム設計</div>
+      <!-- パッケージ選択（お客様ヒアリング入力時のみ表示） -->
+      <div id="pkg-area" style="background:var(--pg);border-radius:8px;border:1px solid var(--border);padding:10px 14px;margin-bottom:12px">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+          <div class="field" style="flex:2;min-width:200px">
+            <label>📦 システムパッケージ</label>
+            <select id="pkg-select" onchange="onPkgChange()" style="border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:14px;background:#fff;color:var(--text);font-family:inherit;width:100%">
+              <option value="">── 手動入力（パッケージ選択なし）──</option>
+              <option value="5+7">5+7パッケージ（14枚 / 5.46kW / 7.7kWh）</option>
+              <option value="5+15">5+15パッケージ（14枚 / 5.46kW / 15.4kWh）</option>
+              <option value="6+7">6+7パッケージ（16枚 / 6.24kW / 7.7kWh）</option>
+              <option value="6+15">6+15パッケージ（16枚 / 6.24kW / 15.4kWh）</option>
+              <option value="7+7" selected>7+7パッケージ（18枚 / 7.02kW / 7.7kWh）</option>
+              <option value="7+15">7+15パッケージ（18枚 / 7.02kW / 15.4kWh）</option>
+              <option value="8+7">8+7パッケージ（21枚 / 8.16kW / 7.7kWh）</option>
+              <option value="8+15">8+15パッケージ（21枚 / 8.16kW / 15.4kWh）</option>
+              <option value="9+7">9+7パッケージ（24枚 / 9.36kW / 7.7kWh）</option>
+              <option value="9+15">9+15パッケージ（24枚 / 9.36kW / 15.4kWh）</option>
+              <option value="10+7">10+7パッケージ（27枚 / 10.53kW / 7.7kWh）</option>
+              <option value="10+15">10+15パッケージ（27枚 / 10.53kW / 15.4kWh）</option>
+              <option value="14+7">14+7パッケージ（36枚 / 14.04kW / 7.7kWh）</option>
+              <option value="14+15">14+15パッケージ（36枚 / 14.04kW / 15.4kWh）</option>
+            </select>
+          </div>
+          <div class="field" style="min-width:130px">
+            <label>追加費用（万円）</label>
+            <input type="number" id="pkg-extra" value="0" min="0" step="10" oninput="onPkgExtraChange()">
+          </div>
+          <div class="field" id="pkg-extra-note-field" style="min-width:180px">
+            <label>追加費用の内容（任意）</label>
+            <input type="text" id="pkg-extra-note" placeholder="例：配線延長工事・足場追加など" oninput="calc()">
+          </div>
+        </div>
+        <div id="pkg-cost-summary" style="margin-top:8px;font-size:12px;color:var(--dg);display:none"></div>
+        <!-- 手動入力時のみ表示 -->
+        <div id="pkg-manual-area" style="display:none;margin-top:8px;display:none">
+          <div class="grid2">
+            <div class="field">
+              <label>システム名（任意）<span style="font-size:10px;color:var(--mg);margin-left:4px">スライドの識別用</span></label>
+              <input type="text" id="sys-name" placeholder="例：オリジナル10kWプラン" oninput="calc()">
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px">💡 下のフィールドに直接、太陽光容量・蓄電池容量・年間発電量・税込総工事費用を入力してください。</div>
+        </div>
+      </div>
+      <div class="grid3" style="margin-bottom:12px">
+        <div class="field"><label>太陽光容量（kW）</label><input type="number" id="sk" value="7.02" min="3" max="20" step="0.01" oninput="calc()"></div>
+        <div class="field"><label>蓄電池容量（kWh）</label><input type="number" id="bk" value="7.7" min="3" max="30" step="0.1" oninput="calc()"></div>
+        <div class="field">
+          <label>税込総工事費用（万円）<span style="font-size:10px;color:var(--mg);margin-left:4px">太陽光＋蓄電池 工事込み</span></label>
+          <input type="number" id="ck" value="280" min="50" max="2000" step="10" oninput="calc()">
+        </div>
+      </div>
+      <div class="grid3" style="margin-bottom:12px">
+        <div class="field"><label>年間発電量（kWh）<span style="font-size:10px;color:var(--mg);margin-left:4px">太陽光パネルの年間発電量</span></label><input type="number" id="ag" value="7700" min="2000" max="20000" step="100" oninput="calc()"></div>
+        <div class="field">
+          <label>補助金額（万円）<span style="font-size:10px;color:var(--mg);margin-left:4px">国・自治体補助金（任意）</span></label>
+          <input type="number" id="sub" value="0" min="0" max="500" step="1" oninput="calc()">
+        </div>
+        <div class="field"><label>保証年数（年）</label><input type="number" id="wy" value="20" min="10" max="25" step="5" oninput="calc()"></div>
+      </div>
+      <!-- 補助金適用後の実質費用表示 -->
+      <div id="subsidy-summary" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--pg);border-radius:8px;border:1px solid var(--border);font-size:13px"></div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">🏦 ローン活用プラン（任意）</div>
+      <div class="toggle-row">
+        <input type="checkbox" id="le" onchange="toggleLoan()">
+        <label for="le">ローン活用スライドを追加する</label>
+      </div>
+      <div class="loan-fields" id="loan-fields">
+        <!-- 入力モード切替 -->
+        <div style="display:flex;gap:6px;margin-bottom:12px;background:var(--pg);border-radius:8px;padding:5px;border:1px solid var(--border)">
+          <button id="btn-loan-auto" onclick="setLoanInputMode('auto')"
+            style="flex:1;padding:7px;border-radius:6px;border:none;background:var(--mg);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">
+            🔢 自動計算
+          </button>
+          <button id="btn-loan-manual" onclick="setLoanInputMode('manual')"
+            style="flex:1;padding:7px;border-radius:6px;border:none;background:transparent;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">
+            ✏️ 手動入力
+          </button>
+        </div>
+        <!-- 借入金額・金利・支払回数（常時表示） -->
+        <div class="grid3" style="margin-bottom:12px">
+          <div class="field">
+            <label>借入金額（万円）</label>
+            <input type="number" id="la2" value="280" min="10" max="500" step="10" oninput="loanAmountEdited=true;calc()">
+          </div>
+          <div class="field">
+            <label>金利（年率 %）</label>
+            <input type="number" id="lr" value="4.1" min="0.1" max="15" step="0.1" oninput="calc()">
+          </div>
+          <div class="field">
+            <label>支払回数（回）</label>
+            <select id="lc" onchange="calc()">
+              <option value="12">12回（1年）</option>
+              <option value="24">24回（2年）</option>
+              <option value="36">36回（3年）</option>
+              <option value="48">48回（4年）</option>
+              <option value="60">60回（5年）</option>
+              <option value="72">72回（6年）</option>
+              <option value="84">84回（7年）</option>
+              <option value="96">96回（8年）</option>
+              <option value="108">108回（9年）</option>
+              <option value="120">120回（10年）</option>
+              <option value="132">132回（11年）</option>
+              <option value="144">144回（12年）</option>
+              <option value="156">156回（13年）</option>
+              <option value="168">168回（14年）</option>
+              <option value="180" selected>180回（15年）</option>
+            </select>
+          </div>
+        </div>
+        <!-- 手動入力エリア -->
+        <div id="loan-manual-area" style="display:none;margin-bottom:12px">
+          <div class="field">
+            <label>月々返済額（円）<span style="font-size:10px;color:var(--mg);margin-left:6px">金融機関提示の実際の返済額</span></label>
+            <input type="number" id="lp-manual" value="0" min="0" step="100" oninput="calc()">
+          </div>
+        </div>
+        <!-- 自動計算エリア -->
+        <div id="loan-auto-area">
+        <!-- 計算方式切り替え -->
+        <div style="display:flex;gap:6px;margin-bottom:10px">
+          <button id="btn-addon"   onclick="setLoanMethod('addon')"
+            style="flex:1;padding:7px 4px;border-radius:8px;border:2px solid var(--border);background:#fff;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1.3">
+            アドオン方式
+          </button>
+          <button id="btn-zansai" onclick="setLoanMethod('zansai')"
+            style="flex:1;padding:7px 4px;border-radius:8px;border:2px solid var(--mg);background:var(--mg);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1.3">
+            残債方式<br>元利均等
+          </button>
+          <button id="btn-gankin" onclick="setLoanMethod('gankin')"
+            style="flex:1;padding:7px 4px;border-radius:8px;border:2px solid var(--border);background:#fff;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1.3">
+            残債方式<br>元金均等
+          </button>
+        </div>
+        <!-- 方式の説明 -->
+        <div id="loan-method-desc" style="font-size:11px;color:var(--muted);margin-bottom:10px;padding:6px 10px;background:#f9f9f9;border-radius:6px;border:1px solid var(--border)">
+          アドオン方式：元本に対して金利を一括計算。月々返済額が一定で計算がシンプル。
+        </div>
+        <!-- 3方式比較テーブル -->
+        <div id="loan-compare-table" style="margin-bottom:12px;display:none">
+          <div style="font-size:11px;font-weight:700;color:var(--dg);margin-bottom:6px">📊 3方式 比較</div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead>
+              <tr style="background:var(--dg);color:#fff">
+                <th style="padding:6px 8px;text-align:left;border-radius:6px 0 0 0">方式</th>
+                <th style="padding:6px 8px;text-align:right">月々返済（初回）</th>
+                <th style="padding:6px 8px;text-align:right">総返済額</th>
+                <th style="padding:6px 8px;text-align:right;border-radius:0 6px 0 0">うち利息</th>
+              </tr>
+            </thead>
+            <tbody id="compare-tbody"></tbody>
+          </table>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px">※元金均等は初回月々返済額を表示。返済が進むにつれて減少します。</div>
+        </div>
+        <!-- 計算結果 -->
+        <div id="loan-calc-result" style="background:var(--pg);border-radius:8px;padding:10px 14px;margin-bottom:12px;border:1px solid var(--border);font-size:13px">
+          <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center">
+            <span>月々の返済額：<b id="lp-display" style="color:var(--dg);font-size:16px">-</b></span>
+            <span style="color:var(--muted)">返済期間：<b id="ly-display">-</b></span>
+            <span style="color:var(--muted)">総返済額：<b id="lt-display">-</b></span>
+            <span style="color:var(--muted)">うち利息：<b id="li-display">-</b></span>
+          </div>
+          <div style="margin-top:6px;font-size:11px;color:var(--or)" id="loan-warning">
+            ⚠️ アドオン方式による概算です。実際の返済額はローン会社の計算により異なります。必ず契約前に金融機関へご確認ください。
+          </div>
+        </div>
+        </div><!-- /loan-auto-area -->
+        <!-- 隠しフィールド（計算用） -->
+        <input type="hidden" id="lp" value="13000">
+        <input type="hidden" id="ly" value="15">
+        <div id="loan-preview-box" style="display:none">
+          <div class="loan-preview">
+            <div class="loan-row"><span>現在の月々電気代</span><span id="ln">-</span></div>
+            <div class="loan-row"><span>ローン返済額（概算）</span><span id="ll">-</span></div>
+            <div class="loan-row"><span>残り電気代（削減後）</span><span id="le2">-</span></div>
+            <hr class="loan-divider">
+            <div class="loan-row tot"><span>月々の支出合計（返済中）</span><span id="lt">-</span></div>
+            <div class="loan-row tot"><span>月々の支出（返済後）</span><span id="la">-</span></div>
+            <div class="loan-row" id="ldr"><span>現状との差額</span><span id="ld">-</span></div>
+          </div>
+        </div>
+        <div class="cum-chart-wrap" style="margin-top:14px">
+          <div class="ct">20年間 累計支出イメージ</div>
+          <canvas id="mini-chart"></canvas>
+          <div class="legend" style="flex-wrap:wrap;gap:10px 16px">
+            <span><b style="background:#EA580C"></b>電力会社（<span id="legend-now-label">現状維持</span>）</span>
+            <span><b style="background:#2D6A4F"></b>現金購入</span>
+            <span id="legend-loan-item" style="display:none"><b style="background:#7c3aed"></b>ローン活用</span>
+          </div>
+          <div id="rise-note" style="font-size:10px;color:var(--muted);margin-top:4px"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">📊 シミュレーション結果</div>
+      <div class="preview-grid">
+        <div class="prev-card orange"><div class="p-label">20年間の電気代</div><div class="p-val" id="rb">-</div><div style="font-size:9px;color:var(--muted);margin-top:4px" id="rb-note"></div><div style="font-size:15px;color:#ea580c;margin-top:6px;font-weight:700" id="rb-up"></div></div>
+        <div class="prev-card"><div class="p-label">初期費用</div><div class="p-val" id="rc">-</div></div>
+        <div class="prev-card">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div>
+              <div class="p-label">発電単価<span style="font-size:10px;color:var(--muted);margin-left:4px">（100%活用の理論値）</span></div>
+              <div class="p-val" id="rk" style="font-size:30px">-</div>
+            </div>
+            <div style="border-top:1px solid var(--border);padding-top:8px">
+              <div class="p-label">自家消費単価<span style="font-size:10px;color:var(--muted);margin-left:4px">（現金購入ベース）</span></div>
+              <div class="p-val" id="rk-self" style="color:var(--mg);font-size:30px">-</div>
+            </div>
+            <div id="rk-loan-row" style="border-top:1px solid var(--border);padding-top:8px;display:none">
+              <div class="p-label">ローン活用時の単価<span style="font-size:10px;color:var(--muted);margin-left:4px">（総返済額ベース）</span></div>
+              <div class="p-val" id="rk-loan" style="color:#7c3aed;font-size:30px">-</div>
+            </div>
+          </div>
+        </div>
+        <div class="prev-card"><div class="p-label">年間削減効果</div><div class="p-val" id="rs">-</div></div>
+      </div>
+      <div class="bar-compare">
+        <div class="bar-row">
+          <div class="bar-label">電力会社のまま（20年間）</div>
+          <div class="bar-track" style="display:flex"><div class="bar-fill or" id="bb" style="width:100%"><span id="bbv"></span></div></div>
+        </div>
+        <div class="bar-row" style="margin-top:8px">
+          <div class="bar-label">現金購入</div>
+          <div class="bar-track" style="display:flex">
+            <div class="bar-fill gr" id="bi" style="width:40%;border-radius:0"><span id="biv"></span></div>
+            <div id="bi-r" style="width:20%;height:100%;background:#86efac;display:flex;align-items:center;padding-left:6px;font-size:14px;font-weight:700;color:#14532d;transition:width .4s ease;overflow:hidden"><span id="biv-r"></span></div>
+          </div>
+          <div id="bi-detail" style="font-size:11px;color:var(--muted);margin-top:3px"></div>
+        </div>
+        <div class="bar-row loan-bar-only" style="display:none;margin-top:8px">
+          <div class="bar-label">ローン活用</div>
+          <div class="bar-track" style="display:flex">
+            <div class="bar-fill" id="bl" style="width:40%;border-radius:0;background:#7c3aed"><span id="blv"></span></div>
+            <div id="bl-r" style="width:20%;height:100%;background:#c4b5fd;display:flex;align-items:center;padding-left:6px;font-size:14px;font-weight:700;color:#4c1d95;transition:width .4s ease;overflow:hidden"><span id="blv-r"></span></div>
+          </div>
+          <div id="bl-detail" style="font-size:11px;color:var(--muted);margin-top:3px"></div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:11px;color:var(--muted)">
+          <span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:12px;height:10px;border-radius:2px;background:#EA580C"></span>電気料金（電力会社）</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:12px;height:10px;border-radius:2px;background:#2D6A4F"></span>初期費用</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:12px;height:10px;border-radius:2px;background:#86efac"></span>残り電気代（現金）</span>
+          <span id="stacked-legend-loan" style="display:none;align-items:center;gap:4px"><span style="display:inline-block;width:12px;height:10px;border-radius:2px;background:#7c3aed"></span>ローン返済総額</span>
+          <span id="stacked-legend-loan-r" style="display:none;align-items:center;gap:4px"><span style="display:inline-block;width:12px;height:10px;border-radius:2px;background:#c4b5fd"></span>残り電気代（ローン）</span>
+        </div>
+      </div>
+      <div class="diff-banner">
+        <span class="d-label">20年間のコスト差<br><span id="diff-note" style="font-size:10px;opacity:.7"></span></span>
+        <span class="d-val" id="rd">-</span>
+      </div>
+      <div class="diff-banner loan-bar-only" id="loan-diff-banner" style="display:none;background:#5b21b6;margin-top:8px">
+        <span class="d-label">ローン活用時の20年コスト差<br><span id="loan-diff-note" style="font-size:10px;opacity:.7"></span></span>
+        <span class="d-val" id="rd-loan">-</span>
+      </div>
+    </div>
+
+  </div><!-- /form-body -->
+
+  <!-- ── 履歴セクション ── -->
+  <div class="form-body" id="section-history" style="display:none">
+    <div class="section-card">
+      <div class="section-title">📋 お客様履歴</div>
+      <div id="history-full"></div>
+    </div>
+  </div>
+
+</main>
+</div><!-- /app -->
+
+<!-- ── 進捗オーバーレイ ── -->
+<div class="progress-overlay" id="progress">
+  <div class="progress-box">
+    <div class="p-title">PPTXを生成しています...</div>
+    <div class="p-sub" id="progress-msg">スライドを構築中</div>
+    <div class="spinner"></div>
+  </div>
+</div>
+
+<!-- ── トースト ── -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+// ユーティリティ
+// ══════════════════════════════════════════
+const fmt = n => Math.round(n).toLocaleString('ja-JP');
+const v = id => parseFloat(document.getElementById(id).value) || 0;
+
+// ══════════════════════════════════════════
+// 2タブ データ管理
+// ══════════════════════════════════════════
+const HEARING_KEYS = ['hasBill','hasPV','hasBattery','isAllElectric'];
+
+// ── 蓄電池実効容量マスタ（長州産業 Smart PV Plus）──
+// 変更する場合はここのみ更新。未収録機種は BATTERY_EFFECTIVE_RATIO で按分
+const SMART_PV_PLUS_EFFECTIVE = {
+  5.4:  3.8,  // 公称5.4kWh
+  7.7:  5.4,  // 公称7.7kWh  → 1967kWh/年 ÷ 365日
+  10.2: 7.1,  // 公称10.2kWh
+  15.4: 10.8, // 公称15.4kWh → 3935kWh/年 ÷ 365日
+};
+const BATTERY_EFFECTIVE_RATIO = 0.70; // 未収録機種のフォールバック比率
+
+function effectiveBatteryKwh(nominalKwh) {
+  const key = Math.round(nominalKwh * 10) / 10; // 小数ブレ対策
+  return SMART_PV_PLUS_EFFECTIVE[key] ?? nominalKwh * BATTERY_EFFECTIVE_RATIO;
+}
+
+// ── 九州電力 季時別電灯 概算単価マスタ ──
+// 目安単価のみ。将来的に生活スタイル別へ拡張する場合は styles を追加してください
+const KYUSHU_KIJI = {
+  unitPrice: 31, // 円/kWh（概算・仮置き。季節・時間帯の加重平均目安）
+};
+
+// ── 九州電力 おひさま昼トクプラン 概算単価マスタ ──
+// 太陽光設置前提のプラン。昼間安・夜間高。実購入単価は自家消費分を除いた加重平均目安
+const KYUSHU_OHISAMA = {
+  unitPrice: 30, // 円/kWh（概算・仮置き）
+};
+
+// ── 九州電力 電化でナイト・セレクト 概算単価マスタ ──
+// 単価・比率を変更する場合は tariff と styles の数値を更新してください
+const KYUSHU_DENKA_NIGHT = {
+  tariff: { day:26.5, hol:20.5, ngt:14.6 },
+  styles: {
+    even:        { day:0.30, hol:0.20, ngt:0.50, label:'標準（ナイト22想定）' },
+    away:        { day:0.20, hol:0.15, ngt:0.65, label:'共働き・夜間中心' },
+    home:        { day:0.40, hol:0.15, ngt:0.45, label:'在宅ワーク多め' },
+    allelectric: { day:0.50, hol:0.15, ngt:0.35, label:'高齢者在宅多め' },
+    night:       { day:0.15, hol:0.15, ngt:0.70, label:'夜型・深夜利用多め' },
+    custom:      { day:0.30, hol:0.20, ngt:0.50, label:'標準（ナイト22想定）' },
+  },
+};
+const HEARING_DEFAULTS = { hasBill:false, hasPV:false, hasBattery:false, isAllElectric:false };
+const HYPOTHESIS_DEFAULTS = {
+  cn:'モデルケース', fm:'5人以上の大家族',
+  lsPreset:'custom', ls:'モデルケース（日中の使用量が比較的多いご家庭）',
+  mb:20000, mkwh:667, ag:7700, sk:7, bk:7, ck:280,
+  dc:5000, bc:2500, sub:0, wy:20, er:0,
+  la2:280, lr:4.1, lc:180, le:false, kyudenPlan:'',
+  lp:0, ly:15, loanMethod:'zansai', loanInputMode:'auto', lpManual:0,
+  ...HEARING_DEFAULTS,
+};
+const CUSTOMER_DEFAULTS = {
+  cn:'○○様', fm:'4人家族（夫婦＋子ども2人）',
+  lsPreset:'away', ls:'日中は共働きで外出多め・夜間使用が中心',
+  mb:20000, mkwh:667, ag:7700, sk:7, bk:7, ck:280,
+  dc:2310, bc:2520, sub:0, wy:20, er:0,
+  la2:280, lr:4.1, lc:180, le:false, kyudenPlan:'',
+  lp:0, ly:15, loanMethod:'zansai', loanInputMode:'auto', lpManual:0,
+  ...HEARING_DEFAULTS,
+};
+let hypData = {...HYPOTHESIS_DEFAULTS};
+let custData = {...CUSTOMER_DEFAULTS};
+let activeTab = 'customer';
+const MODEL_EDIT_PASSWORD = 'azuma4001';
+let modelUnlocked = false;
+
+const TAB_FIELDS = ['mb','mkwh','ag','sk','bk','ck','dc','bc','sub','wy','er','la2','lr','lc'];
+
+const PACKAGES = {
+  '5+7' :{panels:14,sk:5.46, bk:7.7, cost:265,ag:6006, bc:1967},
+  '5+15':{panels:14,sk:5.46, bk:15.4,cost:365,ag:6006, bc:3935},
+  '6+7' :{panels:16,sk:6.24, bk:7.7, cost:270,ag:6864, bc:1967},
+  '6+15':{panels:16,sk:6.24, bk:15.4,cost:390,ag:6864, bc:3935},
+  '7+7' :{panels:18,sk:7.02, bk:7.7, cost:280,ag:7722, bc:1967},
+  '7+15':{panels:18,sk:7.02, bk:15.4,cost:385,ag:7722, bc:3935},
+  '8+7' :{panels:21,sk:8.16, bk:7.7, cost:320,ag:8976, bc:1967},
+  '8+15':{panels:21,sk:8.16, bk:15.4,cost:397,ag:8976, bc:3935},
+  '9+7' :{panels:24,sk:9.36, bk:7.7, cost:370,ag:10296,bc:1967},
+  '9+15':{panels:24,sk:9.36, bk:15.4,cost:427,ag:10296,bc:3935},
+  '10+7':{panels:27,sk:10.53,bk:7.7, cost:420,ag:11583,bc:1967},
+  '10+15':{panels:27,sk:10.53,bk:15.4,cost:450,ag:11583,bc:3935},
+  '14+7':{panels:36,sk:14.04,bk:7.7, cost:450,ag:15444,bc:1967},
+  '14+15':{panels:36,sk:14.04,bk:15.4,cost:500,ag:15444,bc:3935},
+};
+let pkgBaseCost = 280;
+let loanAmountEdited = false;
+
+function buildCfg(data, lp, ly) {
+  return {
+    customerName: data.cn || '○○様',
+    familyComposition: data.fm || '',
+    lifestyleNote: data.ls || '',
+    monthlyElectricBill: data.mb || 0,
+    currentUnitPrice: data.mkwh > 0 ? Math.round(data.mb / data.mkwh * 10) / 10 : 0,
+    annualGenerationKWh: data.ag || 0,
+    solarCapacityKW: data.sk || 0,
+    batteryCapacityKWh: data.bk || 0,
+    directConsumptionKWh: data.dc || 0,
+    batteryConsumptionKWh: data.bc || 0,
+    annualConsumptionKWh: (data.mkwh||0) * 12,
+    totalConstructionCost: (data.ck||0) * 10000,
+    subsidyAmount: data.sub || 0,
+    warrantyYears: data.wy || 20,
+    escalationRate: data.er || 0,
+    monthlyLoanPayment: (data.le && lp) ? lp : 0,
+    loanYears: ly || 15,
+    loanAmount: data.la2 || 0,
+    loanRate: data.lr || 0,
+    loanCount: data.lc || 0,
+  };
+}
+
+function onPkgChange() {
+  loanAmountEdited = false;
+  const key = document.getElementById('pkg-select').value;
+  const isManual = !key;
+  document.getElementById('pkg-manual-area').style.display = isManual ? '' : 'none';
+  document.getElementById('pkg-extra').closest('.field').style.display = isManual ? 'none' : '';
+  document.getElementById('pkg-extra-note-field').style.display = isManual ? 'none' : '';
+  if (!isManual && PACKAGES[key]) {
+    const p = PACKAGES[key];
+    const extra = parseFloat(document.getElementById('pkg-extra').value)||0;
+    pkgBaseCost = p.cost;
+    document.getElementById('sk').value = p.sk;
+    document.getElementById('bk').value = p.bk;
+    document.getElementById('ag').value = p.ag;
+    document.getElementById('bc').value = p.bc;
+    document.getElementById('ck').value = p.cost + extra;
+    // パッケージ選択で bc を上書きするため、自動計算説明文をリセット
+    document.getElementById('daytime-auto-note').style.display = 'none';
+    document.getElementById('daytime-auto-text').textContent = '';
+  }
+  updatePkgSummary();
+  calc();
+}
+
+function onPkgExtraChange() {
+  const extra = parseFloat(document.getElementById('pkg-extra').value)||0;
+  const key = document.getElementById('pkg-select').value;
+  if (key && PACKAGES[key]) {
+    document.getElementById('ck').value = pkgBaseCost + extra;
+  }
+  updatePkgSummary();
+  calc();
+}
+
+function updatePkgSummary() {
+  const key = document.getElementById('pkg-select').value;
+  const extra = parseFloat(document.getElementById('pkg-extra').value)||0;
+  const el = document.getElementById('pkg-cost-summary');
+  if (key && PACKAGES[key]) {
+    const total = pkgBaseCost + extra;
+    el.style.display = '';
+    el.innerHTML = `標準パッケージ：<b>${pkgBaseCost}万円</b>　＋　追加費用：<b>${extra}万円</b>　＝　最終税込総工事費用：<b style="color:var(--dg);font-size:13px">${total}万円</b>`;
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+function saveFormToData(data) {
+  data.cn = document.getElementById('cn').value;
+  data.fm = document.getElementById('fm').value;
+  data.lsPreset = document.getElementById('ls-preset').value;
+  data.ls = document.getElementById('ls').value;
+  TAB_FIELDS.forEach(id => { data[id] = parseFloat(document.getElementById(id).value)||0; });
+  data.le = document.getElementById('le').checked;
+  data.kyudenPlan = document.getElementById('kyuden-plan').value;
+  data.utilityCompany = document.getElementById('utility-company').value;
+  data.lp = parseFloat(document.getElementById('lp').value)||0;
+  data.ly = parseFloat(document.getElementById('ly').value)||15;
+  data.loanMethod = loanMethod;
+  data.loanInputMode = loanInputMode;
+  data.lpManual = v('lp-manual');
+  data.pkgSelect = document.getElementById('pkg-select').value;
+  data.pkgExtra = parseFloat(document.getElementById('pkg-extra').value)||0;
+  data.pkgExtraNote = document.getElementById('pkg-extra-note').value;
+  data.sysName = document.getElementById('sys-name').value;
+  HEARING_KEYS.forEach(k => { data[k] = data[k] || false; }); // preserve current values
+}
+
+function loadDataToForm(data) {
+  document.getElementById('cn').value = data.cn || '';
+  document.getElementById('fm').value = data.fm || '4人家族（夫婦＋子ども2人）';
+  document.getElementById('ls-preset').value = data.lsPreset || 'away';
+  document.getElementById('ls').value = data.ls || '';
+  TAB_FIELDS.forEach(id => { const el=document.getElementById(id); if(el && data[id]!==undefined) el.value=data[id]; });
+  document.getElementById('le').checked = data.le || false;
+  document.getElementById('kyuden-plan').value = data.kyudenPlan || '';
+  document.getElementById('utility-company').value = data.utilityCompany || '';
+  const kp = data.kyudenPlan || '';
+  showAvgRateSection(kp.startsWith('avg:'));
+  if (data.loanMethod) setLoanMethod(data.loanMethod);
+  setLoanInputMode(data.loanInputMode || 'auto');
+  document.getElementById('lp-manual').value = data.lpManual || 0;
+  const ps = data.pkgSelect !== undefined ? data.pkgSelect : '7+7';
+  document.getElementById('pkg-select').value = ps;
+  document.getElementById('pkg-extra').value = data.pkgExtra || 0;
+  document.getElementById('pkg-extra-note').value = data.pkgExtraNote || '';
+  document.getElementById('sys-name').value = data.sysName || '';
+  updateHearingUI(data);
+  if (ps && PACKAGES[ps]) pkgBaseCost = PACKAGES[ps].cost;
+  const isManual = !ps;
+  document.getElementById('pkg-manual-area').style.display = isManual ? '' : 'none';
+  document.getElementById('pkg-extra').closest('.field').style.display = isManual ? 'none' : '';
+  document.getElementById('pkg-extra-note-field').style.display = isManual ? 'none' : '';
+  updatePkgSummary();
+  toggleLoan();
+  onHearingChange(data);
+  calc();
+}
+
+function switchTab(tab) {
+  if (tab === activeTab) return;
+  saveFormToData(activeTab === 'hypothesis' ? hypData : custData);
+  activeTab = tab;
+  loanAmountEdited = false;
+  loadDataToForm(activeTab === 'hypothesis' ? hypData : custData);
+  document.getElementById('tab-customer').classList.toggle('active', tab === 'customer');
+  document.getElementById('tab-hypothesis').classList.toggle('active', tab === 'hypothesis');
+  const hypBtn = document.getElementById('tab-hypothesis');
+  if (tab === 'hypothesis') {
+    hypBtn.style.cssText += ';background:#eff6ff;color:#1d4ed8;border-bottom-color:#1d4ed8';
+  } else {
+    hypBtn.style.background = '';
+    hypBtn.style.color = '';
+    hypBtn.style.borderBottomColor = '';
+  }
+  const cb = document.getElementById('tab-cust-banner');
+  const hb = document.getElementById('tab-hyp-banner');
+  cb.style.display = tab === 'customer' ? 'flex' : 'none';
+  hb.style.display = tab === 'hypothesis' ? 'flex' : 'none';
+  document.getElementById('pkg-area').style.display = tab === 'customer' ? '' : 'none';
+  applyTabTheme(tab);
+  const lockEl = document.getElementById('hyp-lock-overlay');
+  const sf = document.getElementById('section-form');
+  if (tab === 'hypothesis' && !modelUnlocked) {
+    lockEl.style.display = 'flex';
+    sf.classList.add('form-locked');
+    setTimeout(() => document.getElementById('model-pw-input').focus(), 80);
+  } else {
+    lockEl.style.display = 'none';
+    sf.classList.remove('form-locked');
+  }
+  updateLockBadge(tab);
+}
+
+function unlockModel() {
+  const pw = document.getElementById('model-pw-input').value;
+  if (pw === MODEL_EDIT_PASSWORD) {
+    modelUnlocked = true;
+    document.getElementById('hyp-lock-overlay').style.display = 'none';
+    document.getElementById('section-form').classList.remove('form-locked');
+    document.getElementById('model-pw-input').value = '';
+    document.getElementById('model-pw-error').style.display = 'none';
+    updateLockBadge('hypothesis');
+  } else {
+    document.getElementById('model-pw-error').style.display = '';
+    document.getElementById('model-pw-input').value = '';
+    document.getElementById('model-pw-input').focus();
+  }
+}
+
+function lockModel() {
+  modelUnlocked = false;
+  document.getElementById('hyp-lock-overlay').style.display = 'flex';
+  document.getElementById('section-form').classList.add('form-locked');
+  updateLockBadge('hypothesis');
+  setTimeout(() => document.getElementById('model-pw-input').focus(), 80);
+}
+
+function updateLockBadge(tab) {
+  const onHyp = tab === 'hypothesis';
+  const locked = !modelUnlocked;
+  document.getElementById('hyp-lock-badge').style.display   = onHyp && locked  ? '' : 'none';
+  document.getElementById('hyp-unlock-badge').style.display = onHyp && !locked ? '' : 'none';
+  document.getElementById('hyp-relock-btn').style.display   = onHyp && !locked ? '' : 'none';
+}
+
+function applyTabTheme(tab) {
+  const el = document.getElementById('section-form');
+  if (tab === 'hypothesis') {
+    el.style.setProperty('--dg', '#1e3a8a');
+    el.style.setProperty('--mg', '#1d4ed8');
+    el.style.setProperty('--lg', '#3b82f6');
+    el.style.setProperty('--ac', '#93c5fd');
+    el.style.setProperty('--pg', '#dbeafe');
+    el.style.setProperty('--border', '#bfdbfe');
+    el.style.setProperty('--bg', '#eff6ff');
+  } else {
+    ['--dg','--mg','--lg','--ac','--pg','--border','--bg']
+      .forEach(v => el.style.removeProperty(v));
+  }
+}
+
+function resetToDefaults() {
+  hypData = {...HYPOTHESIS_DEFAULTS};
+  if (activeTab === 'hypothesis') loadDataToForm(hypData);
+  toast('仮説モデルをデフォルト値に戻しました');
+}
+
+function copyHypToCustomer() {
+  saveFormToData(hypData);
+  custData = {...hypData, cn: custData.cn};
+  if (activeTab === 'customer') loadDataToForm(custData);
+  toast('仮説値をお客様ヒアリング欄にコピーしました');
+}
+
+function toast(msg, type='success') {
+  const el = document.getElementById('toast');
+  el.textContent = (type==='success'?'✅ ':type==='error'?'❌ ':'') + msg;
+  el.className = 'toast show ' + type;
+  setTimeout(() => el.className='toast', 3000);
+}
+
+function showSection(s) {
+  document.getElementById('section-form').style.display = s==='form' ? '' : 'none';
+  document.getElementById('section-history').style.display = s==='history' ? '' : 'none';
+  document.querySelectorAll('.nav-btn').forEach((b,i) => b.classList.toggle('active', i===({'form':0,'history':1}[s])));
+  if (s==='history') renderHistoryFull();
+}
+
+// ══════════════════════════════════════════
+// 改修2：九電プラン選択
+// ── 固定単価マスタは HTML select の value を変更してください ──
+// ── 実効平均単価プランは avg: プレフィックスで判別 ──
+// ══════════════════════════════════════════
+function onKyudenPlanChange() {
+  const data = activeTab === 'hypothesis' ? hypData : custData;
+  // 明細なし時は料金プラン変更で概算単価・使用量を再推定
+  if (!data.hasBill) onHearingChange(data);
+  calc();
+}
+
+function showAvgRateSection(show) {
+  const el = document.getElementById('avg-rate-section');
+  el.style.display = show ? '' : 'none';
+  if (show) {
+    // mkwhを使用量の初期値として転記
+    const est = v('mkwh');
+    if (est > 0 && !document.getElementById('monthly-kwh').value)
+      document.getElementById('monthly-kwh').value = est;
+    calcAvgUnitPrice();
+  } else {
+    ['monthly-kwh','br-basic','br-denki','br-nenryo','br-saiene']
+      .forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('avg-unit-disp').textContent = '-';
+  }
+}
+
+function calcAvgUnitPrice() {
+  const kwh = parseFloat(document.getElementById('monthly-kwh').value) || 0;
+  const dispEl = document.getElementById('avg-unit-disp');
+  if (kwh <= 0) { dispEl.textContent = '-'; return; }
+
+  const basic  = parseFloat(document.getElementById('br-basic').value)  || 0;
+  const denki  = parseFloat(document.getElementById('br-denki').value)  || 0;
+  const nenryo = parseFloat(document.getElementById('br-nenryo').value) || 0;
+  const saiene = parseFloat(document.getElementById('br-saiene').value) || 0;
+  const hasBreakdown = basic + denki + nenryo + saiene > 0;
+
+  // 優先順位: 明細合計 > 月間電気代 > 固定単価マスタ（ここでは前2者のみ）
+  const base = hasBreakdown ? (basic + denki + nenryo + saiene) : v('mb');
+  const avg  = Math.round(base / kwh * 10) / 10;
+
+  dispEl.textContent = `約${avg}円/kWh${hasBreakdown ? '（明細から算出）' : '（月間電気代÷使用量）'}`;
+  // avg-rate-section は現在非使用（単価はmb/mkwhから自動計算）
+  calc();
+}
+
+// ══════════════════════════════════════════
+// 改修1：昼間使用率 自動推定
+// ── 比率を調整する場合は LIFESTYLE_RATE（生活スタイル別基本率）
+//    および FAMILY_MOD（家族構成補正）を変更してください ──
+// ══════════════════════════════════════════
+const LIFESTYLE_RATE = { away:0.20, home:0.45, night:0.18, even:0.35, allelectric:0.40, custom:null };
+const FAMILY_MOD = {
+  '1人暮らし':0.85, '2人暮らし（夫婦・カップル）':1.0,
+  '3人家族（夫婦＋子ども1人）':1.1, '4人家族（夫婦＋子ども2人）':1.1,
+  '5人以上の大家族':1.2, '2世帯住宅（親世代同居）':1.3,
+};
+const LIFESTYLE_LABEL = {
+  away:'日中は共働きで外出多め・夜間使用が中心', home:'日中在宅が多い・在宅ワーク中心',
+  night:'夜間に電気使用が集中', even:'昼夜バランスよく電気を使用',
+  allelectric:'オール電化・昼夜問わず電気を多用',
+};
+
+function getDaytimeRate() {
+  const preset = document.getElementById('ls-preset').value;
+  const base   = LIFESTYLE_RATE[preset];
+  if (base === null) return null;
+  const mod = FAMILY_MOD[document.getElementById('fm').value] || 1.0;
+  return Math.min(0.60, Math.max(0.10, base * mod));
+}
+
+function applyDaytimeRate() {
+  const rate   = getDaytimeRate();
+  const noteEl = document.getElementById('daytime-auto-note');
+  const textEl = document.getElementById('daytime-auto-text');
+  if (rate === null) { noteEl.style.display = 'none'; calc(); return; }
+  const pct = Math.round(rate * 100);
+  const annualConsumption = v('mkwh') * 12;
+  const ag = v('ag');
+  const dc  = Math.round(Math.min(ag * 0.65, annualConsumption * rate));
+  const bcMax = Math.max(0, ag * 0.65 - dc);
+  const bc  = Math.round(Math.min(bcMax, annualConsumption * (1 - rate) * 0.80));
+  document.getElementById('dc').value = dc;
+  document.getElementById('bc').value = bc;
+  noteEl.style.display = '';
+  textEl.textContent = `昼間使用率 約${pct}% をもとに自動計算：昼間直接 ${dc.toLocaleString()} kWh、蓄電池 ${bc.toLocaleString()} kWh`;
+  calc();
+}
+
+function onFamilyChange()    { applyDaytimeRate(); calc(); }
+function onLifestyleChange() {
+  const preset = document.getElementById('ls-preset').value;
+  const lsInput = document.getElementById('ls');
+  if (preset !== 'custom') lsInput.value = LIFESTYLE_LABEL[preset] || '';
+  applyDaytimeRate();
+  // 電化でナイト選択中かつ明細なし → 生活スタイル変更で概算単価を再推定
+  const data = activeTab === 'hypothesis' ? hypData : custData;
+  if (!data.hasBill && document.getElementById('kyuden-plan').value === 'kyushu_denka_night') {
+    onHearingChange(data);
+  }
+}
+
+// ══════════════════════════════════════════
+// スライダー同期
+// ══════════════════════════════════════════
+let loanMethod = 'zansai'; // 'addon' | 'zansai' | 'gankin'
+let loanInputMode = 'auto'; // 'auto' | 'manual'
+
+function setHearing(key, val) {
+  const data = activeTab === 'hypothesis' ? hypData : custData;
+  data[key] = val;
+  updateHearingUI(data);
+  onHearingChange(data);
+}
+function updateHearingUI(data) {
+  HEARING_KEYS.forEach(k => {
+    const val = data ? !!data[k] : false;
+    document.getElementById('htgl-'+k+'-y').classList.toggle('active', val);
+    document.getElementById('htgl-'+k+'-n').classList.toggle('active', !val);
+  });
+}
+function onHearingChange(data) {
+  if (!data) data = activeTab === 'hypothesis' ? hypData : custData;
+  const hasBill = !!data.hasBill;
+  const guide = document.getElementById('billing-guide');
+  const noteEl = document.getElementById('mkwh-label-note');
+  if (hasBill) {
+    guide.style.cssText = 'display:;margin-bottom:8px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);font-size:12px;background:#f0fdf4;color:var(--mg)';
+    guide.innerHTML = '📄 <b>明細あり</b>：請求書・検針票の数値をそのまま入力。月間電気代÷使用量＝実質平均単価（再エネ賦課金等含む）として自動計算します。';
+    noteEl.textContent = '';
+    document.getElementById('estimated-price-disp').style.display = 'none';
+    calc();
+  } else {
+    guide.style.cssText = 'display:;margin-bottom:8px;padding:8px 12px;border-radius:8px;border:1px solid #fed7aa;font-size:12px;background:#fff7ed;color:#9a3412';
+    guide.innerHTML = '📝 <b>明細なし</b>：料金プランの概算単価から使用量を推定し、概算の実質平均単価（目安）として計算します。数値は修正可能です。';
+    noteEl.textContent = '（概算）';
+    const mb = parseFloat(document.getElementById('mb').value) || 20000;
+    const kp = document.getElementById('kyuden-plan').value;
+    let unitPrice = 30;
+    let priceLabel = '';
+    if (kp === 'kyushu_denka_night') {
+      const ls = document.getElementById('ls-preset').value;
+      const s = KYUSHU_DENKA_NIGHT.styles[ls] || KYUSHU_DENKA_NIGHT.styles.custom;
+      const t = KYUSHU_DENKA_NIGHT.tariff;
+      unitPrice = Math.round((s.day*t.day + s.hol*t.hol + s.ngt*t.ngt)*10)/10;
+      priceLabel = `💡 九州電力 電化でナイト・セレクト概算の実質単価（目安）：${unitPrice}円/kWh（${s.label}）`;
+    } else if (kp === 'kyushu_kiji') {
+      unitPrice = KYUSHU_KIJI.unitPrice;
+      priceLabel = `💡 九州電力 季時別電灯 概算の実質単価（目安）：${unitPrice}円/kWh`;
+    } else if (kp === 'kyushu_ohisama') {
+      unitPrice = KYUSHU_OHISAMA.unitPrice;
+      priceLabel = `💡 九州電力 おひさま昼トクプラン 概算の実質単価（目安）：${unitPrice}円/kWh`;
+    } else if (kp && !kp.startsWith('avg:') && parseFloat(kp) > 0) {
+      unitPrice = parseFloat(kp);
+      priceLabel = `💡 概算の実質単価（目安）：${unitPrice}円/kWh を使用`;
+    } else {
+      priceLabel = `💡 概算の実質単価（目安）：${unitPrice}円/kWh（デフォルト）を使用`;
+    }
+    const epDisp = document.getElementById('estimated-price-disp');
+    epDisp.style.display = '';
+    epDisp.textContent = priceLabel;
+    document.getElementById('mkwh').value = Math.round(mb / unitPrice);
+    calc();
+  }
+}
+
+function setLoanInputMode(mode) {
+  loanInputMode = mode;
+  const isManual = mode === 'manual';
+  document.getElementById('loan-manual-area').style.display = isManual ? '' : 'none';
+  document.getElementById('loan-auto-area').style.display   = isManual ? 'none' : '';
+  const aBtn = document.getElementById('btn-loan-auto');
+  const mBtn = document.getElementById('btn-loan-manual');
+  aBtn.style.background = isManual ? 'transparent' : 'var(--mg)';
+  aBtn.style.color      = isManual ? 'var(--muted)' : '#fff';
+  mBtn.style.background = isManual ? 'var(--mg)' : 'transparent';
+  mBtn.style.color      = isManual ? '#fff' : 'var(--muted)';
+  calc();
+}
+
+// 各方式の計算ロジック（共通）
+function calcLoanValues(borrowAmt, annualRate, count) {
+  const years = count / 12;
+  const r     = annualRate / 12;
+
+  // アドオン
+  const addonInterest = borrowAmt * annualRate * years;
+  const addonTotal    = borrowAmt + addonInterest;
+  const addonMonthly  = Math.round(addonTotal / count);
+
+  // 残債元利均等
+  let zansaiMonthly;
+  if (r === 0) { zansaiMonthly = Math.round(borrowAmt / count); }
+  else { const pow = Math.pow(1+r, count); zansaiMonthly = Math.round(borrowAmt * r * pow / (pow - 1)); }
+  const zansaiTotal    = zansaiMonthly * count;
+  const zansaiInterest = zansaiTotal - borrowAmt;
+
+  // 残債元金均等（初回月々 = 元金均等分 + 初回利息）
+  const gankinBase       = Math.round(borrowAmt / count);       // 毎月の元金返済
+  const gankinFirstInt   = Math.round(borrowAmt * r);           // 初回利息
+  const gankinFirstTotal = gankinBase + gankinFirstInt;         // 初回月々返済
+  // 総返済額：元金 + 利息合計（1回目から最終回まで利息を合計）
+  let gankinTotalInterest = 0;
+  for(let i = 0; i < count; i++) {
+    const remaining = borrowAmt - gankinBase * i;
+    gankinTotalInterest += Math.round(remaining * r);
+  }
+  const gankinTotal = borrowAmt + gankinTotalInterest;
+
+  return {
+    addon:  { monthly: addonMonthly,       total: addonTotal,    interest: addonInterest },
+    zansai: { monthly: zansaiMonthly,      total: zansaiTotal,   interest: zansaiInterest },
+    gankin: { monthly: gankinFirstTotal,   total: gankinTotal,   interest: gankinTotalInterest },
+    years,
+  };
+}
+
+function setLoanMethod(method) {
+  loanMethod = method;
+  const methods = ['addon','zansai','gankin'];
+  const btns    = ['btn-addon','btn-zansai','btn-gankin'];
+  btns.forEach((id, i) => {
+    const el = document.getElementById(id);
+    const active = methods[i] === method;
+    el.style.background   = active ? 'var(--mg)' : '#fff';
+    el.style.color        = active ? '#fff'       : 'var(--muted)';
+    el.style.borderColor  = active ? 'var(--mg)'  : 'var(--border)';
+  });
+  const descs = {
+    addon:  'アドオン方式：元本全体に金利を一括計算。月々返済額が一定。消費者ローンに多い。',
+    zansai: '残債方式（元利均等）：毎月の返済額が一定。残高に応じた利息を計算。銀行・住宅ローンに多い。',
+    gankin: '残債方式（元金均等）：毎月の元金返済額が一定。返済当初は高く、後半は減少。総利息が最も少ない。',
+  };
+  const warnings = {
+    addon:  '⚠️ アドオン方式による概算です。実際の返済額はローン会社の計算により異なります。必ず契約前に金融機関へご確認ください。',
+    zansai: '⚠️ 元利均等返済による概算です。実際の返済額はローン会社の計算により異なります。必ず契約前に金融機関へご確認ください。',
+    gankin: '⚠️ 元金均等返済（初回月々）による概算です。返済額は毎月減少します。実際の返済額は金融機関へご確認ください。',
+  };
+  document.getElementById('loan-method-desc').textContent = descs[method];
+  document.getElementById('loan-warning').textContent     = warnings[method];
+  calc();
+}
+
+function calcLoan() {
+  if (loanInputMode === 'manual') {
+    const manualMonthly = v('lp-manual');
+    const count = v('lc');
+    const years = count / 12;
+    document.getElementById('lp').value = manualMonthly;
+    document.getElementById('ly').value = years;
+    document.getElementById('lp-display').textContent = '¥' + fmt(manualMonthly) + ' / 月';
+    document.getElementById('ly-display').textContent = years + '年（' + count + '回）';
+    document.getElementById('lt-display').textContent = '約' + Math.round(manualMonthly * count / 10000) + '万円';
+    document.getElementById('li-display').textContent = '-（手動入力）';
+    document.getElementById('loan-compare-table').style.display = 'none';
+    document.getElementById('loan-warning').textContent = '✏️ 金融機関から提示された月々返済額を使用しています。';
+    return;
+  }
+  const borrowAmt  = v('la2') * 10000;
+  const annualRate = v('lr') / 100;
+  const count      = v('lc');
+  const res = calcLoanValues(borrowAmt, annualRate, count);
+  const cur = res[loanMethod];
+
+  // 隠しフィールドに選択中方式の値を反映
+  document.getElementById('lp').value = cur.monthly;
+  document.getElementById('ly').value = res.years;
+
+  // 選択中方式の結果表示
+  const suffix = loanMethod === 'gankin' ? '（初回）' : '';
+  document.getElementById('lp-display').textContent = '¥' + fmt(cur.monthly) + ' / 月' + suffix;
+  document.getElementById('ly-display').textContent = res.years + '年（' + count + '回）';
+  document.getElementById('lt-display').textContent = '約' + Math.round(cur.total   / 10000) + '万円';
+  document.getElementById('li-display').textContent = '約' + Math.round(cur.interest / 10000) + '万円';
+
+  // 3方式比較テーブル更新
+  const tbody = document.getElementById('compare-tbody');
+  const rows = [
+    { label:'アドオン',     key:'addon',  d:res.addon  },
+    { label:'残債・元利均等', key:'zansai', d:res.zansai },
+    { label:'残債・元金均等', key:'gankin', d:res.gankin },
+  ];
+  tbody.innerHTML = rows.map((r,i) => {
+    const isActive = r.key === loanMethod;
+    const bg = isActive ? 'background:var(--pg);font-weight:700' : (i%2===0?'background:#fff':'background:#fafafa');
+    const suffix = r.key==='gankin' ? '<span style="font-size:9px;color:var(--muted)">初回</span>' : '';
+    return `<tr style="${bg}">
+      <td style="padding:6px 8px;border-bottom:1px solid var(--border)">${isActive?'▶ ':''}<b>${r.label}</b></td>
+      <td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right">¥${fmt(r.d.monthly)} ${suffix}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right">約${Math.round(r.d.total/10000)}万円</td>
+      <td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;color:var(--or)">約${Math.round(r.d.interest/10000)}万円</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('loan-compare-table').style.display = '';
+}
+
+function toggleLoan() {
+  const on=document.getElementById('le').checked;
+  document.getElementById('loan-fields').className='loan-fields'+(on?' on':'');
+  calc();
+}
+
+function updateSelfSummary(dc, bc, ag, mb, up, remainKWh, remainBill, bk) {
+  bk = bk || 0;
+  const total = dc + bc;
+  const selfRate = ag > 0 ? Math.round(total / ag * 100) : 0;
+  const over = selfRate > 100;
+  const annualConsumption = Math.round(mb / Math.max(1, up) * 12);
+  const surplus = ag > annualConsumption;
+  const kpiBg  = over ? '#DC2626' : 'var(--mg)';
+  const kpiBdr = over ? '#B91C1C' : 'var(--dg)';
+
+  // ── KPIカード：自家消費率（最優先） ──
+  document.getElementById('self-kpi').innerHTML =
+    `<div style="background:${kpiBg};border-radius:12px;padding:22px 24px;border:2px solid ${kpiBdr};box-shadow:0 2px 8px rgba(0,0,0,.12)">` +
+      `<div style="font-size:16px;font-weight:900;color:#fff;letter-spacing:.04em;margin-bottom:6px">自家消費率</div>` +
+      `<div style="font-size:52px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em">${selfRate}<span style="font-size:28px;font-weight:700">%</span></div>` +
+      (over ? `<div style="margin-top:10px;font-size:13px;font-weight:700;color:#fff;background:rgba(0,0,0,.2);border-radius:6px;padding:4px 10px;display:inline-block">⚠️ 100%超過 — 昼間直接使用量・蓄電池放電量を見直してください</div>` : '') +
+    `</div>`;
+
+  // ── 余剰電力量カード ──
+  const surplusKwh = Math.max(0, ag - total);
+  const surplusEl  = document.getElementById('surplus-disp');
+  surplusEl.style.display = '';
+  document.getElementById('surplus-big').textContent =
+    surplusKwh > 0 ? `約 ${fmt(surplusKwh)} kWh/年` : '余剰ほぼなし';
+  document.getElementById('surplus-sub').textContent =
+    surplusKwh > 0
+      ? `約 ${Math.round(surplusKwh/12).toLocaleString()} kWh/月・約 ${(surplusKwh/365).toFixed(1)} kWh/日`
+      : '自家消費が発電量の範囲内に収まっています';
+
+  // ── 詳細内訳（補助情報）── remain-disp の下に表示
+  const detailEl = document.getElementById('self-detail');
+  detailEl.style.display = '';
+  detailEl.innerHTML =
+    `<div style="background:var(--pg);border-radius:8px;border:1px solid var(--border);padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px 20px;font-size:12px;color:var(--mg)">` +
+      `<span>⚡ 年間発電量：<b>${fmt(ag)} kWh</b></span>` +
+      `<span>☀️ 昼間直接使用：<b>${fmt(dc)} kWh/年</b><span style="font-size:11px;color:var(--muted);margin-left:4px">（約${Math.round(dc/12)}kWh/月・約${(dc/365).toFixed(1)}kWh/日）</span></span>` +
+      `<span>🔋 蓄電池放電：<b>${fmt(bc)} kWh/年</b><span style="font-size:11px;color:var(--muted);margin-left:4px">（約${Math.round(bc/12)}kWh/月・約${(bc/365).toFixed(1)}kWh/日）</span></span>` +
+      `<span>🏠 合計自家消費：<b>${fmt(total)} kWh</b></span>` +
+      `<span style="color:var(--or)">🛒 残り購入：<b>${fmt(remainKWh)} kWh/年</b> → 月平均 <b>¥${fmt(remainBill)}</b></span>` +
+      (surplus && !over
+        ? `<div style="width:100%;margin-top:12px;margin-bottom:4px;background:#fffbeb;border:2px solid #f59e0b;border-radius:10px;padding:16px 16px;border-left:5px solid #d97706">` +
+          `<div style="font-size:15px;font-weight:800;color:#92400e;margin-bottom:4px">⚠️ 余剰発電の可能性あり</div>` +
+          `<div style="font-size:14px;color:#78350f;line-height:1.5">年間発電量が年間消費量（${fmt(annualConsumption)} kWh）を<b>上回っています</b>。<br>余剰売電が発生する可能性があります。</div>` +
+          `</div>`
+        : '') +
+    `</div>`;
+
+  // 蓄電池実効容量ベースで判定（公称容量 bk は表示専用）
+  const bkEff = effectiveBatteryKwh(bk); // 実効容量 kWh/日
+  const bkEffYearMax = bkEff * 365;      // 年間理論上限（実効）
+
+  // 上限超過判定（実効容量ベース）
+  const batteryOver = bk > 0 && bc > bkEffYearMax;
+  document.getElementById('bk-error').style.display = batteryOver ? '' : 'none';
+
+  // 蓄電池残容量カード（実効容量ベース）
+  const bkRemainEl = document.getElementById('bk-remain-disp');
+  if (bk > 0) {
+    const bkRemain = Math.max(0, bkEffYearMax - bc);
+    const bkUsageRate = Math.min(100, Math.round(bc / bkEffYearMax * 100));
+    bkRemainEl.style.display = '';
+    document.getElementById('bk-remain-big').textContent = batteryOver
+      ? '0 kWh/年（上限超過）'
+      : `あと ${fmt(bkRemain)} kWh/年`;
+    document.getElementById('bk-remain-big').style.color = batteryOver ? '#DC2626' : 'var(--mg)';
+    document.getElementById('bk-remain-sub').textContent =
+      `年間理論上限（実効）：${fmt(bkEffYearMax)} kWh　活用率：${bkUsageRate}% / 残り：${100 - bkUsageRate}%`;
+  } else {
+    bkRemainEl.style.display = 'none';
+  }
+
+  // 自家消費余地 = 年間発電量 - 現在の自家消費量
+  const selfKWh = total; // dc + bc
+  const potential = ag > 0 ? Math.max(0, ag - selfKWh) : 0;
+  const rdEl = document.getElementById('remain-disp');
+  if (ag > 0 && !over && !batteryOver) {
+    rdEl.style.display = '';
+    if (potential > 0) {
+      document.getElementById('remain-kwh-big').textContent = `約 ${fmt(potential)} kWh/年`;
+      document.getElementById('remain-sub-text').textContent = 'この分を使い切れると、さらに買電を減らせます';
+    } else {
+      document.getElementById('remain-kwh-big').textContent = '余地なし（発電量をフル自家消費中）';
+      document.getElementById('remain-sub-text').textContent = '昼間直接使用量や蓄電池放電量がすでに発電量に達しています';
+    }
+  } else {
+    rdEl.style.display = 'none';
+  }
+}
+
+// ══════════════════════════════════════════
+// 計算
+// ══════════════════════════════════════════
+let miniChart = null;
+
+function calcMetrics(c) {
+  const subsidyAmt  = (c.subsidyAmount || 0) * 10000; // 補助金（万円→円）
+  const totalCost   = Math.max(0, c.totalConstructionCost - subsidyAmt); // 実質費用（補助金控除後）
+  const costPerKWh = Math.round(totalCost / (c.annualGenerationKWh * c.warrantyYears));
+  const annualBill = c.monthlyElectricBill * 12;
+  const er         = (c.escalationRate || 0) / 100; // 年間上昇率
+
+  // 精密計算：昼間直接使用量＋蓄電池放電量
+  const selfKWh = (c.directConsumptionKWh || 0) + (c.batteryConsumptionKWh || 0);
+  const annualConsumptionKWh = c.annualConsumptionKWh || (c.monthlyElectricBill / c.currentUnitPrice * 12);
+  const remainKWh  = Math.max(0, annualConsumptionKWh - selfKWh);
+  const remainBill = Math.round(remainKWh * c.currentUnitPrice / 12);
+  const monthlySaving = c.monthlyElectricBill - remainBill;
+  const selfRate = c.annualGenerationKWh > 0 ? Math.round(selfKWh / c.annualGenerationKWh * 100) : 0;
+
+  // 上昇率を考慮した20年間累計電気代
+  let bill20Y_with_rise = 0;
+  for(let i=1; i<=c.warrantyYears; i++) bill20Y_with_rise += annualBill * Math.pow(1+er, i-1);
+  // 上昇率考慮の残り電気代累計（太陽光導入後）
+  let remain20Y_with_rise = 0;
+  for(let i=1; i<=c.warrantyYears; i++) remain20Y_with_rise += remainBill*12 * Math.pow(1+er, i-1);
+  // 削減効果（上昇率考慮）
+  const saving20Y_with_rise = bill20Y_with_rise - remain20Y_with_rise;
+  // コスト差（上昇率考慮）：現状20年電気代 - (初期費用 + じぶん電気20年残り電気代)
+  const costDiff_with_rise = Math.round((bill20Y_with_rise - totalCost - remain20Y_with_rise) / 10000);
+
+  return {
+    totalCost, costPerKWh, annualBill,
+    bill10Y: annualBill*10,
+    bill20Y: annualBill*c.warrantyYears,           // 上昇なし（カード表示用）
+    bill20Y_rise: Math.round(bill20Y_with_rise),   // 上昇考慮
+    selfKWh, remainKWh, remainBill, selfRate,
+    annualSaving: monthlySaving*12,
+    saving20Y: monthlySaving*12*c.warrantyYears,   // 上昇なし
+    saving20Y_rise: Math.round(saving20Y_with_rise), // 上昇考慮
+    remain20Y_rise: Math.round(remain20Y_with_rise), // 残り電気代累計（上昇考慮）
+    costDiff_with_rise,
+    selfCostPerKWh: selfKWh > 0 ? Math.round(totalCost / (selfKWh * c.warrantyYears)) : 0,
+    totalCostMan: Math.round(totalCost/10000),
+    grossCostMan: Math.round(c.totalConstructionCost/10000), // 補助金前の総工事費
+    subsidyMan: Math.round(subsidyAmt/10000),                // 補助金額
+    bill20YMan: Math.round((annualBill*c.warrantyYears)/10000),
+    bill20YMan_rise: Math.round(bill20Y_with_rise/10000),
+    saving20YMan: Math.round(monthlySaving*12*c.warrantyYears/10000),
+  };
+}
+
+function calc() {
+  const mb=v('mb'),mkwh=v('mkwh'),ag=v('ag'),sk=v('sk'),wy=v('wy');
+  const dc=v('dc'), bc=v('bc'), bk=v('bk'), er=v('er');
+  document.getElementById('dc-monthly-hint').textContent = dc > 0 ? `約 ${Math.round(dc/12).toLocaleString()} kWh/月・約 ${(dc/365).toFixed(1)} kWh/日` : '';
+  document.getElementById('bc-monthly-hint').textContent = bc > 0 ? `約 ${Math.round(bc/12).toLocaleString()} kWh/月・約 ${(bc/365).toFixed(1)} kWh/日` : '';
+  const up = mkwh > 0 ? Math.round(mb / mkwh * 10) / 10 : 0;
+  const annualConsumptionKWh = mkwh * 12;
+  // 最優先表示：mb/mkwhがあれば何があっても必ず更新
+  const upEl = document.getElementById('up-auto');
+  if (upEl) upEl.textContent = mkwh > 0 ? `${up.toFixed(1)} 円/kWh` : '月間使用量を入力してください';
+  document.getElementById('annual-bill-disp').textContent = mb > 0 ? '¥' + fmt(mb * 12) : '-';
+  document.getElementById('annual-kwh-disp').textContent = mkwh > 0 ? fmt(annualConsumptionKWh) + ' kWh' : '-';
+  const totalConstructionCost = v('ck') * 10000;
+  if (!loanAmountEdited) { document.getElementById('la2').value = v('ck'); }
+  calcLoan();
+  const subsidyAmount = v('sub');
+  // 昼間使用率・使用量表示（手動上書きも即時反映）
+  const daytimePct = annualConsumptionKWh > 0 ? Math.round(dc / annualConsumptionKWh * 100) : 0;
+  const dcMonthly  = Math.round(dc / 12);
+  document.getElementById('daytime-rate-disp').innerHTML =
+    `推定昼間使用率：${daytimePct}%<br>` +
+    `推定昼間使用量：${fmt(dc)}kWh/年（約${fmt(dcMonthly)}kWh/月）`;
+  const c = { monthlyElectricBill:mb, currentUnitPrice:up, annualGenerationKWh:ag,
+               solarCapacityKW:sk, totalConstructionCost, subsidyAmount, warrantyYears:wy,
+               directConsumptionKWh:dc, batteryConsumptionKWh:bc,
+               annualConsumptionKWh, escalationRate:er };
+  const m = calcMetrics(c);
+  // 上昇率ノート表示切替
+  document.getElementById('er-note').style.display = er > 0 ? '' : 'none';
+  // 上昇率がある場合は20年電気代を上昇後の数値で表示
+  const bill20Show = er > 0 ? m.bill20YMan_rise : m.bill20YMan;
+  const ratio = Math.min(m.totalCostMan/bill20Show, 1);
+  updateSelfSummary(dc, bc, ag, mb, up, m.remainKWh, m.remainBill, bk);
+
+  // 補助金サマリー表示
+  const subEl = document.getElementById('subsidy-summary');
+  const subAmt = v('sub');
+  if (subAmt > 0) {
+    subEl.style.display = '';
+    subEl.innerHTML =
+      `<span style="color:var(--muted)">税込総工事費用：<b style="color:var(--dg)">${m.grossCostMan}万円</b></span>` +
+      `<span style="color:var(--muted)">　－　補助金：<b style="color:#16a34a">${m.subsidyMan}万円</b></span>` +
+      `<span style="color:var(--muted)">　＝　` +
+      `<b style="color:var(--dg);font-size:15px">実質費用：${m.totalCostMan}万円</b></span>`;
+  } else {
+    subEl.style.display = 'none';
+  }
+  document.getElementById('rc').textContent = m.totalCostMan+'万円'+(subAmt>0?' （補助金適用後）':'');
+  document.getElementById('rk').textContent = m.costPerKWh+'円/kWh';
+  document.getElementById('rk-self').textContent = m.selfCostPerKWh > 0 ? m.selfCostPerKWh+'円/kWh' : '-';
+  // 20年電気代：上昇率があれば上昇後の数値を表示
+  document.getElementById('rb').textContent = bill20Show+'万円' + (er>0 ? `（年${er}%上昇）` : '');
+  document.getElementById('rs').textContent = fmt(m.annualSaving)+'円';
+  document.getElementById('bbv').textContent = bill20Show+'万円';
+  // 積み上げ棒グラフ：残り電気代（残り購入電力量 × 平均単価 ベース）
+  // m.remainBill = remainKWh × currentUnitPrice / 12（月額）
+  const remain20Man = er > 0
+    ? Math.round(m.remain20Y_rise / 10000)          // 上昇率考慮の累計
+    : Math.round(m.remainBill * 12 * wy / 10000);   // 上昇なし
+  const biCostW = Math.min(Math.round(m.totalCostMan / bill20Show * 100), 100);
+  const biRemainW = Math.min(Math.round(remain20Man / bill20Show * 100), 100 - biCostW);
+  document.getElementById('bi').style.width = biCostW + '%';
+  document.getElementById('biv').textContent = m.totalCostMan + '万円';
+  document.getElementById('bi-r').style.width = biRemainW + '%';
+  document.getElementById('biv-r').textContent = biRemainW >= 4 ? remain20Man+'万円' : '';
+  document.getElementById('bi-detail').textContent =
+    `初期費用 ${m.totalCostMan}万円 ＋ 残電気代 ${remain20Man}万円 ＝ 計 ${m.totalCostMan+remain20Man}万円`;
+  // コスト差：電力会社20年総額 - (初期費用 + 残り電気代20年分) ← er=0でも costDiff_with_rise が正しく機能
+  const diffShow = m.costDiff_with_rise;
+  document.getElementById('rd').textContent = '約'+diffShow+'万円';
+  document.getElementById('rb-note').textContent = er > 0 ? `年${er}%上昇想定` : '現状維持';
+  document.getElementById('rb-up').innerHTML = up > 0
+    ? `<span style="font-size:11px;font-weight:500;opacity:.8">現在の平均単価</span><br><span style="font-size:20px;font-weight:800">${up.toFixed(1)}円/kWh</span>`
+    : '';
+  document.getElementById('diff-note').textContent = er > 0 ? `電気代年${er}%上昇想定` : '電気代現状維持';
+
+  const lon = document.getElementById('le').checked;
+  if (lon) {
+    const lp=v('lp'), ly=v('ly')||10;
+    const loanTotalMan = Math.round(lp * ly * 12 / 10000);
+    const blW = Math.min(Math.round(loanTotalMan / bill20Show * 100), 100);
+    const blRemainW = Math.min(Math.round(remain20Man / bill20Show * 100), 100 - blW);
+    document.getElementById('bl').style.width = blW + '%';
+    document.getElementById('blv').textContent = loanTotalMan + '万円';
+    document.getElementById('bl-r').style.width = blRemainW + '%';
+    document.getElementById('blv-r').textContent = blRemainW >= 4 ? remain20Man+'万円' : '';
+    document.getElementById('bl-detail').textContent =
+      `ローン総額 ${loanTotalMan}万円 ＋ 残電気代 ${remain20Man}万円 ＝ 計 ${loanTotalMan+remain20Man}万円`;
+    document.getElementById('stacked-legend-loan').style.display = 'flex';
+    document.getElementById('stacked-legend-loan-r').style.display = 'flex';
+    const loanCostPerKWh = m.selfKWh > 0 ? Math.round(lp * ly * 12 / (m.selfKWh * wy)) : 0;
+    document.getElementById('rk-loan').textContent = loanCostPerKWh > 0 ? loanCostPerKWh + '円/kWh' : '-';
+    document.getElementById('rk-loan-row').style.display = '';
+    const loanDiffMan = Math.round((m.bill20Y_rise - lp * ly * 12 - m.remain20Y_rise) / 10000);
+    document.getElementById('rd-loan').textContent = '約' + loanDiffMan + '万円';
+    document.getElementById('loan-diff-note').textContent = er > 0 ? `電気代年${er}%上昇想定` : '電気代現状維持';
+    document.querySelectorAll('.loan-bar-only').forEach(el => el.style.display = '');
+    const re = m.remainBill; // 残り購入電力量 × 平均単価 / 12（月額）
+    const mt = lp+re;
+    const mdiff = mb-mt;
+    document.getElementById('loan-preview-box').style.display='';
+    document.getElementById('ln').textContent = '¥'+fmt(mb);
+    document.getElementById('ll').textContent = '¥'+fmt(lp);
+    document.getElementById('le2').textContent = '¥'+fmt(re);
+    document.getElementById('lt').textContent = '¥'+fmt(mt);
+    document.getElementById('la').textContent = '¥'+fmt(re);
+    const dd=document.getElementById('ld'), dr=document.getElementById('ldr');
+    if(mdiff>=0){dd.textContent='月々 約'+fmt(mdiff)+'円 おトク';dr.className='loan-row pos';}
+    else{dd.textContent='月々 約'+fmt(Math.abs(mdiff))+'円 増加（返済後は削減）';dr.className='loan-row neg';}
+
+    // ミニチャート（ローンON: 3系列）
+    renderMiniChart(m, mb, wy, re, lp, ly, mt, true);
+  } else {
+    document.getElementById('loan-preview-box').style.display='none';
+    document.querySelectorAll('.loan-bar-only').forEach(el => el.style.display = 'none');
+    document.getElementById('legend-loan-item').style.display = 'none';
+    document.getElementById('stacked-legend-loan').style.display = 'none';
+    document.getElementById('stacked-legend-loan-r').style.display = 'none';
+    document.getElementById('rk-loan-row').style.display = 'none';
+    // ミニチャート（ローンOFF: 2系列）
+    renderMiniChart(m, mb, wy, m.remainBill, 0, 0, 0, false);
+  }
+}
+
+function renderMiniChart(m, mb, wy, re, lp, ly, mt, showLoan) {
+  const er = v('er') / 100;
+  const labels=[], nowD=[], cashD=[], loanD=[];
+  for(let y=0;y<=wy;y++){
+    labels.push(y+'年');
+    let cumNow=0;
+    for(let i=1;i<=y;i++) cumNow += mb*12*Math.pow(1+er,i-1);
+    nowD.push(Math.round(cumNow/10000));
+    if(y===0){ cashD.push(Math.round(m.totalCost/10000)); }
+    else { const rY=re*Math.pow(1+er,y-1); cashD.push(Math.round(cashD[y-1]+rY*12/10000)); }
+    if(y===0){loanD.push(0);continue;}
+    const rY=re*Math.pow(1+er,y-1);
+    loanD.push(Math.round(loanD[y-1]+(y<=ly?mt+(rY-re):rY)*12/10000));
+  }
+  const datasets=[
+    {label:'電力会社', data:nowD, borderColor:'#EA580C',backgroundColor:'rgba(234,88,12,.07)',borderWidth:2.5,pointRadius:0,tension:0},
+    {label:'現金購入', data:cashD,borderColor:'#2D6A4F',backgroundColor:'rgba(45,106,79,.07)',borderWidth:2.5,pointRadius:0,tension:0},
+  ];
+  if(showLoan) datasets.push(
+    {label:'ローン活用',data:loanD,borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.07)',borderWidth:2.5,pointRadius:0,tension:0}
+  );
+  const ctx=document.getElementById('mini-chart').getContext('2d');
+  if(miniChart)miniChart.destroy();
+  miniChart=new Chart(ctx,{type:'line',data:{labels,datasets},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{ticks:{maxTicksLimit:6,font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}},
+              y:{ticks:{callback:v=>v+'万',font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}}}}}
+  );
+  document.getElementById('legend-loan-item').style.display = showLoan ? '' : 'none';
+  const erVal=v('er');
+  document.getElementById('legend-now-label').textContent = erVal>0?`年${erVal}%上昇想定`:'現状維持';
+  document.getElementById('rise-note').textContent = erVal>0
+    ? `※電気代が毎年${erVal}%上昇した場合の試算。実際の上昇率は異なる場合があります。` : '';
+}
+
+function clearForm() {
+  if(!confirm('フォームをリセットしますか？')) return;
+  ['cn','ls'].forEach(id=>{ const d={'cn':'○○様','ls':'日中は共働きで外出多め・夜間使用が中心'}; document.getElementById(id).value=d[id]||''; });
+  document.getElementById('fm').value='4人家族（夫婦＋子ども2人）';
+  document.getElementById('ls-preset').value='away';
+  document.getElementById('kyuden-plan').value='';
+  showAvgRateSection(false);
+  document.getElementById('daytime-rate-disp').textContent='';
+  document.getElementById('daytime-auto-note').style.display='none';
+  document.getElementById('mb').value=20000; document.getElementById('mkwh').value=667;
+  document.getElementById('ag').value=7700; document.getElementById('sk').value=7;
+  document.getElementById('bk').value=7; document.getElementById('ck').value=40;
+  document.getElementById('dc').value=2310; document.getElementById('bc').value=2520;
+  document.getElementById('er').value=0;
+  document.getElementById('wy').value=20;
+  loanAmountEdited = false;
+  document.getElementById('lr').value=4.1;
+  document.getElementById('lc').value=180;
+  document.getElementById('le').checked=false; document.getElementById('lp-manual').value=0; setLoanInputMode('auto'); setLoanMethod('zansai'); toggleLoan(); calc();
+}
+
+// ══════════════════════════════════════════
+// 履歴管理
+// ══════════════════════════════════════════
+function getHistory() { try{ return JSON.parse(localStorage.getItem('jibunden_history')||'[]'); } catch(e){ return []; } }
+function saveHistory(h) { localStorage.setItem('jibunden_history', JSON.stringify(h)); }
+
+function saveCustomer(cfg) {
+  const h = getHistory();
+  const entry = { id: Date.now(), date: new Date().toLocaleString('ja-JP'), ...cfg, ...custData };
+  h.unshift(entry);
+  if(h.length>30) h.pop();
+  saveHistory(h);
+  renderSidebarHistory();
+}
+
+function loadCustomer(id) {
+  const h = getHistory();
+  const entry = h.find(e=>e.id===id);
+  if(!entry) return;
+  // 短縮名フィールドを優先、古い履歴は長名フィールドからフォールバック
+  custData = {
+    cn:          entry.cn          || entry.customerName || '',
+    fm:          entry.fm          || entry.familyComposition || '4人家族（夫婦＋子ども2人）',
+    ls:          entry.ls          || entry.lifestyleNote || '',
+    lsPreset:    entry.lsPreset    || 'custom',
+    mb:          entry.mb          || entry.monthlyElectricBill || 20000,
+    mkwh:        entry.mkwh        || Math.round((entry.monthlyElectricBill||20000) / (entry.currentUnitPrice||30)),
+    ag:          entry.ag          || entry.annualGenerationKWh || 7700,
+    sk:          entry.sk          || entry.solarCapacityKW || 7,
+    bk:          entry.bk          || entry.batteryCapacityKWh || 7,
+    ck:          entry.ck          || (entry.totalConstructionCost ? Math.round(entry.totalConstructionCost/10000) : 280),
+    sub:         entry.sub         !== undefined ? entry.sub : (entry.subsidyAmount || 0),
+    dc:          entry.dc          || entry.directConsumptionKWh || 2310,
+    bc:          entry.bc          || entry.batteryConsumptionKWh || 2520,
+    er:          entry.er          !== undefined ? entry.er : (entry.escalationRate || 0),
+    wy:          entry.wy          || entry.warrantyYears || 20,
+    le:          entry.le          !== undefined ? entry.le : (entry.monthlyLoanPayment > 0),
+    la2:         entry.la2         || entry.loanAmount || 280,
+    lr:          entry.lr          || entry.loanRate || 4.1,
+    lc:          entry.lc          || entry.loanCount || 180,
+    lp:          entry.lp          || entry.monthlyLoanPayment || 0,
+    ly:          entry.ly          || entry.loanYears || 15,
+    sysName:     entry.sysName     || '',
+    utilityCompany: entry.utilityCompany || '',
+    kyudenPlan:  entry.kyudenPlan  || '',
+    loanMethod:  entry.loanMethod  || 'zansai',
+    loanInputMode: entry.loanInputMode || 'auto',
+    lpManual:    entry.lpManual    || 0,
+    pkgSelect:   entry.pkgSelect   !== undefined ? entry.pkgSelect : '',
+    pkgExtra:    entry.pkgExtra    || 0,
+    pkgExtraNote: entry.pkgExtraNote || '',
+    hasBill:      entry.hasBill      || false,
+    hasPV:        entry.hasPV        || false,
+    hasBattery:   entry.hasBattery   || false,
+    isAllElectric:entry.isAllElectric|| false,
+  };
+  loanAmountEdited = false;
+  if (activeTab === 'customer') {
+    loadDataToForm(custData);
+  } else {
+    switchTab('customer');
+  }
+  document.getElementById('daytime-rate-disp').textContent = '';
+  document.getElementById('daytime-auto-note').style.display = 'none';
+  showSection('form');
+  toast((custData.cn || 'データ') + 'を読み込みました');
+}
+
+function deleteHistory(id, e) {
+  e.stopPropagation();
+  if(!confirm('この履歴を削除しますか？')) return;
+  const h = getHistory().filter(e=>e.id!==id);
+  saveHistory(h);
+  renderSidebarHistory();
+  renderHistoryFull();
+}
+
+function renderSidebarHistory() {
+  const h = getHistory().slice(0,5);
+  const el = document.getElementById('sidebar-history');
+  if(!h.length){el.innerHTML='<div class="history-empty">履歴なし</div>';return;}
+  el.innerHTML = h.map(e=>`
+    <div class="history-item" onclick="loadCustomer(${e.id})">
+      <button class="del-btn" onclick="deleteHistory(${e.id},event)">×</button>
+      <div class="h-name">${e.customerName}</div>
+      <div class="h-date">${e.date}</div>
+      <div class="h-bill">月間 ¥${fmt(e.monthlyElectricBill||0)}</div>
+    </div>
+  `).join('');
+}
+
+function renderHistoryFull() {
+  const h = getHistory();
+  const el = document.getElementById('history-full');
+  if(!h.length){el.innerHTML='<div style="text-align:center;padding:32px;color:var(--muted)">まだ履歴がありません<br>お客様情報を入力してPPTXを生成すると保存されます</div>';return;}
+  el.innerHTML = h.map(e=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:15px">${e.customerName}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">${e.date}　|　月間 ¥${fmt(e.monthlyElectricBill||0)}　|　${e.familyComposition||''}</div>
+      </div>
+      <button onclick="loadCustomer(${e.id})" style="background:var(--mg);color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:12px;cursor:pointer;font-family:inherit">読み込む</button>
+      <button onclick="deleteHistory(${e.id},event)" style="background:none;border:1px solid #e5e7eb;border-radius:6px;padding:7px 12px;font-size:12px;cursor:pointer;color:var(--muted);font-family:inherit">削除</button>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════════
+// PPTX生成
+// ══════════════════════════════════════════
+const C = {
+  darkGreen:"1B4332",midGreen:"2D6A4F",lightGreen:"52B788",
+  accent:"95D5B2",paleGreen:"D8F3DC",white:"FFFFFF",offWhite:"F8FFFE",
+  charcoal:"1C1C1C",gray:"6B7280",lightGray:"E5E7EB",gold:"F59E0B",orange:"EA580C",
+};
+
+function addBrand(sl, pres) {
+  sl.addShape(pres.ShapeType.rect,{x:8.7,y:5.34,w:1.25,h:0.28,fill:{color:C.lightGreen},line:{color:C.lightGreen}});
+  sl.addText("じぶん電気",{x:8.7,y:5.34,w:1.25,h:0.28,fontSize:10,bold:true,color:C.darkGreen,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+}
+
+function setProgress(msg) { document.getElementById('progress-msg').textContent = msg; }
+
+async function generatePPTX(mode) {
+  const outModel = mode === 'model';
+  const outReal  = mode === 'real';
+  saveFormToData(activeTab === 'hypothesis' ? hypData : custData);
+  const cfg = buildCfg(custData, custData.lp, custData.ly);
+  const cn = (cfg.customerName || 'お客様').replace(/様$/, '');
+  const m = calcMetrics(cfg);
+  const hCfg = buildCfg(hypData, 0, 20);
+  const hM = calcMetrics(hCfg);
+
+  const safeName = n => (n||'お客様').replace(/[\\/:*?"<>|]/g,'_');
+
+  document.getElementById('progress').classList.add('show');
+  document.querySelectorAll('.gen-btn').forEach(b=>b.disabled=true);
+
+  try {
+    await new Promise(r=>setTimeout(r,50));
+
+    // ── モデルケース版 ──────────────────────────────────────────
+    let presM, presR;
+    if (outModel) {
+    presM = new PptxGenJS();
+    presM.layout = "LAYOUT_16x9";
+    presM.title = "じぶん電気のご提案（モデルケース版）";
+
+    setProgress("モデルケース版：スライド1 タイトルを作成中...");
+    await new Promise(r=>setTimeout(r,30));
+    // ── Slide 1（モデルケース版タイトル）──
+    {
+      const sl = presM.addSlide();
+      sl.background={color:C.darkGreen};
+      sl.addShape(presM.ShapeType.rect,{x:0,y:0,w:10,h:0.08,fill:{color:C.lightGreen},line:{color:C.lightGreen}});
+      sl.addShape(presM.ShapeType.rect,{x:0,y:5.545,w:10,h:0.08,fill:{color:C.lightGreen},line:{color:C.lightGreen}});
+      sl.addShape(presM.ShapeType.rect,{x:7.5,y:0.08,w:2.5,h:5.465,fill:{color:C.midGreen},line:{color:C.midGreen}});
+      sl.addShape(presM.ShapeType.rect,{x:8.5,y:0.08,w:1.5,h:5.465,fill:{color:C.lightGreen,transparency:30},line:{color:C.lightGreen,transparency:30}});
+      sl.addShape(presM.ShapeType.rect,{x:0.5,y:0.45,w:2.5,h:0.55,fill:{color:C.lightGreen},line:{color:C.lightGreen}});
+      sl.addText("じぶん電気",{x:0.5,y:0.45,w:2.5,h:0.55,fontSize:19,bold:true,color:C.darkGreen,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+      sl.addText("電気は、",{x:0.5,y:1.2,w:7,h:0.65,fontSize:34,bold:true,color:C.accent,fontFace:"Meiryo",margin:0});
+      sl.addText("じぶんでつくる時代へ。",{x:0.5,y:1.8,w:7,h:0.9,fontSize:36,bold:true,color:C.white,fontFace:"Meiryo",margin:0});
+      sl.addText("太陽光＋蓄電池で、電気代を自分でコントロール。",{x:0.5,y:2.85,w:7,h:0.5,fontSize:14,color:C.accent,fontFace:"Meiryo",margin:0});
+      sl.addShape(presM.ShapeType.rect,{x:0.5,y:3.55,w:4.5,h:0.65,fill:{color:C.lightGreen,transparency:20},line:{color:C.lightGreen}});
+      sl.addText("モデルケースによる参考シミュレーションです",{x:0.5,y:3.55,w:4.5,h:0.65,fontSize:12,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+      sl.addText([{text:`家族構成：${hCfg.familyComposition}`,options:{breakLine:true}},{text:`スタイル：${hCfg.lifestyleNote}`}],{x:0.5,y:4.35,w:7,h:0.95,fontSize:12,color:C.accent,fontFace:"Meiryo"});
+    }
+
+    setProgress("モデルケース版：スライド2〜を作成中...");
+    await new Promise(r=>setTimeout(r,30));
+    // ── Slide 2 ──
+    {
+      const sl=presM.addSlide(); sl.background={color:C.offWhite};
+      sl.addShape(presM.ShapeType.rect,{x:0,y:0,w:10,h:0.9,fill:{color:C.darkGreen},line:{color:C.darkGreen}});
+      sl.addText("「じぶん電気」って、なに？",{x:0.3,y:0,w:7.9,h:0.9,fontSize:22,bold:true,color:C.white,fontFace:"Meiryo",valign:"middle",margin:0});
+      sl.addShape(presM.ShapeType.rect,{x:8.2,y:0.17,w:1.55,h:0.56,fill:{color:"4B5563"},line:{color:"4B5563"}});
+      sl.addText("モデルケース",{x:8.2,y:0.17,w:1.55,h:0.56,fontSize:9,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+      addBrand(sl,presM);
+      sl.addShape(presM.ShapeType.rect,{x:0.4,y:1.1,w:4.2,h:3.8,fill:{color:C.white},line:{color:C.lightGray},shadow:{type:"outer",blur:8,offset:3,angle:135,color:"000000",opacity:0.08}});
+      sl.addShape(presM.ShapeType.rect,{x:0.4,y:1.1,w:4.2,h:0.6,fill:{color:C.orange},line:{color:C.orange}});
+      sl.addText("❌ 電力会社の電気",{x:0.4,y:1.1,w:4.2,h:0.6,fontSize:14,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+      sl.addText([{text:`${hCfg.currentUnitPrice}円/kWh で買い続ける`,options:{bold:true,breakLine:true}},{text:" ",options:{breakLine:true}},{text:`月々：¥${fmt(hCfg.monthlyElectricBill)}`,options:{breakLine:true}},{text:`20年間：¥${fmt(hM.bill20Y)}`,options:{bold:true,color:"991B1B",breakLine:true}},{text:" ",options:{breakLine:true}},{text:"電気代は今後も上昇の可能性",options:{color:C.orange,breakLine:true}},{text:"単価をコントロールできない",options:{color:C.orange}}],{x:0.6,y:1.8,w:3.8,h:3.0,fontSize:14,color:C.charcoal,fontFace:"Meiryo"});
+      sl.addText("VS",{x:4.6,y:2.6,w:0.8,h:0.6,fontSize:20,bold:true,color:C.darkGreen,align:"center",valign:"middle",fontFace:"Meiryo"});
+      sl.addShape(presM.ShapeType.rect,{x:5.4,y:1.1,w:4.2,h:3.8,fill:{color:C.white},line:{color:C.lightGreen},shadow:{type:"outer",blur:8,offset:3,angle:135,color:"000000",opacity:0.08}});
+      sl.addShape(presM.ShapeType.rect,{x:5.4,y:1.1,w:4.2,h:0.6,fill:{color:C.lightGreen},line:{color:C.lightGreen}});
+      sl.addText("✅ じぶん電気",{x:5.4,y:1.1,w:4.2,h:0.6,fontSize:16,bold:true,color:C.darkGreen,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+      sl.addText([{text:`約${hM.costPerKWh}円/kWh でつくって使う`,options:{bold:true,breakLine:true}},{text:" ",options:{breakLine:true}},{text:`初期投資：¥${fmt(hM.totalCost)}`,options:{breakLine:true}},{text:`20年間の実質単価：${hM.costPerKWh}円/kWh`,options:{bold:true,color:C.midGreen,breakLine:true}},{text:" ",options:{breakLine:true}},{text:"単価を自分でコントロール",options:{color:C.midGreen,breakLine:true}},{text:`${hCfg.warrantyYears}年間の保証で安心`,options:{color:C.midGreen}}],{x:5.6,y:1.8,w:3.8,h:3.0,fontSize:14,color:C.charcoal,fontFace:"Meiryo"});
+    }
+
+    setProgress("モデルケース版：スライド3〜を作成中...");
+    await new Promise(r=>setTimeout(r,30));
+    // ── Slide 3 ──
+    {
+      const sl=presM.addSlide(); sl.background={color:C.offWhite};
+      sl.addShape(presM.ShapeType.rect,{x:0,y:0,w:10,h:0.9,fill:{color:C.darkGreen},line:{color:C.darkGreen}});
+      sl.addText("このまま電気代を払い続けたら",{x:0.3,y:0,w:7.9,h:0.9,fontSize:22,bold:true,color:C.white,fontFace:"Meiryo",valign:"middle",margin:0});
+      addBrand(sl,presM);
+      sl.addShape(presM.ShapeType.rect,{x:8.2,y:0.17,w:1.55,h:0.56,fill:{color:"4B5563"},line:{color:"4B5563"}});
+      sl.addText("モデルケース",{x:8.2,y:0.17,w:1.55,h:0.56,fontSize:9,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+      const cards=[
+        {label:"月間電気代",value:`¥${fmt(hCfg.monthlyElectricBill)}`,sub:"毎月の固定支出",color:C.midGreen},
+        {label:"1年間",value:`¥${fmt(hM.annualBill)}`,sub:"12ヶ月分の合計",color:C.orange},
+        {label:"10年間",value:`¥${fmt(hM.bill10Y)}`,sub:"10年間の累積",color:C.orange},
+        {label:"20年間",value:`¥${fmt(hM.bill20Y)}`,sub:"長期で見ると…",color:"991B1B"},
+      ];
+      cards.forEach((card,i)=>{
+        const x=0.4+i*2.35;
+        sl.addShape(presM.ShapeType.rect,{x,y:1.1,w:2.1,h:2.8,fill:{color:C.white},line:{color:C.lightGray},shadow:{type:"outer",blur:8,offset:3,angle:135,color:"000000",opacity:0.1}});
+        sl.addShape(presM.ShapeType.rect,{x,y:1.1,w:2.1,h:0.45,fill:{color:card.color},line:{color:card.color}});
+        sl.addText(card.label,{x,y:1.1,w:2.1,h:0.45,fontSize:12,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+        sl.addText(card.value,{x,y:1.6,w:2.1,h:1.2,fontSize:22,bold:true,color:card.color,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+        sl.addText(card.sub,{x,y:2.8,w:2.1,h:0.6,fontSize:10,color:C.gray,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+      });
+      sl.addShape(presM.ShapeType.rect,{x:0.4,y:4.1,w:9.2,h:1.15,fill:{color:C.paleGreen},line:{color:C.lightGreen}});
+      sl.addText([{text:"現在の平均単価：",options:{color:C.darkGreen}},{text:`${hCfg.currentUnitPrice}円/kWh`,options:{color:C.darkGreen,bold:true,fontSize:22}},{text:`　　年間消費量：${fmt(hCfg.annualConsumptionKWh)} kWh`,options:{color:C.gray,fontSize:14}}],{x:0.4,y:4.1,w:9.2,h:1.15,fontSize:16,fontFace:"Meiryo",align:"center",valign:"middle"});
+    }
+    // ── Slide 4（前半: モデルケース 構成プラン）──
+    {
+      const sl=presM.addSlide(); sl.background={color:C.offWhite};
+      sl.addShape(presM.ShapeType.rect,{x:0,y:0,w:10,h:0.9,fill:{color:C.darkGreen},line:{color:C.darkGreen}});
+      sl.addText("「じぶん電気」構成プランのモデルケース",{x:0.3,y:0,w:7.9,h:0.9,fontSize:22,bold:true,color:C.white,fontFace:"Meiryo",valign:"middle",margin:0});
+      sl.addShape(presM.ShapeType.rect,{x:8.2,y:0.17,w:1.55,h:0.56,fill:{color:"4B5563"},line:{color:"4B5563"}});
+      sl.addText("モデルケース",{x:8.2,y:0.17,w:1.55,h:0.56,fontSize:9,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+      addBrand(sl,presM);
+      const sc=[{icon:"☀️",title:"太陽光パネル",value:`${hCfg.solarCapacityKW} kW`,desc:`年間発電量\n約${fmt(hCfg.annualGenerationKWh)} kWh`,col:C.gold},{icon:"🔋",title:"蓄電池",value:`${hCfg.batteryCapacityKWh} kWh`,desc:"夜間・曇天時も\n安定して供給",col:C.midGreen},{icon:"🔒",title:"安心保証",value:`${hCfg.warrantyYears}年間`,desc:"全機器まとめて\n長期保証付き",col:C.lightGreen}];
+      sc.forEach((card,i)=>{
+        const x=0.5+i*3.05;
+        sl.addShape(presM.ShapeType.rect,{x,y:1.1,w:2.8,h:2.5,fill:{color:C.white},line:{color:C.lightGray},shadow:{type:"outer",blur:8,offset:3,angle:135,color:"000000",opacity:0.1}});
+        sl.addText(card.icon,{x,y:1.15,w:2.8,h:0.7,fontSize:26,align:"center",valign:"middle"});
+        sl.addText(card.title,{x,y:1.85,w:2.8,h:0.4,fontSize:13,bold:true,color:card.col,align:"center",fontFace:"Meiryo"});
+        sl.addText(card.value,{x,y:2.2,w:2.8,h:0.7,fontSize:28,bold:true,color:C.darkGreen,align:"center",fontFace:"Meiryo"});
+        sl.addText(card.desc,{x,y:2.9,w:2.8,h:0.65,fontSize:11,color:C.gray,align:"center",fontFace:"Meiryo"});
+      });
+      sl.addShape(presM.ShapeType.rect,{x:0.4,y:3.8,w:9.2,h:1.55,fill:{color:C.paleGreen},line:{color:C.lightGreen}});
+      sl.addText([{text:"💰 税込総工事費用（目安）：",options:{bold:true,breakLine:true,color:C.darkGreen,fontSize:14}},{text:`約${hM.totalCostMan}万円`,options:{bold:true,fontSize:28,color:C.darkGreen}},{text:`　（1kWhあたりの発電コスト：約${hM.costPerKWh}円）`,options:{color:C.gray,fontSize:13}}],{x:0.8,y:3.85,w:8.5,h:1.4,fontSize:15,fontFace:"Meiryo",valign:"middle"});
+      sl.addText("※本スライドはモデルケースによる試算です。実際の費用はお見積りにてご確認ください。",{x:0.3,y:5.35,w:8.2,h:0.24,fontSize:8,color:C.gray,fontFace:"Meiryo",italic:true,valign:"middle"});
+    }
+    // ── Slide 4.5：発電コスト根拠 ──
+    {
+      const sl=presM.addSlide(); sl.background={color:C.offWhite};
+      sl.addShape(presM.ShapeType.rect,{x:0,y:0,w:10,h:0.9,fill:{color:C.darkGreen},line:{color:C.darkGreen}});
+      sl.addText(`発電コスト 約${hM.costPerKWh}円/kWh　その根拠`,{x:0.3,y:0,w:7.9,h:0.9,fontSize:22,bold:true,color:C.white,fontFace:"Meiryo",valign:"middle",margin:0});
+      sl.addShape(presM.ShapeType.rect,{x:8.2,y:0.17,w:1.55,h:0.56,fill:{color:"4B5563"},line:{color:"4B5563"}});
+      sl.addText("モデルケース",{x:8.2,y:0.17,w:1.55,h:0.56,fontSize:9,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+      addBrand(sl,presM);
+      // 計算式ボックス
+      sl.addShape(presM.ShapeType.rect,{x:0.4,y:1.05,w:9.2,h:1.45,fill:{color:C.white},line:{color:C.lightGreen}});
+      sl.addText("💡 実質発電単価の計算式",{x:0.6,y:1.1,w:8.8,h:0.38,fontSize:13,bold:true,color:C.darkGreen,fontFace:"Meiryo"});
+      sl.addText([
+        {text:"税込総工事費 ",options:{color:C.charcoal,fontSize:13}},
+        {text:`${hM.totalCostMan}万円`,options:{bold:true,fontSize:18,color:C.darkGreen}},
+        {text:"  ÷  （年間発電量 ",options:{color:C.charcoal,fontSize:13}},
+        {text:`${fmt(hCfg.annualGenerationKWh)} kWh`,options:{bold:true,fontSize:14,color:C.midGreen}},
+        {text:"  ×  保証年数 ",options:{color:C.charcoal,fontSize:13}},
+        {text:`${hCfg.warrantyYears}年`,options:{bold:true,fontSize:14,color:C.midGreen}},
+        {text:"）  ＝  ",options:{color:C.charcoal,fontSize:13}},
+      ],{x:0.5,y:1.5,w:7.5,h:0.9,fontSize:13,fontFace:"Meiryo",valign:"middle"});
+      sl.addText(`約${hM.costPerKWh}円/kWh`,{x:7.3,y:1.45,w:2.2,h:0.7,fontSize:20,bold:true,color:C.midGreen,fontFace:"Meiryo",valign:"middle",shrinkText:true});
+      // 3比較カード
+      const comps=[
+        {icon:"❌",label:"現在の平均単価\n（税込）",value:`${hCfg.currentUnitPrice}円`,sub:"/kWh",color:C.orange},
+        {icon:"✅",label:"じぶん電気の\n発電コスト",value:`約${hM.costPerKWh}円`,sub:"/kWh",color:C.midGreen},
+        {icon:"📋",label:"FIT売電\n買取単価",value:"24→8.3円",sub:"/kWh（2026年度）\n1〜4年目→5〜10年目",color:C.gray},
+      ];
+      comps.forEach((item,i)=>{
+        const x=0.4+i*3.1;
+        sl.addShape(presM.ShapeType.rect,{x,y:2.65,w:2.8,h:2.2,fill:{color:C.white},line:{color:C.lightGray},shadow:{type:"outer",blur:6,offset:2,angle:135,color:"000000",opacity:0.1}});
+        sl.addText(item.icon,{x,y:2.7,w:2.8,h:0.4,fontSize:18,align:"center",fontFace:"Meiryo"});
+        sl.addText(item.label,{x,y:3.1,w:2.8,h:0.6,fontSize:11,color:C.gray,align:"center",fontFace:"Meiryo"});
+        sl.addText(item.value,{x,y:3.68,w:2.8,h:0.55,fontSize:20,bold:true,color:item.color,align:"center",fontFace:"Meiryo"});
+        sl.addText(item.sub,{x,y:4.2,w:2.8,h:0.45,fontSize:9,color:C.gray,align:"center",fontFace:"Meiryo"});
+      });
+      // フッター
+      sl.addShape(presM.ShapeType.rect,{x:0.4,y:4.62,w:9.2,h:0.65,fill:{color:C.paleGreen},line:{color:C.lightGreen}});
+      sl.addText([
+        {text:"✅  ",options:{fontSize:14}},
+        {text:`じぶん電気の発電コストは約${hM.costPerKWh}円/kWh。`,options:{color:C.darkGreen,fontSize:13}},
+        {text:`電力会社の${hCfg.currentUnitPrice}円より${Math.round(hCfg.currentUnitPrice - hM.costPerKWh)}円/kWh安く、売電より自家消費がおトク！`,options:{bold:true,color:C.midGreen,fontSize:13}},
+      ],{x:0.5,y:4.62,w:9.0,h:0.65,fontFace:"Meiryo",valign:"middle"});
+    }
+    // ── Slide 5 ──
+    {
+      const sl=presM.addSlide(); sl.background={color:C.offWhite};
+      sl.addShape(presM.ShapeType.rect,{x:0,y:0,w:10,h:0.9,fill:{color:C.darkGreen},line:{color:C.darkGreen}});
+      sl.addText("じぶん電気、どのくらい使える？",{x:0.3,y:0,w:7.9,h:0.9,fontSize:22,bold:true,color:C.white,fontFace:"Meiryo",valign:"middle",margin:0});
+      sl.addShape(presM.ShapeType.rect,{x:8.2,y:0.17,w:1.55,h:0.56,fill:{color:"4B5563"},line:{color:"4B5563"}});
+      sl.addText("モデルケース",{x:8.2,y:0.17,w:1.55,h:0.56,fontSize:9,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+      addBrand(sl,presM);
+      const bd=[{name:"年間発電量",val:hCfg.annualGenerationKWh,color:C.gold,label:`${fmt(hCfg.annualGenerationKWh)} kWh`},{name:"自家消費量",val:hM.selfKWh,color:C.lightGreen,label:`${fmt(hM.selfKWh)} kWh`}];
+      const barAreaH=2.5,barY=1.1;
+      bd.forEach((bar,i)=>{
+        const bH=(bar.val/hCfg.annualGenerationKWh)*barAreaH, x=0.4+i*2.3, y=barY+barAreaH-bH;
+        sl.addShape(presM.ShapeType.rect,{x,y,w:1.8,h:bH,fill:{color:bar.color},line:{color:bar.color}});
+        const spaceAbove = y - barY - 0.1;
+        if(spaceAbove >= 0.45){
+          sl.addText(bar.label,{x,y:y-0.5,w:1.8,h:0.45,fontSize:13,bold:true,color:C.darkGreen,align:"center",fontFace:"Meiryo"});
+        } else {
+          sl.addText(bar.label,{x,y:y+0.1,w:1.8,h:0.45,fontSize:13,bold:true,color:C.white,align:"center",fontFace:"Meiryo"});
+        }
+        sl.addText(bar.name,{x,y:barY+barAreaH+0.1,w:1.8,h:0.4,fontSize:12,color:C.gray,align:"center",fontFace:"Meiryo"});
+      });
+      sl.addShape(presM.ShapeType.rect,{x:5.3,y:1.0,w:4.3,h:2.8,fill:{color:C.white},line:{color:C.lightGreen},shadow:{type:"outer",blur:6,offset:2,angle:135,color:"000000",opacity:0.1}});
+      sl.addText([
+        {text:"自家消費率",options:{breakLine:true,fontSize:12,color:C.gray}},
+        {text:`${hM.selfRate}%`,options:{breakLine:true,fontSize:36,bold:true,color:C.midGreen}},
+        {text:`☀️ 昼間直接：${fmt(hCfg.directConsumptionKWh)} kWh`,options:{breakLine:true,fontSize:11,color:C.gray}},
+        {text:`🔋 蓄電池：${fmt(hCfg.batteryConsumptionKWh)} kWh`,options:{breakLine:true,fontSize:11,color:C.gray}},
+        {text:`残り購入：月平均 ¥${fmt(hM.remainBill)}`,options:{fontSize:12,bold:true,color:C.orange}},
+      ],{x:5.3,y:1.0,w:4.3,h:2.8,align:"center",valign:"middle",fontFace:"Meiryo"});
+      sl.addShape(presM.ShapeType.rect,{x:0.4,y:4.0,w:9.2,h:1.35,fill:{color:C.paleGreen},line:{color:C.lightGreen}});
+      sl.addText([
+        {text:"📊 月々の残り電気代：",options:{color:C.darkGreen}},
+        {text:`約${fmt(hM.remainBill)}円`,options:{bold:true,fontSize:22,color:C.orange}},
+        {text:`　→　削減効果 月${fmt(hM.annualSaving/12)}円・20年で約${hM.saving20YMan}万円`,options:{color:C.charcoal,fontSize:13}},
+      ],{x:0.8,y:4.05,w:8.5,h:1.2,fontSize:16,fontFace:"Meiryo",valign:"middle"});
+    }
+    // ── Slide 6：トータルコスト比較（仮説モデル）──
+    {
+      const sl=presM.addSlide(); sl.background={color:C.offWhite};
+      sl.addShape(presM.ShapeType.rect,{x:0,y:0,w:10,h:0.9,fill:{color:C.darkGreen},line:{color:C.darkGreen}});
+      sl.addText(`${hCfg.warrantyYears}年間トータルコスト比較`,{x:0.3,y:0,w:7.9,h:0.9,fontSize:22,bold:true,color:C.white,fontFace:"Meiryo",valign:"middle",margin:0});
+      sl.addShape(presM.ShapeType.rect,{x:8.2,y:0.17,w:1.55,h:0.56,fill:{color:"4B5563"},line:{color:"4B5563"}});
+      sl.addText("モデルケース",{x:8.2,y:0.17,w:1.55,h:0.56,fontSize:9,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+      addBrand(sl,presM);
+      const erH=(hCfg.escalationRate||0)/100;
+      const bill20ShowH=erH>0?hM.bill20YMan_rise:hM.bill20YMan;
+      const remain20ManH=Math.round(hM.remain20Y_rise/10000);
+      const mBW=6.0;
+      // Row 1: 電力会社
+      sl.addText("このまま電力会社の電気を買い続けた場合",{x:0.4,y:1.3,w:9.2,h:0.4,fontSize:13,color:C.charcoal,fontFace:"Meiryo"});
+      sl.addShape(presM.ShapeType.rect,{x:0.4,y:1.72,w:mBW,h:0.7,fill:{color:C.orange},line:{color:C.orange}});
+      sl.addText(`${fmt(bill20ShowH)} 万円`,{x:0.4+mBW+0.1,y:1.72,w:2.5,h:0.7,fontSize:18,bold:true,color:C.orange,valign:"middle",fontFace:"Meiryo"});
+      // Row 2: じぶん電気（積み上げ：初期費用＋残り電気代）
+      const costWH=mBW*Math.min(hM.totalCostMan/bill20ShowH,1);
+      const remWH=mBW*Math.min(remain20ManH/bill20ShowH,Math.max(0,1-hM.totalCostMan/bill20ShowH));
+      sl.addText("じぶん電気（太陽光＋蓄電池）の総支出",{x:0.4,y:2.9,w:9.2,h:0.4,fontSize:13,color:C.charcoal,fontFace:"Meiryo"});
+      sl.addShape(presM.ShapeType.rect,{x:0.4,y:3.32,w:costWH,h:0.7,fill:{color:C.midGreen},line:{color:C.midGreen}});
+      if(costWH>0.9)sl.addText(`初期費用\n${hM.totalCostMan}万`,{x:0.4,y:3.32,w:costWH,h:0.7,fontSize:9,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo"});
+      sl.addShape(presM.ShapeType.rect,{x:0.4+costWH,y:3.32,w:remWH,h:0.7,fill:{color:C.accent},line:{color:C.accent}});
+      if(remWH>0.9)sl.addText(`残電気代\n${remain20ManH}万`,{x:0.4+costWH,y:3.32,w:remWH,h:0.7,fontSize:9,bold:true,color:C.darkGreen,align:"center",valign:"middle",fontFace:"Meiryo"});
+      sl.addText(`計 ${fmt(hM.totalCostMan+remain20ManH)} 万円`,{x:0.4+costWH+remWH+0.1,y:3.32,w:2.5,h:0.7,fontSize:18,bold:true,color:C.midGreen,valign:"middle",fontFace:"Meiryo"});
+      sl.addText([{text:"■ ",options:{color:C.midGreen}},{text:`初期費用 ${hM.totalCostMan}万円　＋　`,options:{color:C.gray}},{text:"■ ",options:{color:C.lightGreen}},{text:`残り電気代 ${remain20ManH}万円　＝　計 ${fmt(hM.totalCostMan+remain20ManH)}万円`,options:{color:C.gray}}],{x:0.4,y:4.08,w:8.8,h:0.28,fontSize:10,fontFace:"Meiryo",valign:"middle"});
+      const diff=hM.costDiff_with_rise;
+      sl.addShape(presM.ShapeType.rect,{x:0.4,y:4.46,w:9.2,h:0.9,fill:{color:C.darkGreen},line:{color:C.darkGreen}});
+      sl.addText([{text:"💡  じぶん電気なら、",options:{color:C.white}},{text:`${hCfg.warrantyYears}年間で 約${fmt(diff)}万円`,options:{bold:true,fontSize:22,color:C.accent}},{text:"  のコスト差が生まれます",options:{color:C.white}}],{x:0.5,y:4.46,w:9.0,h:0.9,fontSize:16,fontFace:"Meiryo",valign:"middle"});
+      sl.addText("※本スライドはモデルケースによる試算です。実際のコストは設置条件等により異なります。",{x:0.3,y:5.4,w:8.2,h:0.22,fontSize:8,color:C.gray,fontFace:"Meiryo",italic:true,valign:"middle"});
+    }
+    // ── Slide 保証 ──
+    {
+      const sl=presM.addSlide(); sl.background={color:C.offWhite};
+      sl.addShape(presM.ShapeType.rect,{x:0,y:0,w:10,h:0.9,fill:{color:C.darkGreen},line:{color:C.darkGreen}});
+      sl.addText("じぶん電気は、長く・安心して使えます",{x:0.3,y:0,w:9.4,h:0.9,fontSize:22,bold:true,color:C.white,fontFace:"Meiryo",valign:"middle",margin:0});
+      sl.addShape(presM.ShapeType.rect,{x:8.2,y:0.17,w:1.55,h:0.56,fill:{color:"4B5563"},line:{color:"4B5563"}});
+      sl.addText("モデルケース",{x:8.2,y:0.17,w:1.55,h:0.56,fontSize:9,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+      addBrand(sl,presM);
+      [{icon:"☀️",title:"太陽光パネル",warranty:`${hCfg.warrantyYears}年保証`,desc:"製品・出力・施工\nすべてカバー"},{icon:"⚡",title:"パワーコンディショナー",warranty:`${hCfg.warrantyYears}年保証`,desc:"変換効率の\n長期維持"},{icon:"🔋",title:"蓄電池",warranty:`${hCfg.warrantyYears}年保証`,desc:"容量保証で\n安心使用"}].forEach((p,i)=>{
+        const x=0.4+i*3.1;
+        sl.addShape(presM.ShapeType.rect,{x,y:1.0,w:2.8,h:2.5,fill:{color:C.white},line:{color:C.lightGray},shadow:{type:"outer",blur:8,offset:3,angle:135,color:"000000",opacity:0.1}});
+        sl.addText(p.icon,{x,y:1.05,w:2.8,h:0.7,fontSize:26,align:"center",valign:"middle"});
+        sl.addText(p.title,{x,y:1.75,w:2.8,h:0.4,fontSize:12,bold:true,color:C.darkGreen,align:"center",fontFace:"Meiryo"});
+        sl.addShape(presM.ShapeType.rect,{x:x+0.3,y:2.18,w:2.2,h:0.4,fill:{color:C.lightGreen},line:{color:C.lightGreen}});
+        sl.addText(p.warranty,{x:x+0.3,y:2.18,w:2.2,h:0.4,fontSize:14,bold:true,color:C.darkGreen,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+        sl.addText(p.desc,{x,y:2.65,w:2.8,h:0.75,fontSize:11,color:C.gray,align:"center",fontFace:"Meiryo"});
+      });
+      sl.addShape(presM.ShapeType.rect,{x:0.4,y:3.65,w:9.2,h:1.7,fill:{color:C.paleGreen},line:{color:C.lightGreen}});
+      sl.addText([{text:"🏠 停電のときも、じぶん電気が守ってくれます\n",options:{bold:true,fontSize:15,color:C.darkGreen}},{text:"太陽光＋蓄電池があれば、停電中でも電気が使えます。\n冷蔵庫・照明・スマートフォン充電など、大切な日常生活を守ります。",options:{fontSize:13,color:C.charcoal}}],{x:0.8,y:3.7,w:8.5,h:1.55,fontFace:"Meiryo"});
+    }
+    setProgress("モデルケース版：まとめスライドを作成中...");
+    await new Promise(r=>setTimeout(r,30));
+    // ── Slide まとめ（モデルケース版）──
+    {
+      const sl=presM.addSlide(); sl.background={color:C.darkGreen};
+      sl.addShape(presM.ShapeType.rect,{x:0,y:0,w:10,h:0.08,fill:{color:C.lightGreen},line:{color:C.lightGreen}});
+      sl.addShape(presM.ShapeType.rect,{x:0,y:5.545,w:10,h:0.08,fill:{color:C.lightGreen},line:{color:C.lightGreen}});
+      sl.addShape(presM.ShapeType.rect,{x:0.5,y:0.18,w:2.0,h:0.48,fill:{color:C.lightGreen},line:{color:C.lightGreen}});
+      sl.addText("じぶん電気",{x:0.5,y:0.18,w:2.0,h:0.48,fontSize:15,bold:true,color:C.darkGreen,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+      sl.addText("じぶん電気 モデルケースまとめ",{x:2.6,y:0.18,w:6.5,h:0.48,fontSize:18,bold:true,color:C.white,fontFace:"Meiryo",valign:"middle",margin:0});
+      [
+        {num:"01",icon:"💡",text:`電力会社の${hCfg.currentUnitPrice}円/kWhを、じぶん電気なら約${hM.costPerKWh}円/kWhに`},
+        {num:"02",icon:"💰",text:(()=>{const diff=hM.costDiff_with_rise;return diff>=10?`${hCfg.warrantyYears}年間で約${fmt(diff)}万円のコスト差が見込めます（モデルケース試算）`:diff>=-10?`${hCfg.warrantyYears}年間のコスト差はほぼ同水準になる場合があります（条件次第）`:`条件によっては電力会社と大きな差が出ない場合があります（ご確認ください）`;})()},
+        {num:"03",icon:"🔒",text:`全機器 ${hCfg.warrantyYears}年間保証で、ずっと安心して使い続けられます`},
+        {num:"04",icon:"🏠",text:"停電時もじぶん電気で安心。大切なご家族を守る備えに"},
+      ].forEach((item,i)=>{
+        const y=1.05+i*1.0;
+        sl.addShape(presM.ShapeType.rect,{x:0.4,y,w:0.6,h:0.7,fill:{color:C.lightGreen},line:{color:C.lightGreen}});
+        sl.addText(item.num,{x:0.4,y,w:0.6,h:0.7,fontSize:14,bold:true,color:C.darkGreen,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+        sl.addText(`${item.icon}　${item.text}`,{x:1.2,y:y+0.05,w:8.3,h:0.6,fontSize:14,color:C.white,valign:"middle",fontFace:"Meiryo"});
+      });
+      sl.addShape(presM.ShapeType.rect,{x:0.4,y:4.97,w:9.2,h:0.45,fill:{color:C.lightGreen,transparency:25},line:{color:C.lightGreen}});
+      sl.addText("じぶん電気について、お気軽にご相談ください 🌿",{x:0.4,y:4.97,w:9.2,h:0.45,fontSize:13,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+    }
+    setProgress("モデルケース版：ファイルを生成中...");
+    await new Promise(r=>setTimeout(r,30));
+    await presM.writeFile({ fileName: `${safeName(hCfg.customerName)}様_モデルケース版.pptx` });
+    } // end if (outModel)
+
+    // ── 実データシミュレーション版 ─────────────────────────────
+    if (outReal) {
+    presR = new PptxGenJS();
+    presR.layout = "LAYOUT_16x9";
+    presR.title = "じぶん電気のご提案（実データシミュレーション版）";
+
+    // ── Slide 1（実データ版タイトル）──
+    setProgress("実データ版：スライド1 タイトルを作成中...");
+    await new Promise(r=>setTimeout(r,30));
+    {
+      const sl = presR.addSlide();
+      sl.background={color:C.darkGreen};
+      sl.addShape(presR.ShapeType.rect,{x:0,y:0,w:10,h:0.08,fill:{color:C.lightGreen},line:{color:C.lightGreen}});
+      sl.addShape(presR.ShapeType.rect,{x:0,y:5.545,w:10,h:0.08,fill:{color:C.lightGreen},line:{color:C.lightGreen}});
+      sl.addShape(presR.ShapeType.rect,{x:7.5,y:0.08,w:2.5,h:5.465,fill:{color:C.midGreen},line:{color:C.midGreen}});
+      sl.addShape(presR.ShapeType.rect,{x:8.5,y:0.08,w:1.5,h:5.465,fill:{color:C.lightGreen,transparency:30},line:{color:C.lightGreen,transparency:30}});
+      sl.addShape(presR.ShapeType.rect,{x:0.5,y:0.45,w:2.5,h:0.55,fill:{color:C.lightGreen},line:{color:C.lightGreen}});
+      sl.addText("じぶん電気",{x:0.5,y:0.45,w:2.5,h:0.55,fontSize:19,bold:true,color:C.darkGreen,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+      sl.addText("電気は、",{x:0.5,y:1.2,w:7,h:0.65,fontSize:34,bold:true,color:C.accent,fontFace:"Meiryo",margin:0});
+      sl.addText("じぶんでつくる時代へ。",{x:0.5,y:1.8,w:7,h:0.9,fontSize:36,bold:true,color:C.white,fontFace:"Meiryo",margin:0});
+      sl.addText("太陽光＋蓄電池で、電気代を自分でコントロール。",{x:0.5,y:2.85,w:7,h:0.5,fontSize:14,color:C.accent,fontFace:"Meiryo",margin:0});
+      sl.addShape(presR.ShapeType.rect,{x:0.5,y:3.55,w:4.5,h:0.65,fill:{color:C.lightGreen,transparency:20},line:{color:C.lightGreen}});
+      sl.addText(`${cn}様　ご提案資料`,{x:0.5,y:3.55,w:4.5,h:0.65,fontSize:15,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+      sl.addText([{text:`家族構成：${cfg.familyComposition}`,options:{breakLine:true}},{text:`スタイル：${cfg.lifestyleNote}`}],{x:0.5,y:4.35,w:7,h:0.95,fontSize:12,color:C.accent,fontFace:"Meiryo"});
+    }
+
+    setProgress("実データスライドを作成中...");
+    await new Promise(r=>setTimeout(r,30));
+    // ── Slide 5.5：お客様ヒアリング結果（実データ区切り）──
+    {
+      const sl=presR.addSlide(); sl.background={color:C.offWhite};
+      sl.addShape(presR.ShapeType.rect,{x:0,y:0,w:10,h:0.9,fill:{color:C.darkGreen},line:{color:C.darkGreen}});
+      sl.addText(`${cn}様　お客様ヒアリング結果`,{x:0.3,y:0,w:7.9,h:0.9,fontSize:22,bold:true,color:C.white,fontFace:"Meiryo",valign:"middle",margin:0});
+      sl.addShape(presR.ShapeType.rect,{x:8.2,y:0.17,w:1.55,h:0.56,fill:{color:C.midGreen},line:{color:C.midGreen}});
+      sl.addText("実データ",{x:8.2,y:0.17,w:1.55,h:0.56,fontSize:11,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+      addBrand(sl,presR);
+      const companyName = custData.utilityCompany ? custData.utilityCompany : '電力会社';
+      const planLabel = (custData.utilityCompany ? custData.utilityCompany + '　' : '') +
+        (custData.kyudenPlan
+          ? (custData.kyudenPlan.startsWith('avg:') ? '請求書から平均単価算出' : `固定単価プラン（${custData.kyudenPlan}円/kWh目安）`)
+          : '手動入力');
+      const hItems=[
+        {label:"お客様名",       value:cn + '様'},
+        {label:"家族構成",       value:cfg.familyComposition},
+        {label:"月間電気代",     value:`¥${fmt(cfg.monthlyElectricBill)}`},
+        {label:"現在の平均単価",  value:`${cfg.currentUnitPrice} 円/kWh`},
+        {label:"年間消費量",     value:`${fmt(cfg.annualConsumptionKWh)} kWh`},
+        {label:"料金プラン",     value:planLabel},
+      ];
+      hItems.forEach((item,i)=>{
+        const col=i%2, row=Math.floor(i/2);
+        const x=0.4+col*4.75, y=1.05+row*1.0;
+        sl.addShape(presR.ShapeType.rect,{x,y,w:4.4,h:0.9,fill:{color:C.white},line:{color:C.lightGray},shadow:{type:"outer",blur:6,offset:2,angle:135,color:"000000",opacity:0.08}});
+        sl.addShape(presR.ShapeType.rect,{x,y,w:4.4,h:0.3,fill:{color:C.paleGreen},line:{color:C.lightGreen}});
+        sl.addText(item.label,{x,y,w:4.4,h:0.3,fontSize:10,bold:true,color:C.midGreen,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+        sl.addText(item.value,{x,y:y+0.3,w:4.4,h:0.6,fontSize:14,bold:true,color:C.charcoal,align:"center",valign:"middle",fontFace:"Meiryo"});
+      });
+      // 生活スタイル（横幅全体）
+      const lsY=1.05+3*1.0;
+      sl.addShape(presR.ShapeType.rect,{x:0.4,y:lsY,w:9.2,h:0.85,fill:{color:C.white},line:{color:C.lightGray}});
+      sl.addShape(presR.ShapeType.rect,{x:0.4,y:lsY,w:9.2,h:0.28,fill:{color:C.paleGreen},line:{color:C.lightGreen}});
+      sl.addText("生活スタイル・備考",{x:0.4,y:lsY,w:9.2,h:0.28,fontSize:10,bold:true,color:C.midGreen,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+      sl.addText(cfg.lifestyleNote||'－',{x:0.5,y:lsY+0.28,w:9.0,h:0.57,fontSize:12,color:C.charcoal,valign:"middle",fontFace:"Meiryo"});
+      sl.addShape(presR.ShapeType.rect,{x:0.4,y:4.95,w:9.2,h:0.35,fill:{color:C.darkGreen},line:{color:C.darkGreen}});
+      sl.addText("以降のスライドでは上記ヒアリング情報をもとに個別シミュレーションを行います",{x:0.5,y:4.95,w:9.1,h:0.35,fontSize:11,bold:true,color:C.accent,align:"center",valign:"middle",fontFace:"Meiryo"});
+    }
+
+    setProgress("実データシミュレーションスライドを作成中...");
+    await new Promise(r=>setTimeout(r,30));
+    // ── 実データ A：このまま電気代を払い続けたら ──
+    {
+      const sl=presR.addSlide(); sl.background={color:C.offWhite};
+      sl.addShape(presR.ShapeType.rect,{x:0,y:0,w:10,h:0.9,fill:{color:C.darkGreen},line:{color:C.darkGreen}});
+      sl.addText("このまま電気代を払い続けたら",{x:0.3,y:0,w:7.9,h:0.9,fontSize:22,bold:true,color:C.white,fontFace:"Meiryo",valign:"middle",margin:0});
+      sl.addShape(presR.ShapeType.rect,{x:8.2,y:0.17,w:1.55,h:0.56,fill:{color:C.midGreen},line:{color:C.midGreen}});
+      sl.addText("実データ",{x:8.2,y:0.17,w:1.55,h:0.56,fontSize:11,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+      addBrand(sl,presR);
+      const cardsA=[
+        {label:"月間電気代",value:`¥${fmt(cfg.monthlyElectricBill)}`,sub:"毎月の固定支出",color:C.midGreen},
+        {label:"1年間",value:`¥${fmt(m.annualBill)}`,sub:"12ヶ月分の合計",color:C.orange},
+        {label:"10年間",value:`¥${fmt(m.bill10Y)}`,sub:"10年間の累積",color:C.orange},
+        {label:"20年間",value:`¥${fmt(m.bill20Y)}`,sub:"長期で見ると…",color:"991B1B"},
+      ];
+      cardsA.forEach((card,i)=>{
+        const x=0.4+i*2.35;
+        sl.addShape(presR.ShapeType.rect,{x,y:1.1,w:2.1,h:2.8,fill:{color:C.white},line:{color:C.lightGray},shadow:{type:"outer",blur:8,offset:3,angle:135,color:"000000",opacity:0.1}});
+        sl.addShape(presR.ShapeType.rect,{x,y:1.1,w:2.1,h:0.45,fill:{color:card.color},line:{color:card.color}});
+        sl.addText(card.label,{x,y:1.1,w:2.1,h:0.45,fontSize:12,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+        sl.addText(card.value,{x,y:1.6,w:2.1,h:1.2,fontSize:22,bold:true,color:card.color,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+        sl.addText(card.sub,{x,y:2.8,w:2.1,h:0.6,fontSize:10,color:C.gray,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+      });
+      sl.addShape(presR.ShapeType.rect,{x:0.4,y:4.1,w:9.2,h:1.15,fill:{color:C.paleGreen},line:{color:C.lightGreen}});
+      sl.addText([{text:"現在の平均単価：",options:{color:C.darkGreen}},{text:`${cfg.currentUnitPrice}円/kWh`,options:{color:C.darkGreen,bold:true,fontSize:22}},{text:`　　年間消費量：${fmt(cfg.annualConsumptionKWh)} kWh`,options:{color:C.gray,fontSize:14}}],{x:0.4,y:4.1,w:9.2,h:1.15,fontSize:16,fontFace:"Meiryo",align:"center",valign:"middle"});
+    }
+    // ── 実データ B：構成プラン ──
+    {
+      const sl=presR.addSlide(); sl.background={color:C.offWhite};
+      sl.addShape(presR.ShapeType.rect,{x:0,y:0,w:10,h:0.9,fill:{color:C.darkGreen},line:{color:C.darkGreen}});
+      sl.addText(`${cn}様宅「じぶん電気」構成プラン`,{x:0.3,y:0,w:7.9,h:0.9,fontSize:20,bold:true,color:C.white,fontFace:"Meiryo",valign:"middle",margin:0});
+      sl.addShape(presR.ShapeType.rect,{x:8.2,y:0.17,w:1.55,h:0.56,fill:{color:C.midGreen},line:{color:C.midGreen}});
+      sl.addText("実データ",{x:8.2,y:0.17,w:1.55,h:0.56,fontSize:11,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+      addBrand(sl,presR);
+      [{icon:"☀️",title:"太陽光パネル",value:`${cfg.solarCapacityKW} kW`,desc:`年間発電量\n約${fmt(cfg.annualGenerationKWh)} kWh`,col:C.gold},{icon:"🔋",title:"蓄電池",value:`${cfg.batteryCapacityKWh} kWh`,desc:"夜間・曇天時も\n安定して供給",col:C.midGreen},{icon:"🔒",title:"安心保証",value:`${cfg.warrantyYears}年間`,desc:"全機器まとめて\n長期保証付き",col:C.lightGreen}].forEach((card,i)=>{
+        const x=0.5+i*3.05;
+        sl.addShape(presR.ShapeType.rect,{x,y:1.1,w:2.8,h:2.5,fill:{color:C.white},line:{color:C.lightGray},shadow:{type:"outer",blur:8,offset:3,angle:135,color:"000000",opacity:0.1}});
+        sl.addText(card.icon,{x,y:1.15,w:2.8,h:0.7,fontSize:26,align:"center",valign:"middle"});
+        sl.addText(card.title,{x,y:1.85,w:2.8,h:0.4,fontSize:13,bold:true,color:card.col,align:"center",fontFace:"Meiryo"});
+        sl.addText(card.value,{x,y:2.2,w:2.8,h:0.7,fontSize:28,bold:true,color:C.darkGreen,align:"center",fontFace:"Meiryo"});
+        sl.addText(card.desc,{x,y:2.9,w:2.8,h:0.65,fontSize:11,color:C.gray,align:"center",fontFace:"Meiryo"});
+      });
+      sl.addShape(presR.ShapeType.rect,{x:0.4,y:3.8,w:9.2,h:1.55,fill:{color:C.paleGreen},line:{color:C.lightGreen}});
+      sl.addText([{text:"💰 税込総工事費用（目安）：",options:{bold:true,breakLine:true,color:C.darkGreen,fontSize:14}},{text:`約${m.totalCostMan}万円`,options:{bold:true,fontSize:28,color:C.darkGreen}},{text:`　（1kWhあたりの発電コスト：約${m.costPerKWh}円）`,options:{color:C.gray,fontSize:13}}],{x:0.8,y:3.85,w:8.5,h:1.4,fontSize:15,fontFace:"Meiryo",valign:"middle"});
+      sl.addText(`※${cn}様のヒアリング情報をもとにした試算です。実際の費用はお見積りにてご確認ください。`,{x:0.3,y:5.35,w:8.2,h:0.24,fontSize:8,color:C.gray,fontFace:"Meiryo",italic:true,valign:"middle"});
+    }
+    // ── 実データ C：発電コスト根拠 ──
+    {
+      const sl=presR.addSlide(); sl.background={color:C.offWhite};
+      sl.addShape(presR.ShapeType.rect,{x:0,y:0,w:10,h:0.9,fill:{color:C.darkGreen},line:{color:C.darkGreen}});
+      sl.addText(`発電コスト 約${m.costPerKWh}円/kWh　その根拠`,{x:0.3,y:0,w:7.9,h:0.9,fontSize:22,bold:true,color:C.white,fontFace:"Meiryo",valign:"middle",margin:0});
+      sl.addShape(presR.ShapeType.rect,{x:8.2,y:0.17,w:1.55,h:0.56,fill:{color:C.midGreen},line:{color:C.midGreen}});
+      sl.addText("実データ",{x:8.2,y:0.17,w:1.55,h:0.56,fontSize:11,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+      addBrand(sl,presR);
+      sl.addShape(presR.ShapeType.rect,{x:0.4,y:1.05,w:9.2,h:1.45,fill:{color:C.white},line:{color:C.lightGreen}});
+      sl.addText("💡 実質発電単価の計算式",{x:0.6,y:1.1,w:8.8,h:0.38,fontSize:13,bold:true,color:C.darkGreen,fontFace:"Meiryo"});
+      sl.addText([
+        {text:"税込総工事費 ",options:{color:C.charcoal,fontSize:13}},
+        {text:`${m.totalCostMan}万円`,options:{bold:true,fontSize:18,color:C.darkGreen}},
+        {text:"  ÷  （年間発電量 ",options:{color:C.charcoal,fontSize:13}},
+        {text:`${fmt(cfg.annualGenerationKWh)} kWh`,options:{bold:true,fontSize:14,color:C.midGreen}},
+        {text:"  ×  保証年数 ",options:{color:C.charcoal,fontSize:13}},
+        {text:`${cfg.warrantyYears}年`,options:{bold:true,fontSize:14,color:C.midGreen}},
+        {text:"）  ＝  ",options:{color:C.charcoal,fontSize:13}},
+      ],{x:0.5,y:1.5,w:7.5,h:0.9,fontSize:13,fontFace:"Meiryo",valign:"middle"});
+      sl.addText(`約${m.costPerKWh}円/kWh`,{x:7.3,y:1.45,w:2.2,h:0.7,fontSize:20,bold:true,color:C.midGreen,fontFace:"Meiryo",valign:"middle",shrinkText:true});
+      const compsC=[
+        {icon:"❌",label:"現在の平均単価\n（税込）",value:`${cfg.currentUnitPrice}円`,sub:"/kWh",color:C.orange},
+        {icon:"✅",label:"じぶん電気の\n発電コスト",value:`約${m.costPerKWh}円`,sub:"/kWh",color:C.midGreen},
+        {icon:"📋",label:"FIT売電\n買取単価",value:"24→8.3円",sub:"/kWh（2026年度）\n1〜4年目→5〜10年目",color:C.gray},
+      ];
+      compsC.forEach((item,i)=>{
+        const x=0.4+i*3.1;
+        sl.addShape(presR.ShapeType.rect,{x,y:2.65,w:2.8,h:2.2,fill:{color:C.white},line:{color:C.lightGray},shadow:{type:"outer",blur:6,offset:2,angle:135,color:"000000",opacity:0.1}});
+        sl.addText(item.icon,{x,y:2.7,w:2.8,h:0.4,fontSize:18,align:"center",fontFace:"Meiryo"});
+        sl.addText(item.label,{x,y:3.1,w:2.8,h:0.6,fontSize:11,color:C.gray,align:"center",fontFace:"Meiryo"});
+        sl.addText(item.value,{x,y:3.68,w:2.8,h:0.55,fontSize:20,bold:true,color:item.color,align:"center",fontFace:"Meiryo"});
+        sl.addText(item.sub,{x,y:4.2,w:2.8,h:0.45,fontSize:9,color:C.gray,align:"center",fontFace:"Meiryo"});
+      });
+      sl.addShape(presR.ShapeType.rect,{x:0.4,y:4.62,w:9.2,h:0.65,fill:{color:C.paleGreen},line:{color:C.lightGreen}});
+      sl.addText([
+        {text:"✅  ",options:{fontSize:14}},
+        {text:`じぶん電気の発電コストは約${m.costPerKWh}円/kWh。`,options:{color:C.darkGreen,fontSize:13}},
+        {text:`電力会社の${cfg.currentUnitPrice}円より${Math.round(cfg.currentUnitPrice - m.costPerKWh)}円/kWh安く、売電より自家消費がおトク！`,options:{bold:true,color:C.midGreen,fontSize:13}},
+      ],{x:0.5,y:4.62,w:9.0,h:0.65,fontFace:"Meiryo",valign:"middle"});
+    }
+    // ── 実データ D：自家消費 ──
+    {
+      const sl=presR.addSlide(); sl.background={color:C.offWhite};
+      sl.addShape(presR.ShapeType.rect,{x:0,y:0,w:10,h:0.9,fill:{color:C.darkGreen},line:{color:C.darkGreen}});
+      sl.addText("じぶん電気、どのくらい使える？",{x:0.3,y:0,w:7.9,h:0.9,fontSize:22,bold:true,color:C.white,fontFace:"Meiryo",valign:"middle",margin:0});
+      sl.addShape(presR.ShapeType.rect,{x:8.2,y:0.17,w:1.55,h:0.56,fill:{color:C.midGreen},line:{color:C.midGreen}});
+      sl.addText("実データ",{x:8.2,y:0.17,w:1.55,h:0.56,fontSize:11,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+      addBrand(sl,presR);
+      const bdD=[{name:"年間発電量",val:cfg.annualGenerationKWh,color:C.gold,label:`${fmt(cfg.annualGenerationKWh)} kWh`},{name:"自家消費量",val:m.selfKWh,color:C.lightGreen,label:`${fmt(m.selfKWh)} kWh`}];
+      const barAreaHD=2.5,barYD=1.1;
+      bdD.forEach((bar,i)=>{
+        const bH=(bar.val/cfg.annualGenerationKWh)*barAreaHD, x=0.4+i*2.3, y=barYD+barAreaHD-bH;
+        sl.addShape(presR.ShapeType.rect,{x,y,w:1.8,h:bH,fill:{color:bar.color},line:{color:bar.color}});
+        const spaceAbove=y-barYD-0.1;
+        if(spaceAbove>=0.45){
+          sl.addText(bar.label,{x,y:y-0.5,w:1.8,h:0.45,fontSize:13,bold:true,color:C.darkGreen,align:"center",fontFace:"Meiryo"});
+        } else {
+          sl.addText(bar.label,{x,y:y+0.1,w:1.8,h:0.45,fontSize:13,bold:true,color:C.white,align:"center",fontFace:"Meiryo"});
+        }
+        sl.addText(bar.name,{x,y:barYD+barAreaHD+0.1,w:1.8,h:0.4,fontSize:12,color:C.gray,align:"center",fontFace:"Meiryo"});
+      });
+      sl.addShape(presR.ShapeType.rect,{x:5.3,y:1.0,w:4.3,h:2.8,fill:{color:C.white},line:{color:C.lightGreen},shadow:{type:"outer",blur:6,offset:2,angle:135,color:"000000",opacity:0.1}});
+      sl.addText([
+        {text:"自家消費率",options:{breakLine:true,fontSize:12,color:C.gray}},
+        {text:`${m.selfRate}%`,options:{breakLine:true,fontSize:36,bold:true,color:C.midGreen}},
+        {text:`☀️ 昼間直接：${fmt(cfg.directConsumptionKWh)} kWh`,options:{breakLine:true,fontSize:11,color:C.gray}},
+        {text:`🔋 蓄電池：${fmt(cfg.batteryConsumptionKWh)} kWh`,options:{breakLine:true,fontSize:11,color:C.gray}},
+        {text:`残り購入：月平均 ¥${fmt(m.remainBill)}`,options:{fontSize:12,bold:true,color:C.orange}},
+      ],{x:5.3,y:1.0,w:4.3,h:2.8,align:"center",valign:"middle",fontFace:"Meiryo"});
+      sl.addShape(presR.ShapeType.rect,{x:0.4,y:4.0,w:9.2,h:1.35,fill:{color:C.paleGreen},line:{color:C.lightGreen}});
+      sl.addText([
+        {text:"📊 月々の残り電気代：",options:{color:C.darkGreen}},
+        {text:`約${fmt(m.remainBill)}円`,options:{bold:true,fontSize:22,color:C.orange}},
+        {text:`　→　削減効果 月${fmt(m.annualSaving/12)}円・20年で約${m.saving20YMan}万円`,options:{color:C.charcoal,fontSize:13}},
+      ],{x:0.8,y:4.05,w:8.5,h:1.2,fontSize:16,fontFace:"Meiryo",valign:"middle"});
+    }
+    // ── 実データ E：コスト比較 ──
+    {
+      const sl=presR.addSlide(); sl.background={color:C.offWhite};
+      sl.addShape(presR.ShapeType.rect,{x:0,y:0,w:10,h:0.9,fill:{color:C.darkGreen},line:{color:C.darkGreen}});
+      sl.addText(`${cfg.warrantyYears}年間トータルコスト比較`,{x:0.3,y:0,w:7.9,h:0.9,fontSize:22,bold:true,color:C.white,fontFace:"Meiryo",valign:"middle",margin:0});
+      sl.addShape(presR.ShapeType.rect,{x:8.2,y:0.17,w:1.55,h:0.56,fill:{color:C.midGreen},line:{color:C.midGreen}});
+      sl.addText("実データ",{x:8.2,y:0.17,w:1.55,h:0.56,fontSize:11,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+      addBrand(sl,presR);
+      const erE=(cfg.escalationRate||0)/100;
+      const bill20ShowE=erE>0?m.bill20YMan_rise:m.bill20YMan;
+      const remain20ManE=Math.round(m.remain20Y_rise/10000);
+      const mBWE=6.0;
+      // Row 1: 電力会社
+      sl.addText("このまま電力会社の電気を買い続けた場合",{x:0.4,y:1.3,w:9.2,h:0.4,fontSize:13,color:C.charcoal,fontFace:"Meiryo"});
+      sl.addShape(presR.ShapeType.rect,{x:0.4,y:1.72,w:mBWE,h:0.7,fill:{color:C.orange},line:{color:C.orange}});
+      sl.addText(`${fmt(bill20ShowE)} 万円`,{x:0.4+mBWE+0.1,y:1.72,w:2.5,h:0.7,fontSize:18,bold:true,color:C.orange,valign:"middle",fontFace:"Meiryo"});
+      // Row 2: じぶん電気（積み上げ：初期費用＋残り電気代）
+      const costWE=mBWE*Math.min(m.totalCostMan/bill20ShowE,1);
+      const remWE=mBWE*Math.min(remain20ManE/bill20ShowE,Math.max(0,1-m.totalCostMan/bill20ShowE));
+      sl.addText("じぶん電気（太陽光＋蓄電池）の総支出",{x:0.4,y:2.9,w:9.2,h:0.4,fontSize:13,color:C.charcoal,fontFace:"Meiryo"});
+      sl.addShape(presR.ShapeType.rect,{x:0.4,y:3.32,w:costWE,h:0.7,fill:{color:C.midGreen},line:{color:C.midGreen}});
+      if(costWE>0.9)sl.addText(`初期費用\n${m.totalCostMan}万`,{x:0.4,y:3.32,w:costWE,h:0.7,fontSize:9,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo"});
+      sl.addShape(presR.ShapeType.rect,{x:0.4+costWE,y:3.32,w:remWE,h:0.7,fill:{color:C.accent},line:{color:C.accent}});
+      if(remWE>0.9)sl.addText(`残電気代\n${remain20ManE}万`,{x:0.4+costWE,y:3.32,w:remWE,h:0.7,fontSize:9,bold:true,color:C.darkGreen,align:"center",valign:"middle",fontFace:"Meiryo"});
+      sl.addText(`計 ${fmt(m.totalCostMan+remain20ManE)} 万円`,{x:0.4+costWE+remWE+0.1,y:3.32,w:2.5,h:0.7,fontSize:18,bold:true,color:C.midGreen,valign:"middle",fontFace:"Meiryo"});
+      sl.addText([{text:"■ ",options:{color:C.midGreen}},{text:`初期費用 ${m.totalCostMan}万円　＋　`,options:{color:C.gray}},{text:"■ ",options:{color:C.lightGreen}},{text:`残り電気代 ${remain20ManE}万円　＝　計 ${fmt(m.totalCostMan+remain20ManE)}万円`,options:{color:C.gray}}],{x:0.4,y:4.08,w:8.8,h:0.28,fontSize:10,fontFace:"Meiryo",valign:"middle"});
+      const diffE=m.costDiff_with_rise;
+      sl.addShape(presR.ShapeType.rect,{x:0.4,y:4.46,w:9.2,h:0.9,fill:{color:C.darkGreen},line:{color:C.darkGreen}});
+      sl.addText([{text:"💡  じぶん電気なら、",options:{color:C.white}},{text:`${cfg.warrantyYears}年間で 約${fmt(diffE)}万円`,options:{bold:true,fontSize:22,color:C.accent}},{text:"  のコスト差が生まれます",options:{color:C.white}}],{x:0.5,y:4.46,w:9.0,h:0.9,fontSize:16,fontFace:"Meiryo",valign:"middle"});
+      sl.addText(`※${cn}様のヒアリング情報をもとにした試算です。実際のコストは設置条件等により異なります。`,{x:0.3,y:5.4,w:8.2,h:0.22,fontSize:8,color:C.gray,fontFace:"Meiryo",italic:true,valign:"middle"});
+    }
+
+    // ── Slide 7・8（ローン） ──
+    if (cfg.monthlyLoanPayment > 0) {
+      setProgress("ローンスライドを作成中...");
+      await new Promise(r=>setTimeout(r,30));
+      const loanYrs = cfg.loanYears || 15;
+      const mred = Math.round(m.annualSaving/12);
+      const re = m.remainBill; // 精密計算：月々残り電気代
+      const mt = cfg.monthlyLoanPayment + re;
+      const mdiff = cfg.monthlyElectricBill - mt;
+
+      // Slide 7a 月々3比較（電力会社 / 現金購入 / ローン活用）
+      {
+        const sl=presR.addSlide(); sl.background={color:C.offWhite};
+        sl.addShape(presR.ShapeType.rect,{x:0,y:0,w:10,h:0.75,fill:{color:C.darkGreen},line:{color:C.darkGreen}});
+        sl.addText("月々の支出比較　3つの選択肢",{x:0.3,y:0,w:7.5,h:0.75,fontSize:22,bold:true,color:C.white,fontFace:"Meiryo",valign:"middle",margin:0});
+        sl.addShape(presR.ShapeType.rect,{x:8.2,y:0.1,w:1.55,h:0.55,fill:{color:C.midGreen},line:{color:C.midGreen}});
+        sl.addText("実データ",{x:8.2,y:0.1,w:1.55,h:0.55,fontSize:11,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+        addBrand(sl,presR);
+        const c1x=0.2,c2x=3.43,c3x=6.65,cw=2.9,c3w=3.1,cy=0.87,ch=3.78;
+        // カード背景
+        sl.addShape(presR.ShapeType.rect,{x:c1x,y:cy,w:cw,h:ch,fill:{color:C.white},line:{color:"FED7AA"},shadow:{type:"outer",blur:6,offset:2,angle:135,color:"000000",opacity:0.08}});
+        sl.addShape(presR.ShapeType.rect,{x:c2x,y:cy,w:cw,h:ch,fill:{color:C.white},line:{color:C.accent},shadow:{type:"outer",blur:6,offset:2,angle:135,color:"000000",opacity:0.08}});
+        sl.addShape(presR.ShapeType.rect,{x:c3x,y:cy,w:c3w,h:ch,fill:{color:C.white},line:{color:"C4B5FD"},shadow:{type:"outer",blur:6,offset:2,angle:135,color:"000000",opacity:0.08}});
+        // ヘッダー
+        sl.addShape(presR.ShapeType.rect,{x:c1x,y:cy,w:cw,h:0.48,fill:{color:C.orange},line:{color:C.orange}});
+        sl.addText("電力会社のまま",{x:c1x,y:cy,w:cw,h:0.48,fontSize:13,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+        sl.addShape(presR.ShapeType.rect,{x:c2x,y:cy,w:cw,h:0.48,fill:{color:C.midGreen},line:{color:C.midGreen}});
+        sl.addText("じぶん電気（現金購入）",{x:c2x,y:cy,w:cw,h:0.48,fontSize:12,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+        sl.addShape(presR.ShapeType.rect,{x:c3x,y:cy,w:c3w,h:0.48,fill:{color:"5B21B6"},line:{color:"5B21B6"}});
+        sl.addText(`じぶん電気（${loanYrs}年ローン）`,{x:c3x,y:cy,w:c3w,h:0.48,fontSize:12,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+        // Col1 内容
+        sl.addShape(presR.ShapeType.rect,{x:c1x+0.12,y:cy+0.58,w:cw-0.24,h:0.44,fill:{color:"FFF7ED"},line:{color:"FED7AA"}});
+        sl.addText(`電気代　¥${fmt(cfg.monthlyElectricBill)}`,{x:c1x+0.12,y:cy+0.58,w:cw-0.24,h:0.44,fontSize:12,bold:true,color:"7C2D12",align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+        sl.addText("月々の支出",{x:c1x,y:cy+1.18,w:cw,h:0.3,fontSize:10,color:C.gray,align:"center",fontFace:"Meiryo"});
+        sl.addText(`¥${fmt(cfg.monthlyElectricBill)}`,{x:c1x,y:cy+1.48,w:cw,h:0.75,fontSize:30,bold:true,color:C.orange,align:"center",valign:"middle",fontFace:"Meiryo"});
+        sl.addText("毎月払い続けても\n資産にはなりません",{x:c1x,y:cy+2.38,w:cw,h:0.65,fontSize:10,color:C.gray,align:"center",fontFace:"Meiryo"});
+        sl.addShape(presR.ShapeType.rect,{x:c1x+0.3,y:cy+3.18,w:cw-0.6,h:0.4,fill:{color:"FFF7ED"},line:{color:"FED7AA"}});
+        sl.addText(`20年累計 約${fmt(Math.round(m.bill20Y_rise/10000))}万円`,{x:c1x+0.3,y:cy+3.18,w:cw-0.6,h:0.4,fontSize:10,bold:true,color:C.orange,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+        // Col2 内容
+        sl.addShape(presR.ShapeType.rect,{x:c2x+0.12,y:cy+0.58,w:cw-0.24,h:0.44,fill:{color:"ECFDF5"},line:{color:C.accent}});
+        sl.addText(`残り電気代　¥${fmt(re)}`,{x:c2x+0.12,y:cy+0.58,w:cw-0.24,h:0.44,fontSize:12,bold:true,color:C.darkGreen,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+        sl.addShape(presR.ShapeType.rect,{x:c2x+0.12,y:cy+1.1,w:cw-0.24,h:0.38,fill:{color:"F9FAFB"},line:{color:C.lightGray}});
+        sl.addText(`初期費用　${m.totalCostMan}万円（別途）`,{x:c2x+0.12,y:cy+1.1,w:cw-0.24,h:0.38,fontSize:10,color:C.gray,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+        sl.addText("月々の残電気代",{x:c2x,y:cy+1.58,w:cw,h:0.3,fontSize:10,color:C.gray,align:"center",fontFace:"Meiryo"});
+        sl.addText(`¥${fmt(re)}`,{x:c2x,y:cy+1.88,w:cw,h:0.75,fontSize:30,bold:true,color:C.midGreen,align:"center",valign:"middle",fontFace:"Meiryo"});
+        sl.addText(`初期費用 ${m.totalCostMan}万円を除く\n月々の電気代支出`,{x:c2x,y:cy+2.72,w:cw,h:0.58,fontSize:10,color:C.gray,align:"center",fontFace:"Meiryo"});
+        sl.addShape(presR.ShapeType.rect,{x:c2x+0.3,y:cy+3.18,w:cw-0.6,h:0.4,fill:{color:"ECFDF5"},line:{color:C.lightGreen}});
+        sl.addText(`20年累計 約${fmt(Math.round((m.totalCost+m.remain20Y_rise)/10000))}万円`,{x:c2x+0.3,y:cy+3.18,w:cw-0.6,h:0.4,fontSize:10,bold:true,color:C.midGreen,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+        // Col3 内容
+        sl.addShape(presR.ShapeType.rect,{x:c3x+0.12,y:cy+0.58,w:c3w-0.24,h:0.44,fill:{color:"F5F3FF"},line:{color:"C4B5FD"}});
+        sl.addText(`ローン返済　¥${fmt(cfg.monthlyLoanPayment)}`,{x:c3x+0.12,y:cy+0.58,w:c3w-0.24,h:0.44,fontSize:12,bold:true,color:"4C1D95",align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+        sl.addShape(presR.ShapeType.rect,{x:c3x+0.12,y:cy+1.1,w:c3w-0.24,h:0.38,fill:{color:"ECFDF5"},line:{color:C.accent}});
+        sl.addText(`残り電気代　¥${fmt(re)}`,{x:c3x+0.12,y:cy+1.1,w:c3w-0.24,h:0.38,fontSize:11,bold:true,color:C.darkGreen,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+        sl.addText("月々の支出合計",{x:c3x,y:cy+1.58,w:c3w,h:0.3,fontSize:10,color:C.gray,align:"center",fontFace:"Meiryo"});
+        sl.addText(`¥${fmt(mt)}`,{x:c3x,y:cy+1.88,w:c3w,h:0.75,fontSize:30,bold:true,color:"7C3AED",align:"center",valign:"middle",fontFace:"Meiryo"});
+        sl.addText(`${loanYrs}年完済後は\n残電気代のみ ¥${fmt(re)}/月`,{x:c3x,y:cy+2.72,w:c3w,h:0.58,fontSize:10,color:C.gray,align:"center",fontFace:"Meiryo"});
+        const loanTotal7a=cfg.monthlyLoanPayment*loanYrs*12;
+        sl.addShape(presR.ShapeType.rect,{x:c3x+0.3,y:cy+3.18,w:c3w-0.6,h:0.4,fill:{color:"F5F3FF"},line:{color:"C4B5FD"}});
+        sl.addText(`20年累計 約${fmt(Math.round((loanTotal7a+m.remain20Y_rise)/10000))}万円`,{x:c3x+0.3,y:cy+3.18,w:c3w-0.6,h:0.4,fontSize:10,bold:true,color:"5B21B6",align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+        // フッター
+        sl.addShape(presR.ShapeType.rect,{x:0,y:4.82,w:10,h:0.8,fill:{color:C.paleGreen},line:{color:C.lightGreen,width:0.5}});
+        const dCol7a=mdiff>=0?C.midGreen:C.orange;
+        const dLbl7a=mdiff>=0
+          ?`ローン活用：月々 約${fmt(mdiff)}円おトク（vs 電力会社）`
+          :`ローン活用：月々 約${fmt(Math.abs(mdiff))}円増（${loanYrs}年完済後は 約${fmt(mred)}円/月 削減）`;
+        sl.addText([{text:"🌿  "},{text:dLbl7a,options:{bold:true,color:dCol7a,fontSize:12}}],{x:0.4,y:4.84,w:9.2,h:0.55,fontFace:"Meiryo",valign:"middle",fontSize:12,color:C.charcoal});
+      }
+
+      // Slide 7b 累計グラフ（3系列：電力会社・現金購入・ローン活用）
+      {
+        const sl=presR.addSlide(); sl.background={color:C.white};
+        sl.addShape(presR.ShapeType.rect,{x:0,y:0,w:10,h:0.75,fill:{color:C.darkGreen},line:{color:C.darkGreen}});
+        const erLabel=cfg.escalationRate>0?`・電気代年${cfg.escalationRate}%上昇想定`:'・電気代現状維持';
+        sl.addText(`20年間の累計支出比較　〜3つの選択肢${erLabel}〜`,{x:0.4,y:0,w:7.5,h:0.75,fontSize:16,bold:true,color:C.white,fontFace:"Meiryo",valign:"middle",margin:0});
+        sl.addShape(presR.ShapeType.rect,{x:8.2,y:0.1,w:1.55,h:0.55,fill:{color:C.midGreen},line:{color:C.midGreen}});
+        sl.addText("実データ",{x:8.2,y:0.1,w:1.55,h:0.55,fontSize:11,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+        const wY=cfg.warrantyYears;
+        const aBN=cfg.monthlyElectricBill*12;
+        const aDLA=re*12, aDL=mt*12;
+        const er=(cfg.escalationRate||0)/100;
+        const steps=[0,5,10,15,20].filter(y=>y<=wY);
+        const labels=[], nowVals=[], cashVals=[], loanVals=[];
+        steps.forEach(y=>{
+          labels.push(`${y}年`);
+          let cumNow=0; for(let i=1;i<=y;i++) cumNow+=aBN*Math.pow(1+er,i-1);
+          nowVals.push(Math.round(cumNow/10000));
+          if(y===0){cashVals.push(Math.round(m.totalCost/10000));}
+          else{let cumCash=m.totalCost;for(let i=1;i<=y;i++)cumCash+=aDLA*Math.pow(1+er,i-1);cashVals.push(Math.round(cumCash/10000));}
+          let cumLoan=0;
+          for(let i=1;i<=y;i++){const reY=re*12*Math.pow(1+er,i-1);cumLoan+=(i<=loanYrs?aDL+(reY-aDLA):reY);}
+          loanVals.push(Math.round(cumLoan/10000));
+        });
+        sl.addChart(presR.charts.LINE,[
+          {name:"電力会社のまま",           labels, values:nowVals},
+          {name:"じぶん電気（現金購入）",    labels, values:cashVals},
+          {name:`じぶん電気（${loanYrs}年ローン）`, labels, values:loanVals},
+        ],{
+          x:0.4,y:0.85,w:8.0,h:3.85,
+          chartColors:["EA580C","2D6A4F","7C3AED"],
+          lineSize:2.5,lineDataSymbol:"circle",lineDataSymbolSize:7,
+          chartArea:{fill:{color:C.white},border:{color:"FFFFFF"}},
+          plotArea:{fill:{color:C.white}},
+          catAxisLabelColor:"6B7280",valAxisLabelColor:"6B7280",
+          catAxisLabelFontSize:11,valAxisLabelFontSize:11,
+          valAxisMinVal:0,
+          valAxisMaxVal:Math.ceil(Math.max(...nowVals,...cashVals,...loanVals)/100)*100+100,
+          valGridLine:{color:"E5E7EB",size:0.5,style:"solid"},catGridLine:{style:"none"},
+          showLegend:true,legendPos:"b",legendFontSize:11,
+          showValue:false,valAxisTitle:"万円",showValAxisTitle:true,
+        });
+        if(loanYrs<wY){
+          const stepCount=steps.length-1, loanStep=steps.indexOf(loanYrs);
+          if(loanStep>=0){
+            const graphLeft=0.85,graphRight=8.1;
+            const lxP=graphLeft+(loanStep/stepCount)*(graphRight-graphLeft);
+            sl.addShape(presR.ShapeType.line,{x:lxP,y:0.9,w:0,h:3.5,line:{color:"7C3AED",width:1.5,dashType:"dash"}});
+            sl.addText(`${loanYrs}年でローン完済`,{x:lxP-0.85,y:0.92,w:1.7,h:0.32,fontSize:9,bold:true,color:"5B21B6",align:"center",fontFace:"Meiryo"});
+          }
+        }
+        const eN=nowVals[nowVals.length-1],eC=cashVals[cashVals.length-1],eL=loanVals[loanVals.length-1];
+        const maxV=Math.ceil(Math.max(eN,eC,eL)/100)*100+100;
+        const graphTop=0.9,graphH=3.3,labelX=8.55;
+        const endPts=[[eN,"EA580C"],[eC,"2D6A4F"],[eL,"7C3AED"]]
+          .map(([v,col])=>[graphTop+graphH*(1-v/maxV)-0.18,col,`${v}万`])
+          .sort((a,b)=>a[0]-b[0]);
+        endPts.forEach((_,i)=>{if(i>0&&endPts[i][0]-endPts[i-1][0]<0.45)endPts[i][0]=endPts[i-1][0]+0.45;});
+        endPts.forEach(([y,col,txt])=>{
+          sl.addShape(presR.ShapeType.rect,{x:labelX,y,w:1.1,h:0.36,fill:{color:col},line:{color:col}});
+          sl.addText(txt,{x:labelX,y,w:1.1,h:0.36,fontSize:11,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+        });
+        sl.addShape(presR.ShapeType.rect,{x:0,y:4.88,w:10,h:0.745,fill:{color:C.paleGreen},line:{color:C.lightGreen,width:0.5}});
+        const diffC=Math.round(eN-eC),diffL=Math.round(eN-eL);
+        sl.addText([
+          {text:"🌿　20年間の累計：",options:{color:C.charcoal,fontSize:11}},
+          {text:`現金購入 約${fmt(Math.abs(diffC))}万円${diffC>=0?'おトク':'増'}　`,options:{bold:true,fontSize:12,color:diffC>=0?C.midGreen:C.orange}},
+          {text:`ローン活用 約${fmt(Math.abs(diffL))}万円${diffL>=0?'おトク':'増'}（vs 電力会社）`,options:{bold:true,fontSize:12,color:diffL>=0?"5B21B6":C.orange}},
+        ],{x:0.4,y:4.9,w:9.2,h:0.65,fontFace:"Meiryo",valign:"middle"});
+      }
+
+      // Slide 7c コスト差・単価サマリー（新規）
+      {
+        const sl=presR.addSlide(); sl.background={color:C.offWhite};
+        sl.addShape(presR.ShapeType.rect,{x:0,y:0,w:10,h:0.75,fill:{color:C.darkGreen},line:{color:C.darkGreen}});
+        sl.addText("20年間のコスト比較まとめ",{x:0.3,y:0,w:7.9,h:0.75,fontSize:22,bold:true,color:C.white,fontFace:"Meiryo",valign:"middle",margin:0});
+        sl.addShape(presR.ShapeType.rect,{x:8.2,y:0.1,w:1.55,h:0.55,fill:{color:C.midGreen},line:{color:C.midGreen}});
+        sl.addText("実データ",{x:8.2,y:0.1,w:1.55,h:0.55,fontSize:11,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+        addBrand(sl,presR);
+        const loanTotalC=cfg.monthlyLoanPayment*loanYrs*12;
+        const loanDiffManC=Math.round((m.bill20Y_rise-loanTotalC-m.remain20Y_rise)/10000);
+        const loanCPKC=m.selfKWh>0?Math.round(loanTotalC/(m.selfKWh*cfg.warrantyYears)):0;
+        const bill20Man=Math.round(m.bill20Y_rise/10000);
+        const remain20ManC=Math.round(m.remain20Y_rise/10000);
+        // 左パネル：コスト差
+        sl.addShape(presR.ShapeType.rect,{x:0.2,y:0.87,w:4.55,h:4.3,fill:{color:C.white},line:{color:C.lightGray}});
+        sl.addShape(presR.ShapeType.rect,{x:0.2,y:0.87,w:4.55,h:0.44,fill:{color:C.darkGreen},line:{color:C.darkGreen}});
+        sl.addText("📊 電力会社と比べたコスト差（20年間）",{x:0.25,y:0.87,w:4.45,h:0.44,fontSize:11,bold:true,color:C.white,valign:"middle",fontFace:"Meiryo"});
+        sl.addShape(presR.ShapeType.rect,{x:0.35,y:1.4,w:4.25,h:0.36,fill:{color:"ECFDF5"},line:{color:C.lightGreen}});
+        sl.addText("現金購入ベース",{x:0.4,y:1.4,w:4.15,h:0.36,fontSize:11,color:C.darkGreen,bold:true,valign:"middle",fontFace:"Meiryo",margin:4});
+        sl.addText(`約 ${fmt(m.costDiff_with_rise)} 万円 おトク`,{x:0.35,y:1.8,w:4.25,h:0.6,fontSize:24,bold:true,color:C.midGreen,align:"center",valign:"middle",fontFace:"Meiryo"});
+        sl.addText(`電力会社 ${bill20Man}万 ー（初期費用 ${m.totalCostMan}万 ＋ 残電気代 ${remain20ManC}万）`,{x:0.35,y:2.42,w:4.25,h:0.3,fontSize:9,color:C.gray,align:"center",fontFace:"Meiryo"});
+        sl.addShape(presR.ShapeType.line,{x:0.35,y:2.82,w:4.25,h:0,line:{color:C.lightGray,width:0.5}});
+        sl.addShape(presR.ShapeType.rect,{x:0.35,y:2.92,w:4.25,h:0.36,fill:{color:"F5F3FF"},line:{color:"C4B5FD"}});
+        sl.addText("ローン活用ベース",{x:0.4,y:2.92,w:4.15,h:0.36,fontSize:11,color:"4C1D95",bold:true,valign:"middle",fontFace:"Meiryo",margin:4});
+        sl.addText(`約 ${fmt(loanDiffManC)} 万円 おトク`,{x:0.35,y:3.32,w:4.25,h:0.6,fontSize:24,bold:true,color:"5B21B6",align:"center",valign:"middle",fontFace:"Meiryo"});
+        sl.addText(`電力会社 ${bill20Man}万 ー（ローン総額 ${Math.round(loanTotalC/10000)}万 ＋ 残電気代 ${remain20ManC}万）`,{x:0.35,y:3.95,w:4.25,h:0.3,fontSize:9,color:C.gray,align:"center",fontFace:"Meiryo"});
+        sl.addShape(presR.ShapeType.rect,{x:0.35,y:4.35,w:4.25,h:0.64,fill:{color:"FFF7ED"},line:{color:"FED7AA"}});
+        const cashBetter=m.costDiff_with_rise-loanDiffManC;
+        sl.addText(cashBetter>0?`現金購入の方が 約${fmt(cashBetter)}万円おトクですが、初期費用が必要です`:`ローン活用でも十分おトクです（初期費用不要）`,{x:0.35,y:4.35,w:4.25,h:0.64,fontSize:10,color:C.orange,align:"center",valign:"middle",fontFace:"Meiryo"});
+        // 右パネル：単価比較
+        sl.addShape(presR.ShapeType.rect,{x:5.1,y:0.87,w:4.7,h:4.3,fill:{color:C.white},line:{color:C.lightGray}});
+        sl.addShape(presR.ShapeType.rect,{x:5.1,y:0.87,w:4.7,h:0.44,fill:{color:C.darkGreen},line:{color:C.darkGreen}});
+        sl.addText("💡 1kWhあたりの実質単価比較",{x:5.15,y:0.87,w:4.6,h:0.44,fontSize:11,bold:true,color:C.white,valign:"middle",fontFace:"Meiryo"});
+        [{label:"現在の電気代単価（比較基準）",val:`${cfg.currentUnitPrice}円/kWh`,bg:"FFF7ED",border:"FED7AA",vc:C.orange},
+         {label:"発電単価（100%活用・理論値）",val:`${m.costPerKWh}円/kWh`,bg:"ECFDF5",border:C.accent,vc:C.midGreen},
+         {label:"自家消費単価（現金購入ベース）",val:m.selfCostPerKWh>0?`${m.selfCostPerKWh}円/kWh`:'-',bg:"ECFDF5",border:"86EFAC",vc:C.darkGreen},
+         {label:"ローン活用時の単価（総返済額）",val:loanCPKC>0?`${loanCPKC}円/kWh`:'-',bg:"F5F3FF",border:"C4B5FD",vc:"5B21B6"},
+        ].forEach((r,i)=>{
+          const ry=1.42+i*0.92;
+          sl.addShape(presR.ShapeType.rect,{x:5.25,y:ry,w:4.4,h:0.84,fill:{color:r.bg},line:{color:r.border}});
+          sl.addText(r.label,{x:5.3,y:ry+0.04,w:4.3,h:0.3,fontSize:10,color:C.gray,fontFace:"Meiryo",valign:"middle"});
+          sl.addText(r.val,{x:5.3,y:ry+0.38,w:4.3,h:0.38,fontSize:19,bold:true,color:r.vc,fontFace:"Meiryo",valign:"middle"});
+        });
+      }
+    }
+
+    // ── 実データ版：保証スライド ──
+    setProgress("実データ版：保証スライドを作成中...");
+    await new Promise(r=>setTimeout(r,30));
+    {
+      const sl=presR.addSlide(); sl.background={color:C.offWhite};
+      sl.addShape(presR.ShapeType.rect,{x:0,y:0,w:10,h:0.9,fill:{color:C.darkGreen},line:{color:C.darkGreen}});
+      sl.addText("じぶん電気は、長く・安心して使えます",{x:0.3,y:0,w:7.9,h:0.9,fontSize:22,bold:true,color:C.white,fontFace:"Meiryo",valign:"middle",margin:0});
+      sl.addShape(presR.ShapeType.rect,{x:8.2,y:0.17,w:1.55,h:0.56,fill:{color:C.midGreen},line:{color:C.midGreen}});
+      sl.addText("実データ",{x:8.2,y:0.17,w:1.55,h:0.56,fontSize:11,bold:true,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+      addBrand(sl,presR);
+      [{icon:"☀️",title:"太陽光パネル",warranty:`${cfg.warrantyYears}年保証`,desc:"製品・出力・施工\nすべてカバー"},{icon:"⚡",title:"パワーコンディショナー",warranty:`${cfg.warrantyYears}年保証`,desc:"変換効率の\n長期維持"},{icon:"🔋",title:"蓄電池",warranty:`${cfg.warrantyYears}年保証`,desc:"容量保証で\n安心使用"}].forEach((p,i)=>{
+        const x=0.4+i*3.1;
+        sl.addShape(presR.ShapeType.rect,{x,y:1.0,w:2.8,h:2.5,fill:{color:C.white},line:{color:C.lightGray},shadow:{type:"outer",blur:8,offset:3,angle:135,color:"000000",opacity:0.1}});
+        sl.addText(p.icon,{x,y:1.05,w:2.8,h:0.7,fontSize:26,align:"center",valign:"middle"});
+        sl.addText(p.title,{x,y:1.75,w:2.8,h:0.4,fontSize:12,bold:true,color:C.darkGreen,align:"center",fontFace:"Meiryo"});
+        sl.addShape(presR.ShapeType.rect,{x:x+0.3,y:2.18,w:2.2,h:0.4,fill:{color:C.lightGreen},line:{color:C.lightGreen}});
+        sl.addText(p.warranty,{x:x+0.3,y:2.18,w:2.2,h:0.4,fontSize:14,bold:true,color:C.darkGreen,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+        sl.addText(p.desc,{x,y:2.65,w:2.8,h:0.75,fontSize:11,color:C.gray,align:"center",fontFace:"Meiryo"});
+      });
+      sl.addShape(presR.ShapeType.rect,{x:0.4,y:3.65,w:9.2,h:1.7,fill:{color:C.paleGreen},line:{color:C.lightGreen}});
+      sl.addText([{text:"🏠 停電のときも、じぶん電気が守ってくれます\n",options:{bold:true,fontSize:15,color:C.darkGreen}},{text:"太陽光＋蓄電池があれば、停電中でも電気が使えます。\n冷蔵庫・照明・スマートフォン充電など、大切な日常生活を守ります。",options:{fontSize:13,color:C.charcoal}}],{x:0.8,y:3.7,w:8.5,h:1.55,fontFace:"Meiryo"});
+    }
+
+    setProgress("実データ版：まとめスライドを作成中...");
+    await new Promise(r=>setTimeout(r,30));
+    // ── Slide まとめ（実データ版）──
+    {
+      const sl=presR.addSlide(); sl.background={color:C.darkGreen};
+      sl.addShape(presR.ShapeType.rect,{x:0,y:0,w:10,h:0.08,fill:{color:C.lightGreen},line:{color:C.lightGreen}});
+      sl.addShape(presR.ShapeType.rect,{x:0,y:5.545,w:10,h:0.08,fill:{color:C.lightGreen},line:{color:C.lightGreen}});
+      sl.addShape(presR.ShapeType.rect,{x:0.5,y:0.18,w:2.0,h:0.48,fill:{color:C.lightGreen},line:{color:C.lightGreen}});
+      sl.addText("じぶん電気",{x:0.5,y:0.18,w:2.0,h:0.48,fontSize:15,bold:true,color:C.darkGreen,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+      sl.addText(`${cn}様へのご提案まとめ`,{x:2.6,y:0.18,w:6.5,h:0.48,fontSize:18,bold:true,color:C.white,fontFace:"Meiryo",valign:"middle",margin:0});
+      [{num:"01",icon:"💡",text:`電力会社の${cfg.currentUnitPrice}円/kWhを、じぶん電気なら約${m.costPerKWh}円/kWhに`},{num:"02",icon:"💰",text:`${cfg.warrantyYears}年間のコスト差　約${fmt(m.costDiff_with_rise)}万円（電力会社より安い）`},{num:"03",icon:"🔒",text:`全機器 ${cfg.warrantyYears}年間保証で、ずっと安心して使い続けられます`},{num:"04",icon:"🏠",text:"停電時もじぶん電気で安心。大切なご家族を守る備えに"}].forEach((item,i)=>{
+        const y=1.05+i*1.0;
+        sl.addShape(presR.ShapeType.rect,{x:0.4,y,w:0.6,h:0.7,fill:{color:C.lightGreen},line:{color:C.lightGreen}});
+        sl.addText(item.num,{x:0.4,y,w:0.6,h:0.7,fontSize:14,bold:true,color:C.darkGreen,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+        sl.addText(`${item.icon}　${item.text}`,{x:1.2,y:y+0.05,w:8.3,h:0.6,fontSize:14,color:C.white,valign:"middle",fontFace:"Meiryo"});
+      });
+      sl.addShape(presR.ShapeType.rect,{x:0.4,y:4.97,w:9.2,h:0.45,fill:{color:C.lightGreen,transparency:25},line:{color:C.lightGreen}});
+      sl.addText("じぶん電気について、お気軽にご相談ください 🌿",{x:0.4,y:4.97,w:9.2,h:0.45,fontSize:13,color:C.white,align:"center",valign:"middle",fontFace:"Meiryo",margin:0});
+    }
+
+    setProgress("実データ版：ファイルを生成中...");
+    await new Promise(r=>setTimeout(r,30));
+    await presR.writeFile({ fileName: `${safeName(cn)}様_実データシミュレーション版.pptx` });
+    } // end if (outReal)
+
+    // 履歴保存
+    saveCustomer(cfg);
+    renderSidebarHistory();
+
+    document.getElementById('progress').classList.remove('show');
+    document.querySelectorAll('.gen-btn').forEach(b=>b.disabled=false);
+    const outNames=[outModel&&'モデルケース版',outReal&&'実データシミュレーション版'].filter(Boolean).join('・');
+    toast(`${cn}様の提案書（${outNames}）を生成しました！`);
+
+  } catch(err) {
+    console.error(err);
+    document.getElementById('progress').classList.remove('show');
+    document.querySelectorAll('.gen-btn').forEach(b=>b.disabled=false);
+    toast('エラーが発生しました: '+err.message, 'error');
+  }
+}
+
+// ── 初期化 ──
+onPkgChange(); // 7+7パッケージのデフォルト値を適用
+calc();
+renderSidebarHistory();
+
+function scrollToTopHandler(e) {
+  if (e && e.type === 'touchstart') e.preventDefault();
+  const candidates = [
+    document.querySelector('.main'),
+    document.querySelector('.app'),
+    document.documentElement,
+    document.body,
+  ];
+  const scrolled = candidates.find(el => el && el.scrollTop > 0);
+  if (scrolled) {
+    scrolled.scrollTo({ top: 0, behavior: 'smooth' });
+  } else {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }
+}
+// ページが完全に読み込まれてから実行するようにします
+window.addEventListener('DOMContentLoaded', () => {
+    setLoanMethod('zansai');
+    const _stb = document.getElementById('scroll-top-btn');
+    if (_stb) {
+        _stb.addEventListener('touchstart', scrollToTopHandler, { passive: false });
+        _stb.addEventListener('click', scrollToTopHandler);
+    }
+});
+</script>
+<button id="scroll-top-btn" title="上へ戻る" onclick="scrollToTopHandler(event)">↑</button>
+
+<!-- ── 仮説モデル入力 ロックモーダル ── -->
+<div id="hyp-lock-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:16px;padding:40px 32px;max-width:380px;width:90%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.25)">
+    <div style="font-size:44px;margin-bottom:14px">🔒</div>
+    <div style="font-size:17px;font-weight:900;color:#1d4ed8;margin-bottom:6px">仮説モデル編集にはパスワードが必要です</div>
+    <div style="font-size:13px;color:#6b7280;margin-bottom:22px">パスワードを入力して編集を解除してください</div>
+    <div style="display:flex;gap:8px;margin:0 auto;max-width:300px">
+      <input type="password" id="model-pw-input" placeholder="パスワード"
+             style="flex:1;border:1.5px solid #bfdbfe;border-radius:8px;padding:10px 12px;font-size:15px;font-family:inherit"
+             onkeydown="if(event.key==='Enter')unlockModel()">
+      <button onclick="unlockModel()"
+              style="padding:10px 20px;background:#1d4ed8;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">解除</button>
+    </div>
+    <div id="model-pw-error" style="display:none;color:#dc2626;font-size:12px;margin-top:10px;font-weight:600">❌ パスワードが正しくありません</div>
+    <button onclick="switchTab('customer')"
+            style="margin-top:18px;padding:7px 18px;border-radius:8px;border:1px solid #d1d5db;background:#f9fafb;color:#6b7280;font-size:12px;cursor:pointer;font-family:inherit">キャンセル</button>
+  </div>
+</div>
+</body>
+</html>
