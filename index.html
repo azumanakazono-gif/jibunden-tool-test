@@ -134,6 +134,13 @@ canvas#mini-chart { height: 150px !important; }
 
 .tab-btn { flex:1; padding:11px 16px; background:#fff; border:none; border-bottom:3px solid transparent; cursor:pointer; font-size:15px; font-weight:700; font-family:inherit; color:var(--muted); transition:all .15s; }
 .tab-btn.active { color:var(--mg); border-bottom-color:var(--mg); background:var(--pg); }
+
+/* ── 提案モードセレクター ── */
+.proposal-mode-bar { display:flex; gap:0; border:1.5px solid var(--border); border-radius:10px; overflow:hidden; margin-bottom:12px; }
+.pm-btn { flex:1; padding:11px 8px; background:#fff; border:none; border-right:1px solid var(--border); cursor:pointer; font-size:13px; font-weight:700; font-family:inherit; color:var(--muted); transition:all .15s; line-height:1.4; text-align:center; }
+.pm-btn:last-child { border-right:none; }
+.pm-btn.active { background:var(--dg); color:#fff; }
+.pm-btn:hover:not(.active) { background:var(--pg); color:var(--text); }
 .form-locked .section-card,
 .form-locked #pkg-area,
 .form-locked #result-area { opacity:.25; pointer-events:none; user-select:none; }
@@ -227,6 +234,19 @@ canvas#mini-chart { height: 150px !important; }
       <span id="hyp-unlock-badge" style="display:none;padding:2px 8px;border-radius:12px;background:#f0fdf4;color:#15803d;font-size:11px;font-weight:700">🔓 編集解除済み</span>
       <button onclick="resetToDefaults()" style="margin-left:auto;padding:4px 10px;border-radius:6px;border:1px solid #1d4ed8;background:#fff;color:#1d4ed8;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap">デフォルト値に戻す</button>
       <button id="hyp-relock-btn" onclick="lockModel()" style="display:none;padding:4px 10px;border-radius:6px;border:1px solid #dc2626;background:#fff;color:#dc2626;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap">🔒 再ロック</button>
+    </div>
+
+    <!-- ── 提案モード選択 ── -->
+    <div class="section-card">
+      <div class="section-title">🏗️ 提案モード</div>
+      <div class="proposal-mode-bar">
+        <button class="pm-btn active" id="pm-btn-pv_battery" onclick="setProposalMode('pv_battery')">☀️ 太陽光<br>＋蓄電池</button>
+        <button class="pm-btn" id="pm-btn-pv_only" onclick="setProposalMode('pv_only')">☀️ 太陽光<br>のみ</button>
+        <button class="pm-btn" id="pm-btn-battery_only" onclick="setProposalMode('battery_only')">🔋 蓄電池<br>のみ（後付け）</button>
+      </div>
+      <div id="proposal-mode-desc" style="font-size:12px;color:var(--muted);padding:7px 12px;background:var(--pg);border-radius:8px;border:1px solid var(--border)">
+        太陽光パネルと蓄電池のセットを提案します（標準モード）。
+      </div>
     </div>
 
     <div class="section-card">
@@ -373,12 +393,12 @@ canvas#mini-chart { height: 150px !important; }
         <span style="color:var(--muted);margin-left:8px;font-size:11px">↓ 下の値を手動で上書きできます</span>
       </div>
       <div class="grid2" style="margin-top:4px">
-        <div class="field">
+        <div class="field" id="field-dc-wrap">
           <label>昼間 直接使用量（kWh/年）<span style="font-size:10px;color:var(--mg);margin-left:4px">太陽光→直接消費</span></label>
           <input type="number" id="dc" value="2310" min="0" max="15000" step="10" oninput="calc()">
           <span id="dc-monthly-hint" style="font-size:11px;color:var(--muted)"></span>
         </div>
-        <div class="field">
+        <div class="field" id="field-bc-wrap">
           <label>蓄電池で賄う量（kWh/年）<span style="font-size:10px;color:var(--mg);margin-left:4px">夜間・曇天時に放電</span></label>
           <input type="number" id="bc" value="2520" min="0" max="15000" step="10" oninput="calc()">
           <span id="bc-monthly-hint" style="font-size:11px;color:var(--muted)"></span>
@@ -412,7 +432,7 @@ canvas#mini-chart { height: 150px !important; }
     </div>
 
     <div class="section-card">
-      <div class="section-title">☀️ システム設計</div>
+      <div class="section-title" id="system-design-title">☀️ システム設計（太陽光＋蓄電池）</div>
       <!-- パッケージ選択（お客様ヒアリング入力時のみ表示） -->
       <div id="pkg-area" style="background:var(--pg);border-radius:8px;border:1px solid var(--border);padding:10px 14px;margin-bottom:12px">
         <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
@@ -458,15 +478,15 @@ canvas#mini-chart { height: 150px !important; }
         </div>
       </div>
       <div class="grid3" style="margin-bottom:12px">
-        <div class="field"><label>太陽光容量（kW）</label><input type="number" id="sk" value="7.02" min="3" max="20" step="0.01" oninput="calc()"></div>
-        <div class="field"><label>蓄電池容量（kWh）</label><input type="number" id="bk" value="7.7" min="3" max="30" step="0.1" oninput="calc()"></div>
-        <div class="field">
-          <label>税込総工事費用（万円）<span style="font-size:10px;color:var(--mg);margin-left:4px">太陽光＋蓄電池 工事込み</span></label>
+        <div class="field" id="field-sk-wrap"><label>太陽光容量（kW）</label><input type="number" id="sk" value="7.02" min="3" max="20" step="0.01" oninput="calc()"></div>
+        <div class="field" id="field-bk-wrap"><label>蓄電池容量（kWh）</label><input type="number" id="bk" value="7.7" min="3" max="30" step="0.1" oninput="calc()"></div>
+        <div class="field" id="field-ck-wrap">
+          <label id="ck-label">税込総工事費用（万円）<span style="font-size:10px;color:var(--mg);margin-left:4px">太陽光＋蓄電池 工事込み</span></label>
           <input type="number" id="ck" value="280" min="50" max="2000" step="10" oninput="calc()">
         </div>
       </div>
       <div class="grid3" style="margin-bottom:12px">
-        <div class="field"><label>年間発電量（kWh）<span style="font-size:10px;color:var(--mg);margin-left:4px">太陽光パネルの年間発電量</span></label><input type="number" id="ag" value="7700" min="2000" max="20000" step="100" oninput="calc()"></div>
+        <div class="field" id="field-ag-wrap"><label>年間発電量（kWh）<span style="font-size:10px;color:var(--mg);margin-left:4px">太陽光パネルの年間発電量</span></label><input type="number" id="ag" value="7700" min="2000" max="20000" step="100" oninput="calc()"></div>
         <div class="field">
           <label>補助金額（万円）<span style="font-size:10px;color:var(--mg);margin-left:4px">国・自治体補助金（任意）</span></label>
           <input type="number" id="sub" value="0" min="0" max="500" step="1" oninput="calc()">
@@ -705,6 +725,73 @@ const fmt = n => Math.round(n).toLocaleString('ja-JP');
 const v = id => parseFloat(document.getElementById(id).value) || 0;
 
 // ══════════════════════════════════════════
+// 提案モード
+// ══════════════════════════════════════════
+let proposalMode = 'pv_battery'; // 'pv_battery' | 'pv_only' | 'battery_only'
+
+const PROPOSAL_MODE_CONFIG = {
+  pv_battery: {
+    desc: '太陽光パネルと蓄電池のセットを提案します（標準モード）。',
+    sysTitle: '☀️ システム設計（太陽光＋蓄電池）',
+    ckLabel: '税込総工事費用（万円）',
+    ckSub: '太陽光＋蓄電池 工事込み',
+  },
+  pv_only: {
+    desc: '太陽光パネルのみを提案します。蓄電池フィールドは非表示になります。',
+    sysTitle: '☀️ システム設計（太陽光のみ）',
+    ckLabel: '税込総工事費用（万円）',
+    ckSub: '太陽光 工事込み',
+  },
+  battery_only: {
+    desc: '既設の太陽光設備に蓄電池を後付けする提案です。太陽光フィールドは非表示になります。',
+    sysTitle: '🔋 システム設計（蓄電池のみ）',
+    ckLabel: '税込総工事費用（万円）',
+    ckSub: '蓄電池 工事込み',
+  },
+};
+
+function setProposalMode(mode) {
+  proposalMode = mode;
+  ['pv_battery', 'pv_only', 'battery_only'].forEach(m => {
+    document.getElementById('pm-btn-' + m).classList.toggle('active', m === mode);
+  });
+  applyProposalMode();
+}
+
+function applyProposalMode() {
+  const cfg = PROPOSAL_MODE_CONFIG[proposalMode] || PROPOSAL_MODE_CONFIG.pv_battery;
+  const hasSolar   = proposalMode !== 'battery_only';
+  const hasBattery = proposalMode !== 'pv_only';
+
+  // フィールドの表示切替
+  document.getElementById('field-sk-wrap').style.display   = hasSolar   ? '' : 'none';
+  document.getElementById('field-ag-wrap').style.display   = hasSolar   ? '' : 'none';
+  document.getElementById('field-dc-wrap').style.display   = hasSolar   ? '' : 'none';
+  document.getElementById('field-bk-wrap').style.display   = hasBattery ? '' : 'none';
+  document.getElementById('field-bc-wrap').style.display   = hasBattery ? '' : 'none';
+
+  // パッケージ選択（battery_only では非表示）
+  document.getElementById('pkg-area').style.display = hasSolar ? '' : 'none';
+
+  // 蓄電池KPI：再計算で更新されるので reset のみ
+  document.getElementById('bk-remain-disp').style.display = 'none';
+  document.getElementById('bk-error').style.display       = 'none';
+
+  // セクションタイトル更新
+  document.getElementById('system-design-title').textContent = cfg.sysTitle;
+
+  // 工事費ラベル更新
+  const ckLabel = document.getElementById('ck-label');
+  if (ckLabel) ckLabel.innerHTML =
+    cfg.ckLabel + `<span style="font-size:10px;color:var(--mg);margin-left:4px">${cfg.ckSub}</span>`;
+
+  // 説明文更新
+  document.getElementById('proposal-mode-desc').textContent = cfg.desc;
+
+  calc();
+}
+
+// ══════════════════════════════════════════
 // 2タブ データ管理
 // ══════════════════════════════════════════
 const HEARING_KEYS = ['hasBill','hasPV','hasBattery','isAllElectric'];
@@ -886,6 +973,7 @@ function saveFormToData(data) {
   data.pkgExtraNote = document.getElementById('pkg-extra-note').value;
   data.sysName = document.getElementById('sys-name').value;
   HEARING_KEYS.forEach(k => { data[k] = data[k] || false; }); // preserve current values
+  data.proposalMode = proposalMode;
 }
 
 function loadDataToForm(data) {
@@ -916,7 +1004,7 @@ function loadDataToForm(data) {
   updatePkgSummary();
   toggleLoan();
   onHearingChange(data);
-  calc();
+  setProposalMode(data.proposalMode || 'pv_battery');
 }
 
 function switchTab(tab) {
@@ -1651,7 +1739,8 @@ function clearForm() {
   loanAmountEdited = false;
   document.getElementById('lr').value=4.1;
   document.getElementById('lc').value=180;
-  document.getElementById('le').checked=false; document.getElementById('lp-manual').value=0; setLoanInputMode('auto'); setLoanMethod('zansai'); toggleLoan(); calc();
+  document.getElementById('le').checked=false; document.getElementById('lp-manual').value=0; setLoanInputMode('auto'); setLoanMethod('zansai'); toggleLoan();
+  setProposalMode('pv_battery');
 }
 
 // ══════════════════════════════════════════
@@ -1709,6 +1798,7 @@ function loadCustomer(id) {
     hasPV:        entry.hasPV        || false,
     hasBattery:   entry.hasBattery   || false,
     isAllElectric:entry.isAllElectric|| false,
+    proposalMode: entry.proposalMode || 'pv_battery',
   };
   loanAmountEdited = false;
   if (activeTab === 'customer') {
@@ -2524,7 +2614,7 @@ async function generatePPTX(mode) {
 
 // ── 初期化 ──
 onPkgChange(); // 7+7パッケージのデフォルト値を適用
-calc();
+applyProposalMode(); // 提案モードUIを初期化（内部でcalc()を呼ぶ）
 renderSidebarHistory();
 
 function scrollToTopHandler(e) {
