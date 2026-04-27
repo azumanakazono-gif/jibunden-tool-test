@@ -770,8 +770,8 @@ function applyProposalMode() {
   document.getElementById('field-bk-wrap').style.display   = hasBattery ? '' : 'none';
   document.getElementById('field-bc-wrap').style.display   = hasBattery ? '' : 'none';
 
-  // パッケージ選択（battery_only では非表示）
-  document.getElementById('pkg-area').style.display = hasSolar ? '' : 'none';
+  // パッケージ選択（全パッケージが太陽光＋蓄電池のため pv_battery のみ表示）
+  document.getElementById('pkg-area').style.display = proposalMode === 'pv_battery' ? '' : 'none';
 
   // 蓄電池KPI：再計算で更新されるので reset のみ
   document.getElementById('bk-remain-disp').style.display = 'none';
@@ -1451,13 +1451,14 @@ function updateSelfSummary(dc, bc, ag, mb, up, remainKWh, remainBill, bk) {
       : '自家消費が発電量の範囲内に収まっています';
 
   // ── 詳細内訳（補助情報）── remain-disp の下に表示
+  const showBattery = proposalMode !== 'pv_only';
   const detailEl = document.getElementById('self-detail');
   detailEl.style.display = '';
   detailEl.innerHTML =
     `<div style="background:var(--pg);border-radius:8px;border:1px solid var(--border);padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px 20px;font-size:12px;color:var(--mg)">` +
       `<span>⚡ 年間発電量：<b>${fmt(ag)} kWh</b></span>` +
       `<span>☀️ 昼間直接使用：<b>${fmt(dc)} kWh/年</b><span style="font-size:11px;color:var(--muted);margin-left:4px">（約${Math.round(dc/12)}kWh/月・約${(dc/365).toFixed(1)}kWh/日）</span></span>` +
-      `<span>🔋 蓄電池放電：<b>${fmt(bc)} kWh/年</b><span style="font-size:11px;color:var(--muted);margin-left:4px">（約${Math.round(bc/12)}kWh/月・約${(bc/365).toFixed(1)}kWh/日）</span></span>` +
+      (showBattery ? `<span>🔋 蓄電池放電：<b>${fmt(bc)} kWh/年</b><span style="font-size:11px;color:var(--muted);margin-left:4px">（約${Math.round(bc/12)}kWh/月・約${(bc/365).toFixed(1)}kWh/日）</span></span>` : '') +
       `<span>🏠 合計自家消費：<b>${fmt(total)} kWh</b></span>` +
       `<span style="color:var(--or)">🛒 残り購入：<b>${fmt(remainKWh)} kWh/年</b> → 月平均 <b>¥${fmt(remainBill)}</b></span>` +
       (surplus && !over
@@ -1474,11 +1475,11 @@ function updateSelfSummary(dc, bc, ag, mb, up, remainKWh, remainBill, bk) {
 
   // 上限超過判定（実効容量ベース）
   const batteryOver = bk > 0 && bc > bkEffYearMax;
-  document.getElementById('bk-error').style.display = batteryOver ? '' : 'none';
+  document.getElementById('bk-error').style.display = (showBattery && batteryOver) ? '' : 'none';
 
   // 蓄電池残容量カード（実効容量ベース）
   const bkRemainEl = document.getElementById('bk-remain-disp');
-  if (bk > 0) {
+  if (showBattery && bk > 0) {
     const bkRemain = Math.max(0, bkEffYearMax - bc);
     const bkUsageRate = Math.min(100, Math.round(bc / bkEffYearMax * 100));
     bkRemainEl.style.display = '';
