@@ -142,6 +142,7 @@ canvas#mini-chart { height: 150px !important; }
 .pm-btn.active { background:var(--dg); color:#fff; }
 .pm-btn:hover:not(.active) { background:var(--pg); color:var(--text); }
 
+
 /* ── 売電方式セレクター ── */
 .sale-mode-bar { display:flex; gap:0; border:1.5px solid var(--border); border-radius:8px; overflow:hidden; }
 .sm-btn { flex:1; padding:8px 6px; background:#fff; border:none; border-right:1px solid var(--border); cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; color:var(--muted); transition:all .15s; line-height:1.3; text-align:center; }
@@ -150,6 +151,8 @@ canvas#mini-chart { height: 150px !important; }
 .sm-btn:hover:not(.active) { background:var(--pg); color:var(--text); }
 .sale-auto-badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:700; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; margin-left:6px; }
 .sale-edited-badge { display:none; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:700; background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; margin-left:6px; }
+
+
 .form-locked .section-card,
 .form-locked #pkg-area,
 .form-locked #result-area { opacity:.25; pointer-events:none; user-select:none; }
@@ -811,6 +814,7 @@ const PROPOSAL_MODE_CONFIG = {
   },
 };
 
+
 // ══════════════════════════════════════════
 // 売電設定
 // ══════════════════════════════════════════
@@ -906,6 +910,7 @@ function initSaleSetting() {
   onSaleModeChange('fit');
 }
 
+
 function setProposalMode(mode) {
   proposalMode = mode;
   ['pv_battery', 'pv_only', 'battery_only'].forEach(m => {
@@ -929,8 +934,10 @@ function applyProposalMode() {
   // パッケージ選択（全パッケージが太陽光＋蓄電池のため pv_battery のみ表示）
   document.getElementById('pkg-area').style.display = proposalMode === 'pv_battery' ? '' : 'none';
 
+
   // 売電設定（太陽光がある場合のみ表示）
   document.getElementById('sale-setting-area').style.display = hasSolar ? '' : 'none';
+
 
   // 蓄電池KPI：再計算で更新されるので reset のみ
   document.getElementById('bk-remain-disp').style.display = 'none';
@@ -1133,11 +1140,13 @@ function saveFormToData(data) {
   data.sysName = document.getElementById('sys-name').value;
   HEARING_KEYS.forEach(k => { data[k] = data[k] || false; }); // preserve current values
   data.proposalMode = proposalMode;
+
   data.saleMode     = saleMode;
   data.fitYear      = fitYear;
   data.fitCapacity  = fitCapacity;
   data.salePrice    = parseFloat(document.getElementById('sale-price').value) || 16;
   data.salePriceEdited = salePriceEdited;
+
 }
 
 function loadDataToForm(data) {
@@ -1168,6 +1177,7 @@ function loadDataToForm(data) {
   updatePkgSummary();
   toggleLoan();
   onHearingChange(data);
+
   // 売電設定の復元
   saleMode      = data.saleMode     || 'fit';
   fitYear       = data.fitYear      || 2025;
@@ -1182,6 +1192,7 @@ function loadDataToForm(data) {
     document.getElementById('sale-edited-badge').style.display = 'inline-block';
     document.getElementById('sale-reset-btn').style.display    = 'inline-block';
   }
+
   setProposalMode(data.proposalMode || 'pv_battery');
 }
 
@@ -1934,10 +1945,12 @@ function clearForm() {
   document.getElementById('lr').value=4.1;
   document.getElementById('lc').value=180;
   document.getElementById('le').checked=false; document.getElementById('lp-manual').value=0; setLoanInputMode('auto'); setLoanMethod('zansai'); toggleLoan();
+
   salePriceEdited = false; fitYear = 2025; fitCapacity = 'under10';
   document.getElementById('fit-year').value = 2025;
   onFitCapacityChange('under10');
   onSaleModeChange('fit');
+
   setProposalMode('pv_battery');
 }
 
@@ -1997,11 +2010,13 @@ function loadCustomer(id) {
     hasBattery:   entry.hasBattery   || false,
     isAllElectric:entry.isAllElectric|| false,
     proposalMode: entry.proposalMode || 'pv_battery',
+
     saleMode:     entry.saleMode     || 'fit',
     fitYear:      entry.fitYear      || 2025,
     fitCapacity:  entry.fitCapacity  || 'under10',
     salePrice:    entry.salePrice    || 16,
     salePriceEdited: entry.salePriceEdited || false,
+
   };
   loanAmountEdited = false;
   if (activeTab === 'customer') {
@@ -2816,8 +2831,12 @@ async function generatePPTX(mode) {
 }
 
 // ── 初期化 ──
+
 onPkgChange();       // 7+7パッケージのデフォルト値を適用
 initSaleSetting();   // 売電設定UIを初期化
+=======
+onPkgChange(); // 7+7パッケージのデフォルト値を適用
+
 applyProposalMode(); // 提案モードUIを初期化（内部でcalc()を呼ぶ）
 renderSidebarHistory();
 
