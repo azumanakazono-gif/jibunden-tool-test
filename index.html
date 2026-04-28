@@ -141,6 +141,15 @@ canvas#mini-chart { height: 150px !important; }
 .pm-btn:last-child { border-right:none; }
 .pm-btn.active { background:var(--dg); color:#fff; }
 .pm-btn:hover:not(.active) { background:var(--pg); color:var(--text); }
+
+/* ── 売電方式セレクター ── */
+.sale-mode-bar { display:flex; gap:0; border:1.5px solid var(--border); border-radius:8px; overflow:hidden; }
+.sm-btn { flex:1; padding:8px 6px; background:#fff; border:none; border-right:1px solid var(--border); cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; color:var(--muted); transition:all .15s; line-height:1.3; text-align:center; }
+.sm-btn:last-child { border-right:none; }
+.sm-btn.active { background:var(--mg); color:#fff; }
+.sm-btn:hover:not(.active) { background:var(--pg); color:var(--text); }
+.sale-auto-badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:700; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; margin-left:6px; }
+.sale-edited-badge { display:none; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:700; background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; margin-left:6px; }
 .form-locked .section-card,
 .form-locked #pkg-area,
 .form-locked #result-area { opacity:.25; pointer-events:none; user-select:none; }
@@ -412,6 +421,7 @@ canvas#mini-chart { height: 150px !important; }
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px">📤 余剰電力量（年間発電 − 自家消費）</div>
           <div><span id="surplus-big" style="font-size:26px;font-weight:900;color:#15803d">-</span></div>
           <div id="surplus-sub" style="font-size:11px;color:var(--muted);margin-top:2px"></div>
+          <div id="sell-revenue-disp" style="display:none;margin-top:8px;padding:6px 10px;background:#dcfce7;border-radius:6px;font-size:13px;color:#15803d;font-weight:700"></div>
         </div>
         <div id="bk-remain-disp" style="display:none;padding:12px 14px;background:var(--pg);border-radius:8px;border-left:4px solid var(--mg)">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px">🔋 蓄電池の残容量余地（年間）</div>
@@ -495,6 +505,57 @@ canvas#mini-chart { height: 150px !important; }
       </div>
       <!-- 補助金適用後の実質費用表示 -->
       <div id="subsidy-summary" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--pg);border-radius:8px;border:1px solid var(--border);font-size:13px"></div>
+      <!-- 売電設定 -->
+      <div id="sale-setting-area" style="margin-top:4px;padding:12px 14px;background:#f0fdf4;border-radius:10px;border:1px solid #bbf7d0">
+        <div style="font-size:13px;font-weight:700;color:var(--mg);margin-bottom:10px">💴 売電設定</div>
+        <div class="field" style="margin-bottom:10px">
+          <label style="font-size:13px">売電方式</label>
+          <div class="sale-mode-bar" style="margin-top:4px">
+            <button class="sm-btn active" id="sm-btn-fit" onclick="onSaleModeChange('fit')">FIT<br>（固定価格買取）</button>
+            <button class="sm-btn" id="sm-btn-post_fit" onclick="onSaleModeChange('post_fit')">卒FIT</button>
+            <button class="sm-btn" id="sm-btn-manual" onclick="onSaleModeChange('manual')">手動入力</button>
+          </div>
+        </div>
+        <div id="fit-options" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+          <div class="field" style="min-width:120px">
+            <label style="font-size:12px">FIT認定年度</label>
+            <select id="fit-year" onchange="onFitYearChange()" style="border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;background:#fff;font-family:inherit">
+              <option value="2019">2019年度</option>
+              <option value="2020">2020年度</option>
+              <option value="2021">2021年度</option>
+              <option value="2022">2022年度</option>
+              <option value="2023">2023年度</option>
+              <option value="2024">2024年度</option>
+              <option value="2025" selected>2025年度</option>
+              <option value="2026">2026年度</option>
+            </select>
+          </div>
+          <div class="field" style="min-width:150px">
+            <label style="font-size:12px">容量区分</label>
+            <div style="display:flex;gap:6px;margin-top:4px">
+              <button id="cap-btn-under10" onclick="onFitCapacityChange('under10')"
+                style="flex:1;padding:8px 6px;border-radius:6px;border:1.5px solid var(--mg);background:var(--mg);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">
+                10kW未満
+              </button>
+              <button id="cap-btn-over10" onclick="onFitCapacityChange('over10')"
+                style="flex:1;padding:8px 6px;border-radius:6px;border:1.5px solid var(--border);background:#fff;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">
+                10kW以上
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label style="font-size:12px">売電単価（円/kWh）
+            <span class="sale-auto-badge" id="sale-auto-badge">自動セット済み</span>
+            <span class="sale-edited-badge" id="sale-edited-badge">手動変更</span>
+            <button id="sale-reset-btn" onclick="resetSalePrice()" style="display:none;margin-left:6px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;border:1px solid #fed7aa;background:#fff7ed;color:#c2410c;cursor:pointer;font-family:inherit">自動値に戻す</button>
+          </label>
+          <input type="number" id="sale-price" value="16" min="1" max="50" step="0.5"
+            style="border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:15px;background:#fff;font-family:inherit;max-width:160px;margin-top:4px"
+            oninput="onSalePriceInput()">
+          <div id="sale-price-note" style="font-size:11px;color:var(--muted);margin-top:3px"></div>
+        </div>
+      </div>
     </div>
 
     <div class="section-card">
@@ -750,6 +811,101 @@ const PROPOSAL_MODE_CONFIG = {
   },
 };
 
+// ══════════════════════════════════════════
+// 売電設定
+// ══════════════════════════════════════════
+const FIT_MASTER = {
+  2019: { under10: 24, over10: 14 },
+  2020: { under10: 21, over10: 13 },
+  2021: { under10: 19, over10: 12 },
+  2022: { under10: 17, over10: 11 },
+  2023: { under10: 16, over10: 10 },
+  2024: { under10: 16, over10: 10 },
+  2025: { under10: 16, over10: 10 },
+  2026: { under10: 15, over10:  9 },
+};
+const POST_FIT_DEFAULT = 8;
+
+let saleMode      = 'fit';
+let fitYear       = 2025;
+let fitCapacity   = 'under10';
+let salePriceEdited = false;
+
+function fitAutoPrice() {
+  const row = FIT_MASTER[fitYear] || FIT_MASTER[2025];
+  return row[fitCapacity];
+}
+
+function setSalePrice(price, isAuto) {
+  document.getElementById('sale-price').value = price;
+  salePriceEdited = !isAuto;
+  document.getElementById('sale-auto-badge').style.display   = isAuto ? '' : 'none';
+  document.getElementById('sale-edited-badge').style.display = isAuto ? 'none' : 'inline-block';
+  document.getElementById('sale-reset-btn').style.display    = isAuto ? 'none' : 'inline-block';
+  calc();
+}
+
+function resetSalePrice() {
+  if (saleMode === 'fit')      setSalePrice(fitAutoPrice(), true);
+  else if (saleMode === 'post_fit') setSalePrice(POST_FIT_DEFAULT, true);
+}
+
+function onSalePriceInput() {
+  salePriceEdited = true;
+  document.getElementById('sale-auto-badge').style.display   = 'none';
+  document.getElementById('sale-edited-badge').style.display = 'inline-block';
+  document.getElementById('sale-reset-btn').style.display    = 'inline-block';
+  calc();
+}
+
+function onSaleModeChange(mode) {
+  saleMode = mode;
+  ['fit','post_fit','manual'].forEach(m => {
+    document.getElementById('sm-btn-' + m).classList.toggle('active', m === mode);
+  });
+  const fitOpts = document.getElementById('fit-options');
+  fitOpts.style.display = mode === 'fit' ? '' : 'none';
+  const noteEl = document.getElementById('sale-price-note');
+  if (mode === 'fit') {
+    if (!salePriceEdited) setSalePrice(fitAutoPrice(), true);
+    noteEl.textContent = `FIT ${fitYear}年度・${fitCapacity === 'under10' ? '10kW未満' : '10kW以上'} 買取単価`;
+  } else if (mode === 'post_fit') {
+    setSalePrice(POST_FIT_DEFAULT, true);
+    noteEl.textContent = '卒FIT後の買取目安単価（電力会社によって異なります）';
+  } else {
+    document.getElementById('sale-auto-badge').style.display  = 'none';
+    document.getElementById('sale-edited-badge').style.display = 'none';
+    document.getElementById('sale-reset-btn').style.display   = 'none';
+    noteEl.textContent = '売電単価を直接入力してください';
+    calc();
+  }
+}
+
+function onFitYearChange() {
+  fitYear = parseInt(document.getElementById('fit-year').value);
+  if (!salePriceEdited) setSalePrice(fitAutoPrice(), true);
+  document.getElementById('sale-price-note').textContent =
+    `FIT ${fitYear}年度・${fitCapacity === 'under10' ? '10kW未満' : '10kW以上'} 買取単価`;
+}
+
+function onFitCapacityChange(cap) {
+  fitCapacity = cap;
+  ['under10','over10'].forEach(c => {
+    const btn = document.getElementById('cap-btn-' + c);
+    const active = c === cap;
+    btn.style.background    = active ? 'var(--mg)' : '#fff';
+    btn.style.color         = active ? '#fff' : 'var(--muted)';
+    btn.style.borderColor   = active ? 'var(--mg)' : 'var(--border)';
+  });
+  if (!salePriceEdited) setSalePrice(fitAutoPrice(), true);
+  document.getElementById('sale-price-note').textContent =
+    `FIT ${fitYear}年度・${cap === 'under10' ? '10kW未満' : '10kW以上'} 買取単価`;
+}
+
+function initSaleSetting() {
+  onSaleModeChange('fit');
+}
+
 function setProposalMode(mode) {
   proposalMode = mode;
   ['pv_battery', 'pv_only', 'battery_only'].forEach(m => {
@@ -772,6 +928,9 @@ function applyProposalMode() {
 
   // パッケージ選択（全パッケージが太陽光＋蓄電池のため pv_battery のみ表示）
   document.getElementById('pkg-area').style.display = proposalMode === 'pv_battery' ? '' : 'none';
+
+  // 売電設定（太陽光がある場合のみ表示）
+  document.getElementById('sale-setting-area').style.display = hasSolar ? '' : 'none';
 
   // 蓄電池KPI：再計算で更新されるので reset のみ
   document.getElementById('bk-remain-disp').style.display = 'none';
@@ -974,6 +1133,11 @@ function saveFormToData(data) {
   data.sysName = document.getElementById('sys-name').value;
   HEARING_KEYS.forEach(k => { data[k] = data[k] || false; }); // preserve current values
   data.proposalMode = proposalMode;
+  data.saleMode     = saleMode;
+  data.fitYear      = fitYear;
+  data.fitCapacity  = fitCapacity;
+  data.salePrice    = parseFloat(document.getElementById('sale-price').value) || 16;
+  data.salePriceEdited = salePriceEdited;
 }
 
 function loadDataToForm(data) {
@@ -1004,6 +1168,20 @@ function loadDataToForm(data) {
   updatePkgSummary();
   toggleLoan();
   onHearingChange(data);
+  // 売電設定の復元
+  saleMode      = data.saleMode     || 'fit';
+  fitYear       = data.fitYear      || 2025;
+  fitCapacity   = data.fitCapacity  || 'under10';
+  salePriceEdited = data.salePriceEdited || false;
+  document.getElementById('fit-year').value = fitYear;
+  onFitCapacityChange(fitCapacity);
+  onSaleModeChange(saleMode);
+  if (data.salePriceEdited && data.salePrice) {
+    document.getElementById('sale-price').value = data.salePrice;
+    document.getElementById('sale-auto-badge').style.display   = 'none';
+    document.getElementById('sale-edited-badge').style.display = 'inline-block';
+    document.getElementById('sale-reset-btn').style.display    = 'inline-block';
+  }
   setProposalMode(data.proposalMode || 'pv_battery');
 }
 
@@ -1566,6 +1744,8 @@ function calcMetrics(c) {
 function calc() {
   const mb=v('mb'),mkwh=v('mkwh'),ag=v('ag'),sk=v('sk'),wy=v('wy');
   const dc=v('dc'), bc=v('bc'), bk=v('bk'), er=v('er');
+  // pv_only モードでは蓄電池消費を 0 として計算（フィールド値は保持）
+  const bc_eff = proposalMode === 'pv_only' ? 0 : bc;
   document.getElementById('dc-monthly-hint').textContent = dc > 0 ? `約 ${Math.round(dc/12).toLocaleString()} kWh/月・約 ${(dc/365).toFixed(1)} kWh/日` : '';
   document.getElementById('bc-monthly-hint').textContent = bc > 0 ? `約 ${Math.round(bc/12).toLocaleString()} kWh/月・約 ${(bc/365).toFixed(1)} kWh/日` : '';
   const up = mkwh > 0 ? Math.round(mb / mkwh * 10) / 10 : 0;
@@ -1587,7 +1767,7 @@ function calc() {
     `推定昼間使用量：${fmt(dc)}kWh/年（約${fmt(dcMonthly)}kWh/月）`;
   const c = { monthlyElectricBill:mb, currentUnitPrice:up, annualGenerationKWh:ag,
                solarCapacityKW:sk, totalConstructionCost, subsidyAmount, warrantyYears:wy,
-               directConsumptionKWh:dc, batteryConsumptionKWh:bc,
+               directConsumptionKWh:dc, batteryConsumptionKWh:bc_eff,
                annualConsumptionKWh, escalationRate:er };
   const m = calcMetrics(c);
   // 上昇率ノート表示切替
@@ -1595,7 +1775,20 @@ function calc() {
   // 上昇率がある場合は20年電気代を上昇後の数値で表示
   const bill20Show = er > 0 ? m.bill20YMan_rise : m.bill20YMan;
   const ratio = Math.min(m.totalCostMan/bill20Show, 1);
-  updateSelfSummary(dc, bc, ag, mb, up, m.remainKWh, m.remainBill, bk);
+  updateSelfSummary(dc, bc_eff, ag, mb, up, m.remainKWh, m.remainBill, bk);
+
+  // 売電収入計算・表示
+  const hasSolarMode = proposalMode !== 'battery_only';
+  const saleP = parseFloat(document.getElementById('sale-price').value) || 0;
+  const surplusKwhCalc = Math.max(0, ag - (dc + bc_eff));
+  const sellRevenueAnnual = Math.round(surplusKwhCalc * saleP);
+  const sellRevEl = document.getElementById('sell-revenue-disp');
+  if (hasSolarMode && surplusKwhCalc > 0 && saleP > 0) {
+    sellRevEl.style.display = '';
+    sellRevEl.innerHTML = `💴 売電収入（目安）：<b>年間約 ¥${fmt(sellRevenueAnnual)}</b><span style="font-size:11px;font-weight:400;margin-left:6px;color:#15803d">（${saleP}円/kWh × ${fmt(surplusKwhCalc)} kWh）</span>`;
+  } else {
+    sellRevEl.style.display = 'none';
+  }
 
   // 補助金サマリー表示
   const subEl = document.getElementById('subsidy-summary');
@@ -1741,6 +1934,10 @@ function clearForm() {
   document.getElementById('lr').value=4.1;
   document.getElementById('lc').value=180;
   document.getElementById('le').checked=false; document.getElementById('lp-manual').value=0; setLoanInputMode('auto'); setLoanMethod('zansai'); toggleLoan();
+  salePriceEdited = false; fitYear = 2025; fitCapacity = 'under10';
+  document.getElementById('fit-year').value = 2025;
+  onFitCapacityChange('under10');
+  onSaleModeChange('fit');
   setProposalMode('pv_battery');
 }
 
@@ -1800,6 +1997,11 @@ function loadCustomer(id) {
     hasBattery:   entry.hasBattery   || false,
     isAllElectric:entry.isAllElectric|| false,
     proposalMode: entry.proposalMode || 'pv_battery',
+    saleMode:     entry.saleMode     || 'fit',
+    fitYear:      entry.fitYear      || 2025,
+    fitCapacity:  entry.fitCapacity  || 'under10',
+    salePrice:    entry.salePrice    || 16,
+    salePriceEdited: entry.salePriceEdited || false,
   };
   loanAmountEdited = false;
   if (activeTab === 'customer') {
@@ -2614,7 +2816,8 @@ async function generatePPTX(mode) {
 }
 
 // ── 初期化 ──
-onPkgChange(); // 7+7パッケージのデフォルト値を適用
+onPkgChange();       // 7+7パッケージのデフォルト値を適用
+initSaleSetting();   // 売電設定UIを初期化
 applyProposalMode(); // 提案モードUIを初期化（内部でcalc()を呼ぶ）
 renderSidebarHistory();
 
