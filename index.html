@@ -516,30 +516,30 @@ canvas#mini-chart { height: 150px !important; }
             <button class="sm-btn" id="sm-btn-manual" onclick="onSaleModeChange('manual')">手動入力</button>
           </div>
         </div>
-        <div id="fit-options" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px">
-          <div class="field" style="min-width:120px">
-            <label style="font-size:12px">FIT認定年度</label>
-            <select id="fit-year" onchange="onFitYearChange()" style="border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;background:#fff;font-family:inherit">
-              <option value="2019">2019年度</option>
-              <option value="2020">2020年度</option>
-              <option value="2021">2021年度</option>
-              <option value="2022">2022年度</option>
-              <option value="2023">2023年度</option>
-              <option value="2024">2024年度</option>
-              <option value="2025" selected>2025年度</option>
-              <option value="2026">2026年度</option>
+        <div id="fit-options" style="margin-bottom:10px">
+          <div class="field" style="margin-bottom:8px">
+            <label style="font-size:12px">FIT適用区分</label>
+            <select id="fit-period" onchange="onFitPeriodChange()" style="border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;background:#fff;font-family:inherit;width:100%;margin-top:4px">
+              <option value="fy2024">2024年度</option>
+              <option value="fy2025_h1">2025年度（4月～9月）</option>
+              <option value="fy2025_h2">2025年度（10月～3月）</option>
+              <option value="fy2026" selected>2026年度（現行）</option>
             </select>
           </div>
-          <div class="field" style="min-width:150px">
-            <label style="font-size:12px">容量区分</label>
+          <div class="field">
+            <label style="font-size:12px">容量・設置区分</label>
             <div style="display:flex;gap:6px;margin-top:4px">
               <button id="cap-btn-under10" onclick="onFitCapacityChange('under10')"
-                style="flex:1;padding:8px 6px;border-radius:6px;border:1.5px solid var(--mg);background:var(--mg);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">
+                style="flex:1;padding:8px 4px;border-radius:6px;border:1.5px solid var(--mg);background:var(--mg);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1.3">
                 10kW未満
               </button>
-              <button id="cap-btn-over10" onclick="onFitCapacityChange('over10')"
-                style="flex:1;padding:8px 6px;border-radius:6px;border:1.5px solid var(--border);background:#fff;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">
-                10kW以上
+              <button id="cap-btn-over10_roof" onclick="onFitCapacityChange('over10_roof')"
+                style="flex:1;padding:8px 4px;border-radius:6px;border:1.5px solid var(--border);background:#fff;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1.3">
+                10kW以上<br>屋根設置
+              </button>
+              <button id="cap-btn-mid10_50" onclick="onFitCapacityChange('mid10_50')"
+                style="flex:1;padding:8px 4px;border-radius:6px;border:1.5px solid var(--border);background:#fff;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1.3">
+                10〜50kW<br>（地上等）
               </button>
             </div>
           </div>
@@ -814,26 +814,64 @@ const PROPOSAL_MODE_CONFIG = {
 // ══════════════════════════════════════════
 // 売電設定
 // ══════════════════════════════════════════
-const FIT_MASTER = {
-  2019: { under10: 24, over10: 14 },
-  2020: { under10: 21, over10: 13 },
-  2021: { under10: 19, over10: 12 },
-  2022: { under10: 17, over10: 11 },
-  2023: { under10: 16, over10: 10 },
-  2024: { under10: 16, over10: 10 },
-  2025: { under10: 16, over10: 10 },
-  2026: { under10: 15, over10:  9 },
-};
+const FIT_MASTER = [
+  {
+    id: 'fy2024', label: '2024年度',
+    rates: {
+      under10:    { price: 16,   years: 10 },
+      over10_roof: { price: 12,   years: 20 },
+      mid10_50:   { price: 10,   years: 20 },
+    }
+  },
+  {
+    id: 'fy2025_h1', label: '2025年度（4月～9月）',
+    rates: {
+      under10:    { price: 15,   years: 10 },
+      over10_roof: { price: 11.5, years: 20 },
+      mid10_50:   { price: 8.9,  years: 20 },
+    }
+  },
+  {
+    id: 'fy2025_h2', label: '2025年度（10月～3月）',
+    rates: {
+      under10:    { earlyPrice: 24,  earlyYears: 4,  latePrice: 8.3, lateYears: 6,  years: 10 },
+      over10_roof: { earlyPrice: 19,  earlyYears: 5,  latePrice: 8.3, lateYears: 15, years: 20 },
+      mid10_50:   null,
+    }
+  },
+  {
+    id: 'fy2026', label: '2026年度（現行）',
+    rates: {
+      under10:    { earlyPrice: 24,  earlyYears: 4,  latePrice: 8.3, lateYears: 6,  years: 10 },
+      over10_roof: { price: 9.9,  years: 20 },
+      mid10_50:   { price: 8.6,  years: 20 },
+    }
+  },
+];
 const POST_FIT_DEFAULT = 8;
 
-let saleMode      = 'fit';
-let fitYear       = 2025;
-let fitCapacity   = 'under10';
+let saleMode        = 'fit';
+let fitPeriodId     = 'fy2026';
+let fitCapacity     = 'under10';
 let salePriceEdited = false;
 
+function fitPeriodRate() {
+  const p = FIT_MASTER.find(p => p.id === fitPeriodId) || FIT_MASTER[FIT_MASTER.length - 1];
+  return p.rates[fitCapacity];
+}
 function fitAutoPrice() {
-  const row = FIT_MASTER[fitYear] || FIT_MASTER[2025];
-  return row[fitCapacity];
+  const rate = fitPeriodRate();
+  if (!rate) return null;
+  return rate.earlyPrice !== undefined ? rate.earlyPrice : rate.price;
+}
+function fitAutoNote() {
+  const p = FIT_MASTER.find(p => p.id === fitPeriodId) || FIT_MASTER[FIT_MASTER.length - 1];
+  const rate = fitPeriodRate();
+  const capLabel = { under10: '10kW未満', over10_roof: '10kW以上（屋根設置）', mid10_50: '10kW以上50kW未満' }[fitCapacity];
+  if (!rate) return `${p.label}・${capLabel} はこの区分の対象外です`;
+  if (rate.earlyPrice !== undefined)
+    return `${p.label}・${capLabel}：1〜${rate.earlyYears}年目 ${rate.earlyPrice}円 / ${rate.earlyYears + 1}〜${rate.years}年目 ${rate.latePrice}円`;
+  return `${p.label}・${capLabel}：固定 ${rate.price}円/kWh（${rate.years}年間）`;
 }
 
 function setSalePrice(price, isAuto) {
@@ -867,8 +905,9 @@ function onSaleModeChange(mode) {
   fitOpts.style.display = mode === 'fit' ? '' : 'none';
   const noteEl = document.getElementById('sale-price-note');
   if (mode === 'fit') {
-    if (!salePriceEdited) setSalePrice(fitAutoPrice(), true);
-    noteEl.textContent = `FIT ${fitYear}年度・${fitCapacity === 'under10' ? '10kW未満' : '10kW以上'} 買取単価`;
+    const price = fitAutoPrice();
+    if (!salePriceEdited && price !== null) setSalePrice(price, true);
+    noteEl.textContent = fitAutoNote();
   } else if (mode === 'post_fit') {
     setSalePrice(POST_FIT_DEFAULT, true);
     noteEl.textContent = '卒FIT後の買取目安単価（電力会社によって異なります）';
@@ -881,28 +920,40 @@ function onSaleModeChange(mode) {
   }
 }
 
-function onFitYearChange() {
-  fitYear = parseInt(document.getElementById('fit-year').value);
-  if (!salePriceEdited) setSalePrice(fitAutoPrice(), true);
-  document.getElementById('sale-price-note').textContent =
-    `FIT ${fitYear}年度・${fitCapacity === 'under10' ? '10kW未満' : '10kW以上'} 買取単価`;
+function onFitPeriodChange() {
+  fitPeriodId = document.getElementById('fit-period').value;
+  updateCapacityButtons();
+  const price = fitAutoPrice();
+  if (!salePriceEdited && price !== null) setSalePrice(price, true);
+  document.getElementById('sale-price-note').textContent = fitAutoNote();
+}
+
+function updateCapacityButtons() {
+  const p = FIT_MASTER.find(p => p.id === fitPeriodId) || FIT_MASTER[FIT_MASTER.length - 1];
+  ['under10','over10_roof','mid10_50'].forEach(c => {
+    const btn = document.getElementById('cap-btn-' + c);
+    if (!btn) return;
+    const isNull = p.rates[c] === null;
+    const active = c === fitCapacity;
+    btn.style.background  = active ? 'var(--mg)' : (isNull ? '#f3f4f6' : '#fff');
+    btn.style.color       = active ? '#fff'       : (isNull ? '#d1d5db' : 'var(--muted)');
+    btn.style.borderColor = active ? 'var(--mg)'  : (isNull ? '#e5e7eb' : 'var(--border)');
+    btn.disabled          = isNull;
+    btn.title             = isNull ? 'この区分は対象外です' : '';
+  });
 }
 
 function onFitCapacityChange(cap) {
   fitCapacity = cap;
-  ['under10','over10'].forEach(c => {
-    const btn = document.getElementById('cap-btn-' + c);
-    const active = c === cap;
-    btn.style.background    = active ? 'var(--mg)' : '#fff';
-    btn.style.color         = active ? '#fff' : 'var(--muted)';
-    btn.style.borderColor   = active ? 'var(--mg)' : 'var(--border)';
-  });
-  if (!salePriceEdited) setSalePrice(fitAutoPrice(), true);
-  document.getElementById('sale-price-note').textContent =
-    `FIT ${fitYear}年度・${cap === 'under10' ? '10kW未満' : '10kW以上'} 買取単価`;
+  updateCapacityButtons();
+  const price = fitAutoPrice();
+  if (!salePriceEdited && price !== null) setSalePrice(price, true);
+  document.getElementById('sale-price-note').textContent = fitAutoNote();
 }
 
 function initSaleSetting() {
+  document.getElementById('fit-period').value = fitPeriodId;
+  updateCapacityButtons();
   onSaleModeChange('fit');
 }
 
@@ -1134,7 +1185,7 @@ function saveFormToData(data) {
   HEARING_KEYS.forEach(k => { data[k] = data[k] || false; }); // preserve current values
   data.proposalMode = proposalMode;
   data.saleMode     = saleMode;
-  data.fitYear      = fitYear;
+  data.fitPeriodId  = fitPeriodId;
   data.fitCapacity  = fitCapacity;
   data.salePrice    = parseFloat(document.getElementById('sale-price').value) || 16;
   data.salePriceEdited = salePriceEdited;
@@ -1170,10 +1221,11 @@ function loadDataToForm(data) {
   onHearingChange(data);
   // 売電設定の復元
   saleMode      = data.saleMode     || 'fit';
-  fitYear       = data.fitYear      || 2025;
+  fitPeriodId   = data.fitPeriodId  || 'fy2026';
   fitCapacity   = data.fitCapacity  || 'under10';
+  if (fitCapacity === 'over10') fitCapacity = 'over10_roof'; // legacy migration
   salePriceEdited = data.salePriceEdited || false;
-  document.getElementById('fit-year').value = fitYear;
+  document.getElementById('fit-period').value = fitPeriodId;
   onFitCapacityChange(fitCapacity);
   onSaleModeChange(saleMode);
   if (data.salePriceEdited && data.salePrice) {
@@ -1934,8 +1986,8 @@ function clearForm() {
   document.getElementById('lr').value=4.1;
   document.getElementById('lc').value=180;
   document.getElementById('le').checked=false; document.getElementById('lp-manual').value=0; setLoanInputMode('auto'); setLoanMethod('zansai'); toggleLoan();
-  salePriceEdited = false; fitYear = 2025; fitCapacity = 'under10';
-  document.getElementById('fit-year').value = 2025;
+  salePriceEdited = false; fitPeriodId = 'fy2026'; fitCapacity = 'under10';
+  document.getElementById('fit-period').value = 'fy2026';
   onFitCapacityChange('under10');
   onSaleModeChange('fit');
   setProposalMode('pv_battery');
@@ -1998,9 +2050,9 @@ function loadCustomer(id) {
     isAllElectric:entry.isAllElectric|| false,
     proposalMode: entry.proposalMode || 'pv_battery',
     saleMode:     entry.saleMode     || 'fit',
-    fitYear:      entry.fitYear      || 2025,
-    fitCapacity:  entry.fitCapacity  || 'under10',
-    salePrice:    entry.salePrice    || 16,
+    fitPeriodId:  entry.fitPeriodId  || 'fy2026',
+    fitCapacity:  entry.fitCapacity === 'over10' ? 'over10_roof' : (entry.fitCapacity || 'under10'),
+    salePrice:    entry.salePrice    || 24,
     salePriceEdited: entry.salePriceEdited || false,
   };
   loanAmountEdited = false;
