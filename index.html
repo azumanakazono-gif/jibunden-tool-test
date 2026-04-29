@@ -550,7 +550,7 @@ canvas#mini-chart { height: 150px !important; }
             <span class="sale-edited-badge" id="sale-edited-badge">手動変更</span>
             <button id="sale-reset-btn" onclick="resetSalePrice()" style="display:none;margin-left:6px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;border:1px solid #fed7aa;background:#fff7ed;color:#c2410c;cursor:pointer;font-family:inherit">自動値に戻す</button>
           </label>
-          <input type="number" id="sale-price" value="16" min="1" max="50" step="0.5"
+          <input type="number" id="sale-price" value="24" min="1" max="50" step="0.5"
             style="border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:15px;background:#fff;font-family:inherit;max-width:160px;margin-top:4px"
             oninput="onSalePriceInput()">
           <div id="sale-price-note" style="font-size:11px;color:var(--muted);margin-top:3px"></div>
@@ -951,6 +951,18 @@ function onFitCapacityChange(cap) {
   document.getElementById('sale-price-note').textContent = fitAutoNote();
 }
 
+function fitSlideSaleInfo() {
+  const p = FIT_MASTER.find(p => p.id === fitPeriodId) || FIT_MASTER[FIT_MASTER.length - 1];
+  const rate = fitPeriodRate();
+  const salePVal = parseFloat(document.getElementById('sale-price').value) || 0;
+  if (saleMode === 'manual') return { value: `${salePVal}円`, sub: '/kWh（手動設定）' };
+  if (saleMode === 'post_fit') return { value: `${salePVal}円`, sub: '/kWh（卒FIT）' };
+  if (!rate) return { value: '---', sub: '/kWh（対象外）' };
+  if (rate.earlyPrice !== undefined)
+    return { value: `${rate.earlyPrice}→${rate.latePrice}円`, sub: `/kWh（${p.label}）\n1〜${rate.earlyYears}年目→${rate.earlyYears+1}〜${rate.years}年目` };
+  return { value: `${rate.price}円`, sub: `/kWh（${p.label}）` };
+}
+
 function initSaleSetting() {
   document.getElementById('fit-period').value = fitPeriodId;
   updateCapacityButtons();
@@ -1187,7 +1199,7 @@ function saveFormToData(data) {
   data.saleMode     = saleMode;
   data.fitPeriodId  = fitPeriodId;
   data.fitCapacity  = fitCapacity;
-  data.salePrice    = parseFloat(document.getElementById('sale-price').value) || 16;
+  data.salePrice    = parseFloat(document.getElementById('sale-price').value) || fitAutoPrice() || 24;
   data.salePriceEdited = salePriceEdited;
 }
 
@@ -2258,10 +2270,11 @@ async function generatePPTX(mode) {
       ],{x:0.5,y:1.5,w:7.5,h:0.9,fontSize:13,fontFace:"Meiryo",valign:"middle"});
       sl.addText(`約${hM.costPerKWh}円/kWh`,{x:7.3,y:1.45,w:2.2,h:0.7,fontSize:20,bold:true,color:C.midGreen,fontFace:"Meiryo",valign:"middle",shrinkText:true});
       // 3比較カード
+      const fitInfoM = fitSlideSaleInfo();
       const comps=[
         {icon:"❌",label:"現在の平均単価\n（税込）",value:`${hCfg.currentUnitPrice}円`,sub:"/kWh",color:C.orange},
         {icon:"✅",label:"じぶん電気の\n発電コスト",value:`約${hM.costPerKWh}円`,sub:"/kWh",color:C.midGreen},
-        {icon:"📋",label:"FIT売電\n買取単価",value:"24→8.3円",sub:"/kWh（2026年度）\n1〜4年目→5〜10年目",color:C.gray},
+        {icon:"📋",label:"FIT売電\n買取単価",value:fitInfoM.value,sub:fitInfoM.sub,color:C.gray},
       ];
       comps.forEach((item,i)=>{
         const x=0.4+i*3.1;
@@ -2529,10 +2542,11 @@ async function generatePPTX(mode) {
         {text:"）  ＝  ",options:{color:C.charcoal,fontSize:13}},
       ],{x:0.5,y:1.5,w:7.5,h:0.9,fontSize:13,fontFace:"Meiryo",valign:"middle"});
       sl.addText(`約${m.costPerKWh}円/kWh`,{x:7.3,y:1.45,w:2.2,h:0.7,fontSize:20,bold:true,color:C.midGreen,fontFace:"Meiryo",valign:"middle",shrinkText:true});
+      const fitInfoC = fitSlideSaleInfo();
       const compsC=[
         {icon:"❌",label:"現在の平均単価\n（税込）",value:`${cfg.currentUnitPrice}円`,sub:"/kWh",color:C.orange},
         {icon:"✅",label:"じぶん電気の\n発電コスト",value:`約${m.costPerKWh}円`,sub:"/kWh",color:C.midGreen},
-        {icon:"📋",label:"FIT売電\n買取単価",value:"24→8.3円",sub:"/kWh（2026年度）\n1〜4年目→5〜10年目",color:C.gray},
+        {icon:"📋",label:"FIT売電\n買取単価",value:fitInfoC.value,sub:fitInfoC.sub,color:C.gray},
       ];
       compsC.forEach((item,i)=>{
         const x=0.4+i*3.1;
