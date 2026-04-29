@@ -152,7 +152,8 @@ canvas#mini-chart { height: 150px !important; }
 .sale-edited-badge { display:none; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:700; background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; margin-left:6px; }
 .form-locked .section-card,
 .form-locked #pkg-area,
-.form-locked #result-area { opacity:.25; pointer-events:none; user-select:none; }
+.form-locked #result-area,
+.form-locked #kpi-area { opacity:.25; pointer-events:none; user-select:none; }
 @media (max-width: 900px) {
   .app { grid-template-columns: 1fr; }
   .sidebar { position: relative; height: auto; }
@@ -416,40 +417,6 @@ canvas#mini-chart { height: 150px !important; }
       <!-- ── 結果エリア（入力直後のひとまとまりブロック） ── -->
       <div id="result-area" style="margin-top:12px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 4px rgba(0,0,0,.06)">
         <div id="daytime-rate-disp" style="padding:6px 10px;background:var(--pg);border-radius:6px;font-size:12px;color:var(--mg);font-weight:600"></div>
-        <!-- 1段目：率カード（自家消費率 / 余剰率） -->
-        <div class="grid2" style="gap:10px">
-          <div id="self-rate-card" style="border-radius:12px;padding:16px 12px;border:2px solid var(--dg);background:var(--mg);box-shadow:0 2px 8px rgba(0,0,0,.10)">
-            <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:4px">自家消費率</div>
-            <div style="font-size:42px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em"><span id="self-rate-val">-</span><span style="font-size:22px;font-weight:700">%</span></div>
-            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:6px">発電のうちご家庭で使う割合</div>
-          </div>
-          <div id="surplus-rate-card" style="border-radius:12px;padding:16px 12px;border:2px solid #0d9488;background:#0f766e;box-shadow:0 2px 8px rgba(0,0,0,.10)">
-            <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:4px">余剰率</div>
-            <div style="font-size:42px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em"><span id="surplus-rate-val">-</span><span style="font-size:22px;font-weight:700">%</span></div>
-            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:6px">発電のうち売電に回る割合</div>
-          </div>
-        </div>
-        <!-- 2段目：金額カード（年間自家消費メリット / 年間余剰売電収入） -->
-        <div class="grid2" style="gap:10px">
-          <div style="border-radius:12px;padding:16px 12px;border:2px solid #bbf7d0;background:#f0fdf4;box-shadow:0 1px 4px rgba(0,0,0,.06)">
-            <div style="font-size:12px;font-weight:700;color:#15803d;margin-bottom:2px">年間自家消費メリット</div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:6px">買電を減らせる見込み額</div>
-            <div style="display:flex;align-items:baseline;gap:2px">
-              <span style="font-size:11px;color:#15803d;font-weight:700">約</span>
-              <span id="self-saving-val" style="font-size:26px;font-weight:900;color:#15803d;line-height:1">-</span>
-              <span style="font-size:12px;color:#15803d;font-weight:700">円/年</span>
-            </div>
-          </div>
-          <div id="sell-revenue-card" style="border-radius:12px;padding:16px 12px;border:2px solid #99f6e4;background:#f0fdfa;box-shadow:0 1px 4px rgba(0,0,0,.06)">
-            <div style="font-size:12px;font-weight:700;color:#0f766e;margin-bottom:2px">年間余剰売電収入</div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:6px">余剰電力を売る見込み額</div>
-            <div style="display:flex;align-items:baseline;gap:2px">
-              <span id="sell-revenue-prefix" style="font-size:11px;color:#0f766e;font-weight:700">約</span>
-              <span id="sell-revenue-val" style="font-size:26px;font-weight:900;color:#0f766e;line-height:1">-</span>
-              <span id="sell-revenue-unit" style="font-size:12px;color:#0f766e;font-weight:700">円/年</span>
-            </div>
-          </div>
-        </div>
         <div id="bk-remain-disp" style="display:none;padding:12px 14px;background:var(--pg);border-radius:8px;border-left:4px solid var(--mg)">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px">🔋 蓄電池の残容量余地（年間）</div>
           <div><span id="bk-remain-big" style="font-size:26px;font-weight:900;color:var(--mg)">-</span></div>
@@ -459,7 +426,6 @@ canvas#mini-chart { height: 150px !important; }
           ⚠️ 蓄電池の放電量設定が上限を超えています<br>
           <span style="font-size:12px;font-weight:400;margin-top:4px;display:inline-block">蓄電池容量（kWh）×365日を超える放電量は物理的に不可能です。「蓄電池で賄う量（kWh/年）」または「蓄電池容量（kWh）」を見直してください。</span>
         </div>
-        <div id="self-detail" style="display:none"></div>
       </div>
     </div>
 
@@ -577,6 +543,44 @@ canvas#mini-chart { height: 150px !important; }
             oninput="onSalePriceInput()">
           <div id="sale-price-note" style="font-size:11px;color:var(--muted);margin-top:3px"></div>
         </div>
+      </div>
+      <!-- 発電効果サマリー -->
+      <div id="kpi-area" style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
+        <!-- 1段目：率カード（自家消費率 / 余剰率） -->
+        <div class="grid2" style="gap:10px">
+          <div id="self-rate-card" style="border-radius:12px;padding:16px 12px;border:2px solid var(--dg);background:var(--mg);box-shadow:0 2px 8px rgba(0,0,0,.10)">
+            <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:4px">自家消費率</div>
+            <div style="font-size:42px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em"><span id="self-rate-val">-</span><span style="font-size:22px;font-weight:700">%</span></div>
+            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:6px">発電のうちご家庭で使う割合</div>
+          </div>
+          <div id="surplus-rate-card" style="border-radius:12px;padding:16px 12px;border:2px solid #0d9488;background:#0f766e;box-shadow:0 2px 8px rgba(0,0,0,.10)">
+            <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:4px">余剰率</div>
+            <div style="font-size:42px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em"><span id="surplus-rate-val">-</span><span style="font-size:22px;font-weight:700">%</span></div>
+            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:6px">発電のうち売電に回る割合</div>
+          </div>
+        </div>
+        <!-- 2段目：金額カード（年間自家消費メリット / 年間余剰売電収入） -->
+        <div class="grid2" style="gap:10px">
+          <div style="border-radius:12px;padding:16px 12px;border:2px solid #bbf7d0;background:#f0fdf4;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+            <div style="font-size:12px;font-weight:700;color:#15803d;margin-bottom:2px">年間自家消費メリット</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px">買電を減らせる見込み額</div>
+            <div style="display:flex;align-items:baseline;gap:2px">
+              <span style="font-size:11px;color:#15803d;font-weight:700">約</span>
+              <span id="self-saving-val" style="font-size:26px;font-weight:900;color:#15803d;line-height:1">-</span>
+              <span style="font-size:12px;color:#15803d;font-weight:700">円/年</span>
+            </div>
+          </div>
+          <div id="sell-revenue-card" style="border-radius:12px;padding:16px 12px;border:2px solid #99f6e4;background:#f0fdfa;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+            <div style="font-size:12px;font-weight:700;color:#0f766e;margin-bottom:2px">年間余剰売電収入</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px">余剰電力を売る見込み額</div>
+            <div style="display:flex;align-items:baseline;gap:2px">
+              <span id="sell-revenue-prefix" style="font-size:11px;color:#0f766e;font-weight:700">約</span>
+              <span id="sell-revenue-val" style="font-size:26px;font-weight:900;color:#0f766e;line-height:1">-</span>
+              <span id="sell-revenue-unit" style="font-size:12px;color:#0f766e;font-weight:700">円/年</span>
+            </div>
+          </div>
+        </div>
+        <div id="self-detail" style="display:none"></div>
       </div>
     </div>
 
