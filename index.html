@@ -553,6 +553,10 @@ canvas#mini-chart { height: 150px !important; }
             <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:4px">自家消費率</div>
             <div style="font-size:42px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em"><span id="self-rate-val">-</span><span style="font-size:22px;font-weight:700">%</span></div>
             <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:6px">発電のうちご家庭で使う割合</div>
+            <div id="self-rate-warning" style="display:none;margin-top:8px;font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.25);border-radius:6px;padding:6px 8px;line-height:1.5">
+              ⚠ 自家消費率が100%を超えています<br>
+              <span style="font-weight:400;opacity:.9">発電量・自家消費量・蓄電池放電量の前提を見直してください</span>
+            </div>
           </div>
           <div id="surplus-rate-card" style="border-radius:12px;padding:16px 12px;border:2px solid #0d9488;background:#0f766e;box-shadow:0 2px 8px rgba(0,0,0,.10)">
             <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:4px">余剰率</div>
@@ -1734,6 +1738,7 @@ function updateSelfSummary(dc, bc, ag, mb, up, remainKWh, remainBill, bk) {
   selfRateCard.style.background  = over ? '#DC2626' : 'var(--mg)';
   selfRateCard.style.borderColor = over ? '#B91C1C' : 'var(--dg)';
   document.getElementById('self-rate-val').textContent = selfRate;
+  document.getElementById('self-rate-warning').style.display = over ? '' : 'none';
 
   // ── 余剰率カード ──
   document.getElementById('surplus-rate-val').textContent = surplusRate;
