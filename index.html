@@ -738,7 +738,7 @@ canvas#mini-chart { height: 150px !important; }
             </div>
           </div>
         </div>
-        <div class="prev-card"><div class="p-label">年間削減効果</div><div class="p-val" id="rs">-</div></div>
+        <div class="prev-card"><div class="p-label">年間経済メリット<span style="font-size:10px;font-weight:400;display:block;opacity:.7">買電削減＋売電収入</span></div><div class="p-val" id="rs">-</div></div>
       </div>
       <div class="bar-compare">
         <div class="bar-row">
@@ -2322,7 +2322,7 @@ async function generatePPTX(mode) {
       sl.addText([
         {text:"📊 月々の残り電気代：",options:{color:C.darkGreen}},
         {text:`約${fmt(hM.remainBill)}円`,options:{bold:true,fontSize:22,color:C.orange}},
-        {text:`　→　削減効果 月${fmt(hM.annualSaving/12)}円・20年で約${hM.saving20YMan}万円`,options:{color:C.charcoal,fontSize:13}},
+        {text:`　→　経済メリット 月${fmt(hM.annualSaving/12)}円・20年で約${hM.saving20YMan}万円`,options:{color:C.charcoal,fontSize:13}},
       ],{x:0.8,y:4.05,w:8.5,h:1.2,fontSize:16,fontFace:"Meiryo",valign:"middle"});
     }
     // ── Slide 6：トータルコスト比較（仮説モデル）──
@@ -2593,7 +2593,7 @@ async function generatePPTX(mode) {
       sl.addText([
         {text:"📊 月々の残り電気代：",options:{color:C.darkGreen}},
         {text:`約${fmt(m.remainBill)}円`,options:{bold:true,fontSize:22,color:C.orange}},
-        {text:`　→　削減効果 月${fmt(m.annualSaving/12)}円・20年で約${m.saving20YMan}万円`,options:{color:C.charcoal,fontSize:13}},
+        {text:`　→　経済メリット 月${fmt(m.annualSaving/12)}円・20年で約${m.saving20YMan}万円`,options:{color:C.charcoal,fontSize:13}},
       ],{x:0.8,y:4.05,w:8.5,h:1.2,fontSize:16,fontFace:"Meiryo",valign:"middle"});
     }
     // ── 実データ E：コスト比較 ──
