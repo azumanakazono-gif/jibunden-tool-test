@@ -416,12 +416,39 @@ canvas#mini-chart { height: 150px !important; }
       <!-- ── 結果エリア（入力直後のひとまとまりブロック） ── -->
       <div id="result-area" style="margin-top:12px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 4px rgba(0,0,0,.06)">
         <div id="daytime-rate-disp" style="padding:6px 10px;background:var(--pg);border-radius:6px;font-size:12px;color:var(--mg);font-weight:600"></div>
-        <div id="self-kpi"></div>
-        <div id="surplus-disp" style="display:none;padding:12px 14px;background:#f0fdf4;border-radius:8px;border-left:4px solid #16a34a">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">📤 余剰電力量（年間発電 − 自家消費）</div>
-          <div><span id="surplus-big" style="font-size:26px;font-weight:900;color:#15803d">-</span></div>
-          <div id="surplus-sub" style="font-size:11px;color:var(--muted);margin-top:2px"></div>
-          <div id="sell-revenue-disp" style="display:none;margin-top:8px;padding:6px 10px;background:#dcfce7;border-radius:6px;font-size:13px;color:#15803d;font-weight:700"></div>
+        <!-- 1段目：率カード（自家消費率 / 余剰率） -->
+        <div class="grid2" style="gap:10px">
+          <div id="self-rate-card" style="border-radius:12px;padding:16px 12px;border:2px solid var(--dg);background:var(--mg);box-shadow:0 2px 8px rgba(0,0,0,.10)">
+            <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:4px">自家消費率</div>
+            <div style="font-size:42px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em"><span id="self-rate-val">-</span><span style="font-size:22px;font-weight:700">%</span></div>
+            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:6px">発電のうちご家庭で使う割合</div>
+          </div>
+          <div id="surplus-rate-card" style="border-radius:12px;padding:16px 12px;border:2px solid #0d9488;background:#0f766e;box-shadow:0 2px 8px rgba(0,0,0,.10)">
+            <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:4px">余剰率</div>
+            <div style="font-size:42px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em"><span id="surplus-rate-val">-</span><span style="font-size:22px;font-weight:700">%</span></div>
+            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:6px">発電のうち売電に回る割合</div>
+          </div>
+        </div>
+        <!-- 2段目：金額カード（年間自家消費メリット / 年間余剰売電収入） -->
+        <div class="grid2" style="gap:10px">
+          <div style="border-radius:12px;padding:16px 12px;border:2px solid #bbf7d0;background:#f0fdf4;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+            <div style="font-size:12px;font-weight:700;color:#15803d;margin-bottom:2px">年間自家消費メリット</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px">買電を減らせる見込み額</div>
+            <div style="display:flex;align-items:baseline;gap:2px">
+              <span style="font-size:11px;color:#15803d;font-weight:700">約</span>
+              <span id="self-saving-val" style="font-size:26px;font-weight:900;color:#15803d;line-height:1">-</span>
+              <span style="font-size:12px;color:#15803d;font-weight:700">円/年</span>
+            </div>
+          </div>
+          <div id="sell-revenue-card" style="border-radius:12px;padding:16px 12px;border:2px solid #99f6e4;background:#f0fdfa;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+            <div style="font-size:12px;font-weight:700;color:#0f766e;margin-bottom:2px">年間余剰売電収入</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px">余剰電力を売る見込み額</div>
+            <div style="display:flex;align-items:baseline;gap:2px">
+              <span id="sell-revenue-prefix" style="font-size:11px;color:#0f766e;font-weight:700">約</span>
+              <span id="sell-revenue-val" style="font-size:26px;font-weight:900;color:#0f766e;line-height:1">-</span>
+              <span id="sell-revenue-unit" style="font-size:12px;color:#0f766e;font-weight:700">円/年</span>
+            </div>
+          </div>
         </div>
         <div id="bk-remain-disp" style="display:none;padding:12px 14px;background:var(--pg);border-radius:8px;border-left:4px solid var(--mg)">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px">🔋 蓄電池の残容量余地（年間）</div>
@@ -431,11 +458,6 @@ canvas#mini-chart { height: 150px !important; }
         <div id="bk-error" style="display:none;padding:12px 14px;border-radius:8px;background:#FEF2F2;border-left:4px solid #DC2626;font-size:13px;font-weight:700;color:#B91C1C">
           ⚠️ 蓄電池の放電量設定が上限を超えています<br>
           <span style="font-size:12px;font-weight:400;margin-top:4px;display:inline-block">蓄電池容量（kWh）×365日を超える放電量は物理的に不可能です。「蓄電池で賄う量（kWh/年）」または「蓄電池容量（kWh）」を見直してください。</span>
-        </div>
-        <div id="remain-disp" style="display:none;padding:12px 14px;background:#fffbeb;border-radius:8px;border-left:4px solid #f59e0b">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">☀️ 自家消費としてまだ活用できる余地</div>
-          <div><span id="remain-kwh-big" style="font-size:26px;font-weight:900;color:#d97706">-</span></div>
-          <div id="remain-sub-text" style="font-size:11px;color:var(--muted);margin-top:2px"></div>
         </div>
         <div id="self-detail" style="display:none"></div>
       </div>
@@ -1666,61 +1688,55 @@ function toggleLoan() {
 
 function updateSelfSummary(dc, bc, ag, mb, up, remainKWh, remainBill, bk) {
   bk = bk || 0;
-  const total = dc + bc;
-  const selfRate = ag > 0 ? Math.round(total / ag * 100) : 0;
-  const over = selfRate > 100;
-  const annualConsumption = Math.round(mb / Math.max(1, up) * 12);
-  const surplus = ag > annualConsumption;
-  const kpiBg  = over ? '#DC2626' : 'var(--mg)';
-  const kpiBdr = over ? '#B91C1C' : 'var(--dg)';
+  const total       = dc + bc;
+  const selfRate    = ag > 0 ? Math.round(total / ag * 100) : 0;
+  const over        = selfRate > 100;
+  const surplusKwh  = Math.max(0, ag - total);
+  const surplusRate = ag > 0 ? Math.round(surplusKwh / ag * 100) : 0;
+  const annualSelfSaving = Math.round(total * up);
+  const saleP = parseFloat(document.getElementById('sale-price').value) || 0;
+  const annualSurplusRevenue = Math.round(surplusKwh * saleP);
+  const hasSolarMode = proposalMode !== 'battery_only';
 
-  // ── KPIカード：自家消費率（最優先） ──
-  document.getElementById('self-kpi').innerHTML =
-    `<div style="background:${kpiBg};border-radius:12px;padding:22px 24px;border:2px solid ${kpiBdr};box-shadow:0 2px 8px rgba(0,0,0,.12)">` +
-      `<div style="font-size:16px;font-weight:900;color:#fff;letter-spacing:.04em;margin-bottom:6px">自家消費率</div>` +
-      `<div style="font-size:52px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em">${selfRate}<span style="font-size:28px;font-weight:700">%</span></div>` +
-      (over ? `<div style="margin-top:10px;font-size:13px;font-weight:700;color:#fff;background:rgba(0,0,0,.2);border-radius:6px;padding:4px 10px;display:inline-block">⚠️ 100%超過 — 昼間直接使用量・蓄電池放電量を見直してください</div>` : '') +
-    `</div>`;
+  // ── 自家消費率カード ──
+  const selfRateCard = document.getElementById('self-rate-card');
+  selfRateCard.style.background  = over ? '#DC2626' : 'var(--mg)';
+  selfRateCard.style.borderColor = over ? '#B91C1C' : 'var(--dg)';
+  document.getElementById('self-rate-val').textContent = selfRate;
 
-  // ── 余剰電力量カード ──
-  const surplusKwh = Math.max(0, ag - total);
-  const surplusEl  = document.getElementById('surplus-disp');
-  surplusEl.style.display = '';
-  document.getElementById('surplus-big').textContent =
-    surplusKwh > 0 ? `約 ${fmt(surplusKwh)} kWh/年` : '余剰ほぼなし';
-  document.getElementById('surplus-sub').textContent =
-    surplusKwh > 0
-      ? `約 ${Math.round(surplusKwh/12).toLocaleString()} kWh/月・約 ${(surplusKwh/365).toFixed(1)} kWh/日`
-      : '自家消費が発電量の範囲内に収まっています';
+  // ── 余剰率カード ──
+  document.getElementById('surplus-rate-val').textContent = surplusRate;
 
-  // ── 詳細内訳（補助情報）── remain-disp の下に表示
+  // ── 年間自家消費メリット ──
+  document.getElementById('self-saving-val').textContent = fmt(annualSelfSaving);
+
+  // ── 年間余剰売電収入 ──
+  const hasRevenue = hasSolarMode && surplusKwh > 0 && saleP > 0;
+  document.getElementById('sell-revenue-val').textContent     = hasRevenue ? fmt(annualSurplusRevenue) : '-';
+  document.getElementById('sell-revenue-prefix').style.display = hasRevenue ? '' : 'none';
+  document.getElementById('sell-revenue-unit').style.display   = hasRevenue ? '' : 'none';
+  document.getElementById('sell-revenue-card').style.opacity   = hasRevenue ? '1' : '0.4';
+
+  // ── 補足情報 ──
   const showBattery = proposalMode !== 'pv_only';
   const detailEl = document.getElementById('self-detail');
   detailEl.style.display = '';
   detailEl.innerHTML =
     `<div style="background:var(--pg);border-radius:8px;border:1px solid var(--border);padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px 20px;font-size:12px;color:var(--mg)">` +
       `<span>⚡ 年間発電量：<b>${fmt(ag)} kWh</b></span>` +
-      `<span>☀️ 昼間直接使用：<b>${fmt(dc)} kWh/年</b><span style="font-size:11px;color:var(--muted);margin-left:4px">（約${Math.round(dc/12)}kWh/月・約${(dc/365).toFixed(1)}kWh/日）</span></span>` +
-      (showBattery ? `<span>🔋 蓄電池放電：<b>${fmt(bc)} kWh/年</b><span style="font-size:11px;color:var(--muted);margin-left:4px">（約${Math.round(bc/12)}kWh/月・約${(bc/365).toFixed(1)}kWh/日）</span></span>` : '') +
-      `<span>🏠 合計自家消費：<b>${fmt(total)} kWh</b></span>` +
-      `<span style="color:var(--or)">🛒 残り購入：<b>${fmt(remainKWh)} kWh/年</b> → 月平均 <b>¥${fmt(remainBill)}</b></span>` +
-      (surplus && !over
-        ? `<div style="width:100%;margin-top:12px;margin-bottom:4px;background:#fffbeb;border:2px solid #f59e0b;border-radius:10px;padding:16px 16px;border-left:5px solid #d97706">` +
-          `<div style="font-size:15px;font-weight:800;color:#92400e;margin-bottom:4px">⚠️ 余剰発電の可能性あり</div>` +
-          `<div style="font-size:14px;color:#78350f;line-height:1.5">年間発電量が年間消費量（${fmt(annualConsumption)} kWh）を<b>上回っています</b>。<br>余剰売電が発生する可能性があります。</div>` +
-          `</div>`
-        : '') +
+      `<span>🏠 自家消費量：<b>${fmt(total)} kWh/年</b></span>` +
+      `<span>📤 余剰電力量：<b>${fmt(surplusKwh)} kWh/年</b></span>` +
+      `<span style="color:var(--or)">🛒 残り購入量：<b>${fmt(remainKWh)} kWh/年</b>（月平均 ¥${fmt(remainBill)}）</span>` +
+      `<span>💡 買電単価：<b>${up.toFixed(1)}円/kWh</b></span>` +
+      (hasSolarMode && saleP > 0 ? `<span>💴 売電単価：<b>${saleP}円/kWh</b></span>` : '') +
     `</div>`;
 
-  // 蓄電池実効容量ベースで判定（公称容量 bk は表示専用）
-  const bkEff = effectiveBatteryKwh(bk); // 実効容量 kWh/日
-  const bkEffYearMax = bkEff * 365;      // 年間理論上限（実効）
-
-  // 上限超過判定（実効容量ベース）
+  // ── 蓄電池残容量カード ──
+  const bkEff = effectiveBatteryKwh(bk);
+  const bkEffYearMax = bkEff * 365;
   const batteryOver = bk > 0 && bc > bkEffYearMax;
   document.getElementById('bk-error').style.display = (showBattery && batteryOver) ? '' : 'none';
 
-  // 蓄電池残容量カード（実効容量ベース）
   const bkRemainEl = document.getElementById('bk-remain-disp');
   if (showBattery && bk > 0) {
     const bkRemain = Math.max(0, bkEffYearMax - bc);
@@ -1734,23 +1750,6 @@ function updateSelfSummary(dc, bc, ag, mb, up, remainKWh, remainBill, bk) {
       `年間理論上限（実効）：${fmt(bkEffYearMax)} kWh　活用率：${bkUsageRate}% / 残り：${100 - bkUsageRate}%`;
   } else {
     bkRemainEl.style.display = 'none';
-  }
-
-  // 自家消費余地 = 年間発電量 - 現在の自家消費量
-  const selfKWh = total; // dc + bc
-  const potential = ag > 0 ? Math.max(0, ag - selfKWh) : 0;
-  const rdEl = document.getElementById('remain-disp');
-  if (ag > 0 && !over && !batteryOver) {
-    rdEl.style.display = '';
-    if (potential > 0) {
-      document.getElementById('remain-kwh-big').textContent = `約 ${fmt(potential)} kWh/年`;
-      document.getElementById('remain-sub-text').textContent = 'この分を使い切れると、さらに買電を減らせます';
-    } else {
-      document.getElementById('remain-kwh-big').textContent = '余地なし（発電量をフル自家消費中）';
-      document.getElementById('remain-sub-text').textContent = '昼間直接使用量や蓄電池放電量がすでに発電量に達しています';
-    }
-  } else {
-    rdEl.style.display = 'none';
   }
 }
 
@@ -1841,19 +1840,6 @@ function calc() {
   const bill20Show = er > 0 ? m.bill20YMan_rise : m.bill20YMan;
   const ratio = Math.min(m.totalCostMan/bill20Show, 1);
   updateSelfSummary(dc, bc_eff, ag, mb, up, m.remainKWh, m.remainBill, bk);
-
-  // 売電収入計算・表示
-  const hasSolarMode = proposalMode !== 'battery_only';
-  const saleP = parseFloat(document.getElementById('sale-price').value) || 0;
-  const surplusKwhCalc = Math.max(0, ag - (dc + bc_eff));
-  const sellRevenueAnnual = Math.round(surplusKwhCalc * saleP);
-  const sellRevEl = document.getElementById('sell-revenue-disp');
-  if (hasSolarMode && surplusKwhCalc > 0 && saleP > 0) {
-    sellRevEl.style.display = '';
-    sellRevEl.innerHTML = `💴 売電収入（目安）：<b>年間約 ¥${fmt(sellRevenueAnnual)}</b><span style="font-size:11px;font-weight:400;margin-left:6px;color:#15803d">（${saleP}円/kWh × ${fmt(surplusKwhCalc)} kWh）</span>`;
-  } else {
-    sellRevEl.style.display = 'none';
-  }
 
   // 補助金サマリー表示
   const subEl = document.getElementById('subsidy-summary');
