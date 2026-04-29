@@ -421,6 +421,11 @@ canvas#mini-chart { height: 150px !important; }
           <span style="font-weight:400;color:#DC2626">昼間直接使用量・蓄電池放電量・年間発電量の設定を見直してください</span>
         </div>
         <div id="daytime-rate-disp" style="padding:6px 10px;background:var(--pg);border-radius:6px;font-size:12px;color:var(--mg);font-weight:600"></div>
+        <div id="self-margin-disp" style="display:none;padding:12px 14px;background:var(--pg);border-radius:8px;border-left:4px solid #16a34a">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">☀️ 自家消費余地（年間）</div>
+          <div><span id="self-margin-big" style="font-size:26px;font-weight:900;color:#15803d">-</span></div>
+          <div id="self-margin-sub" style="font-size:11px;color:var(--muted);margin-top:2px"></div>
+        </div>
         <div id="bk-remain-disp" style="display:none;padding:12px 14px;background:var(--pg);border-radius:8px;border-left:4px solid var(--mg)">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px">🔋 蓄電池の残容量余地（年間）</div>
           <div><span id="bk-remain-big" style="font-size:26px;font-weight:900;color:var(--mg)">-</span></div>
@@ -1057,9 +1062,10 @@ function applyProposalMode() {
   document.getElementById('sale-setting-area').style.display = hasSolar ? '' : 'none';
 
   // 蓄電池KPI：再計算で更新されるので reset のみ
-  document.getElementById('bk-remain-disp').style.display = 'none';
-  document.getElementById('bk-error').style.display       = 'none';
-  document.getElementById('self-detail-bk').style.display = 'none';
+  document.getElementById('self-margin-disp').style.display = 'none';
+  document.getElementById('bk-remain-disp').style.display   = 'none';
+  document.getElementById('bk-error').style.display         = 'none';
+  document.getElementById('self-detail-bk').style.display   = 'none';
 
   // セクションタイトル更新
   document.getElementById('system-design-title').textContent = cfg.sysTitle;
@@ -1772,6 +1778,17 @@ function updateSelfSummary(dc, bc, ag, mb, up, remainKWh, remainBill, bk) {
       (hasSolarMode && saleP > 0 ? `<span>💴 売電単価：<b>${saleP}円/kWh</b></span>` : '') +
     `</div>`;
   document.getElementById('self-detail-bk').innerHTML = detailEl.innerHTML;
+
+  // ── 自家消費余地カード ──
+  const selfMarginEl = document.getElementById('self-margin-disp');
+  if (hasSolarMode && ag > 0) {
+    selfMarginEl.style.display = '';
+    document.getElementById('self-margin-big').textContent = `${fmt(surplusKwh)} kWh/年`;
+    document.getElementById('self-margin-sub').textContent =
+      `約${fmt(Math.round(surplusKwh / 12))} kWh/月・約${(surplusKwh / 365).toFixed(1)} kWh/日`;
+  } else {
+    selfMarginEl.style.display = 'none';
+  }
 
   // ── 蓄電池残容量カード ──
   const bkEff = effectiveBatteryKwh(bk);
