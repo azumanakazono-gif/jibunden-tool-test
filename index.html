@@ -848,7 +848,7 @@ const FIT_MASTER = [
     }
   },
 ];
-const POST_FIT_DEFAULT = 8;
+const POST_FIT_DEFAULT = 7;
 
 let saleMode        = 'fit';
 let fitPeriodId     = 'fy2026';
@@ -912,6 +912,7 @@ function onSaleModeChange(mode) {
     setSalePrice(POST_FIT_DEFAULT, true);
     noteEl.textContent = '卒FIT後の買取目安単価（電力会社によって異なります）';
   } else {
+    document.getElementById('sale-price').value = '';
     document.getElementById('sale-auto-badge').style.display  = 'none';
     document.getElementById('sale-edited-badge').style.display = 'none';
     document.getElementById('sale-reset-btn').style.display   = 'none';
