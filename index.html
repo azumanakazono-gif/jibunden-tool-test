@@ -1863,7 +1863,13 @@ function calc() {
   document.getElementById('rk-self').textContent = m.selfCostPerKWh > 0 ? m.selfCostPerKWh+'円/kWh' : '-';
   // 20年電気代：上昇率があれば上昇後の数値を表示
   document.getElementById('rb').textContent = bill20Show+'万円' + (er>0 ? `（年${er}%上昇）` : '');
-  document.getElementById('rs').textContent = fmt(m.annualSaving)+'円';
+  document.getElementById('rs').textContent = (() => {
+    const hasSolarMode = proposalMode !== 'battery_only';
+    const saleP = parseFloat(document.getElementById('sale-price').value) || 0;
+    const surplusKwhCalc = Math.max(0, ag - (dc + bc_eff));
+    const annualSellRevenue = hasSolarMode ? Math.round(surplusKwhCalc * saleP) : 0;
+    return fmt(m.annualSaving + annualSellRevenue) + '円';
+  })();
   document.getElementById('bbv').textContent = bill20Show+'万円';
   // 積み上げ棒グラフ：残り電気代（残り購入電力量 × 平均単価 ベース）
   // m.remainBill = remainKWh × currentUnitPrice / 12（月額）
