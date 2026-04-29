@@ -719,27 +719,52 @@ canvas#mini-chart { height: 150px !important; }
 
     <div class="section-card">
       <div class="section-title">📊 シミュレーション結果</div>
-      <div class="preview-grid">
-        <div class="prev-card orange"><div class="p-label">20年間の電気代</div><div class="p-val" id="rb">-</div><div style="font-size:9px;color:var(--muted);margin-top:4px" id="rb-note"></div><div style="font-size:15px;color:#ea580c;margin-top:6px;font-weight:700" id="rb-up"></div></div>
-        <div class="prev-card"><div class="p-label">初期費用</div><div class="p-val" id="rc">-</div></div>
-        <div class="prev-card">
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <div>
-              <div class="p-label">発電単価<span style="font-size:10px;color:var(--muted);margin-left:4px">（100%活用の理論値）</span></div>
-              <div class="p-val" id="rk" style="font-size:30px">-</div>
-            </div>
-            <div style="border-top:1px solid var(--border);padding-top:8px">
-              <div class="p-label">自家消費単価<span style="font-size:10px;color:var(--muted);margin-left:4px">（現金購入ベース）</span></div>
-              <div class="p-val" id="rk-self" style="color:var(--mg);font-size:30px">-</div>
-            </div>
-            <div id="rk-loan-row" style="border-top:1px solid var(--border);padding-top:8px;display:none">
-              <div class="p-label">ローン活用時の単価<span style="font-size:10px;color:var(--muted);margin-left:4px">（総返済額ベース）</span></div>
-              <div class="p-val" id="rk-loan" style="color:#7c3aed;font-size:30px">-</div>
-            </div>
+      <!-- JS互換のために非表示で保持 -->
+      <div style="display:none">
+        <span id="rb"></span><span id="rb-note"></span><span id="rc"></span>
+        <span id="rk"></span><div id="rk-loan-row"><span id="rk-loan"></span></div>
+      </div>
+      <!-- KPI カード (2×2) -->
+      <div class="grid2" style="gap:10px;margin-bottom:12px">
+        <div style="border-radius:12px;padding:16px 12px;border:2px solid #bbf7d0;background:linear-gradient(135deg,#f0fdf4,#dcfce7);box-shadow:0 2px 8px rgba(0,0,0,.08)">
+          <div style="font-size:12px;font-weight:700;color:#15803d;margin-bottom:2px">20年間の経済メリット</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px">電力会社継続との差額</div>
+          <div style="display:flex;align-items:baseline;gap:2px">
+            <span style="font-size:11px;color:#15803d;font-weight:700">約</span>
+            <span id="rd-top" style="font-size:26px;font-weight:900;color:#15803d;line-height:1">-</span>
+            <span style="font-size:12px;color:#15803d;font-weight:700">万円</span>
           </div>
         </div>
-        <div class="prev-card"><div class="p-label">年間経済メリット<span style="font-size:10px;font-weight:400;display:block;opacity:.7">買電削減＋売電収入</span></div><div class="p-val" id="rs">-</div></div>
+        <div style="border-radius:12px;padding:16px 12px;border:2px solid #bbf7d0;background:#f0fdf4;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+          <div style="font-size:12px;font-weight:700;color:#15803d;margin-bottom:2px">年間経済メリット</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px">買電削減＋売電収入</div>
+          <div style="display:flex;align-items:baseline;gap:2px">
+            <span style="font-size:11px;color:#15803d;font-weight:700">約</span>
+            <span id="rs" style="font-size:26px;font-weight:900;color:#15803d;line-height:1">-</span>
+            <span style="font-size:12px;color:#15803d;font-weight:700">円/年</span>
+          </div>
+        </div>
       </div>
+      <div class="grid2" style="gap:10px;margin-bottom:16px">
+        <div style="border-radius:12px;padding:16px 12px;border:2px solid #bbf7d0;background:#f0fdf4;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+          <div style="font-size:12px;font-weight:700;color:#15803d;margin-bottom:2px">月平均メリット</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px">年間経済メリット÷12</div>
+          <div style="display:flex;align-items:baseline;gap:2px">
+            <span style="font-size:11px;color:#15803d;font-weight:700">約</span>
+            <span id="rs-month" style="font-size:26px;font-weight:900;color:#15803d;line-height:1">-</span>
+            <span style="font-size:12px;color:#15803d;font-weight:700">円/月</span>
+          </div>
+        </div>
+        <div style="border-radius:12px;padding:16px 12px;border:2px solid var(--border);background:var(--surface);box-shadow:0 1px 4px rgba(0,0,0,.06)">
+          <div id="rb-up"></div>
+          <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:8px">
+            <div style="font-size:11px;font-weight:500;color:var(--muted)">自家消費単価（現金）</div>
+            <div id="rk-self" style="font-size:20px;font-weight:800;color:var(--mg)">-</div>
+          </div>
+        </div>
+      </div>
+      <!-- 棒グラフタイトル -->
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)">📊 20年間の総コスト比較</div>
       <div class="bar-compare">
         <div class="bar-row">
           <div class="bar-label">電力会社のまま（20年間）</div>
@@ -1863,13 +1888,15 @@ function calc() {
   document.getElementById('rk-self').textContent = m.selfCostPerKWh > 0 ? m.selfCostPerKWh+'円/kWh' : '-';
   // 20年電気代：上昇率があれば上昇後の数値を表示
   document.getElementById('rb').textContent = bill20Show+'万円' + (er>0 ? `（年${er}%上昇）` : '');
-  document.getElementById('rs').textContent = (() => {
+  const _annualTotal = (() => {
     const hasSolarMode = proposalMode !== 'battery_only';
     const saleP = parseFloat(document.getElementById('sale-price').value) || 0;
     const surplusKwhCalc = Math.max(0, ag - (dc + bc_eff));
     const annualSellRevenue = hasSolarMode ? Math.round(surplusKwhCalc * saleP) : 0;
-    return fmt(m.annualSaving + annualSellRevenue) + '円';
+    return m.annualSaving + annualSellRevenue;
   })();
+  document.getElementById('rs').textContent = fmt(_annualTotal);
+  document.getElementById('rs-month').textContent = fmt(Math.round(_annualTotal / 12));
   document.getElementById('bbv').textContent = bill20Show+'万円';
   // 積み上げ棒グラフ：残り電気代（残り購入電力量 × 平均単価 ベース）
   // m.remainBill = remainKWh × currentUnitPrice / 12（月額）
@@ -1887,6 +1914,7 @@ function calc() {
   // コスト差：電力会社20年総額 - (初期費用 + 残り電気代20年分) ← er=0でも costDiff_with_rise が正しく機能
   const diffShow = m.costDiff_with_rise;
   document.getElementById('rd').textContent = '約'+diffShow+'万円';
+  document.getElementById('rd-top').textContent = diffShow;
   document.getElementById('rb-note').textContent = er > 0 ? `年${er}%上昇想定` : '現状維持';
   document.getElementById('rb-up').innerHTML = up > 0
     ? `<span style="font-size:11px;font-weight:500;opacity:.8">現在の平均単価</span><br><span style="font-size:20px;font-weight:800">${up.toFixed(1)}円/kWh</span>`
