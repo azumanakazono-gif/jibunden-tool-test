@@ -323,10 +323,6 @@ canvas#mini-chart { height: 150px !important; }
 
     <div class="section-card">
       <div class="section-title">⚡ 電気使用状況</div>
-      <div id="self-rate-warn-input" style="display:none;margin-bottom:12px;padding:10px 14px;background:#FEF2F2;border:1.5px solid #FCA5A5;border-radius:8px;font-size:12px;font-weight:700;color:#B91C1C;line-height:1.6">
-        ⚠ 自家消費率が100%を超えています<br>
-        <span style="font-weight:400;color:#DC2626">昼間直接使用量・蓄電池放電量・年間発電量の設定を見直してください</span>
-      </div>
       <div class="field" style="margin-bottom:10px">
         <label>電力会社・料金プラン <span style="font-size:10px;color:var(--mg);margin-left:4px">選択すると単価を自動反映（手動上書き可）</span></label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">
@@ -420,6 +416,10 @@ canvas#mini-chart { height: 150px !important; }
       </div>
       <!-- ── 結果エリア（入力直後のひとまとまりブロック） ── -->
       <div id="result-area" style="margin-top:12px;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+        <div id="self-rate-warn-input" style="display:none;padding:10px 14px;background:#FEF2F2;border:1.5px solid #FCA5A5;border-radius:8px;font-size:12px;font-weight:700;color:#B91C1C;line-height:1.6">
+          ⚠ 自家消費率が100%を超えています<br>
+          <span style="font-weight:400;color:#DC2626">昼間直接使用量・蓄電池放電量・年間発電量の設定を見直してください</span>
+        </div>
         <div id="daytime-rate-disp" style="padding:6px 10px;background:var(--pg);border-radius:6px;font-size:12px;color:var(--mg);font-weight:600"></div>
         <div id="bk-remain-disp" style="display:none;padding:12px 14px;background:var(--pg);border-radius:8px;border-left:4px solid var(--mg)">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px">🔋 蓄電池の残容量余地（年間）</div>
