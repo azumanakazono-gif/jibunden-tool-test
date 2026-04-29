@@ -142,6 +142,7 @@ canvas#mini-chart { height: 150px !important; }
 .pm-btn.active { background:var(--dg); color:#fff; }
 .pm-btn:hover:not(.active) { background:var(--pg); color:var(--text); }
 
+
 /* ── 売電方式セレクター ── */
 .sale-mode-bar { display:flex; gap:0; border:1.5px solid var(--border); border-radius:8px; overflow:hidden; }
 .sm-btn { flex:1; padding:8px 6px; background:#fff; border:none; border-right:1px solid var(--border); cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; color:var(--muted); transition:all .15s; line-height:1.3; text-align:center; }
@@ -150,6 +151,7 @@ canvas#mini-chart { height: 150px !important; }
 .sm-btn:hover:not(.active) { background:var(--pg); color:var(--text); }
 .sale-auto-badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:700; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; margin-left:6px; }
 .sale-edited-badge { display:none; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:700; background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; margin-left:6px; }
+
 .form-locked .section-card,
 .form-locked #pkg-area,
 .form-locked #result-area { opacity:.25; pointer-events:none; user-select:none; }
@@ -511,11 +513,16 @@ canvas#mini-chart { height: 150px !important; }
         <div class="field" style="margin-bottom:10px">
           <label style="font-size:13px">売電方式</label>
           <div class="sale-mode-bar" style="margin-top:4px">
+
             <button class="sm-btn active" id="sm-btn-fit" onclick="onSaleModeChange('fit')">FIT買取</button>
+
+            <button class="sm-btn active" id="sm-btn-fit" onclick="onSaleModeChange('fit')">FIT<br>（固定価格買取）</button>
+
             <button class="sm-btn" id="sm-btn-post_fit" onclick="onSaleModeChange('post_fit')">卒FIT</button>
             <button class="sm-btn" id="sm-btn-manual" onclick="onSaleModeChange('manual')">手動入力</button>
           </div>
         </div>
+
         <div id="fit-options" style="margin-bottom:10px">
           <div class="field" style="margin-bottom:8px">
             <label style="font-size:12px">FIT適用区分</label>
@@ -528,6 +535,7 @@ canvas#mini-chart { height: 150px !important; }
           </div>
           <div class="field">
             <label style="font-size:12px">容量・設置区分</label>
+
             <div style="display:flex;flex-wrap:nowrap;gap:6px;margin-top:4px">
               <button id="cap-btn-under10" onclick="onFitCapacityChange('under10')"
                 style="flex:1;padding:7px 4px;border-radius:6px;border:1.5px solid var(--mg);background:var(--mg);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">
@@ -540,6 +548,46 @@ canvas#mini-chart { height: 150px !important; }
               <button id="cap-btn-mid10_50" onclick="onFitCapacityChange('mid10_50')"
                 style="flex:1;padding:7px 4px;border-radius:6px;border:1.5px solid var(--border);background:#fff;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">
                 10〜50kW
+
+            <div style="display:flex;gap:6px;margin-top:4px">
+              <button id="cap-btn-under10" onclick="onFitCapacityChange('under10')"
+                style="flex:1;padding:8px 4px;border-radius:6px;border:1.5px solid var(--mg);background:var(--mg);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1.3">
+                10kW未満
+              </button>
+              <button id="cap-btn-over10_roof" onclick="onFitCapacityChange('over10_roof')"
+                style="flex:1;padding:8px 4px;border-radius:6px;border:1.5px solid var(--border);background:#fff;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1.3">
+                10kW以上<br>屋根設置
+              </button>
+              <button id="cap-btn-mid10_50" onclick="onFitCapacityChange('mid10_50')"
+                style="flex:1;padding:8px 4px;border-radius:6px;border:1.5px solid var(--border);background:#fff;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1.3">
+                10〜50kW<br>（地上等）
+
+        <div id="fit-options" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+          <div class="field" style="min-width:120px">
+            <label style="font-size:12px">FIT認定年度</label>
+            <select id="fit-year" onchange="onFitYearChange()" style="border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;background:#fff;font-family:inherit">
+              <option value="2019">2019年度</option>
+              <option value="2020">2020年度</option>
+              <option value="2021">2021年度</option>
+              <option value="2022">2022年度</option>
+              <option value="2023">2023年度</option>
+              <option value="2024">2024年度</option>
+              <option value="2025" selected>2025年度</option>
+              <option value="2026">2026年度</option>
+            </select>
+          </div>
+          <div class="field" style="min-width:150px">
+            <label style="font-size:12px">容量区分</label>
+            <div style="display:flex;gap:6px;margin-top:4px">
+              <button id="cap-btn-under10" onclick="onFitCapacityChange('under10')"
+                style="flex:1;padding:8px 6px;border-radius:6px;border:1.5px solid var(--mg);background:var(--mg);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">
+                10kW未満
+              </button>
+              <button id="cap-btn-over10" onclick="onFitCapacityChange('over10')"
+                style="flex:1;padding:8px 6px;border-radius:6px;border:1.5px solid var(--border);background:#fff;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">
+                10kW以上
+
+
               </button>
             </div>
           </div>
@@ -550,7 +598,11 @@ canvas#mini-chart { height: 150px !important; }
             <span class="sale-edited-badge" id="sale-edited-badge">手動変更</span>
             <button id="sale-reset-btn" onclick="resetSalePrice()" style="display:none;margin-left:6px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;border:1px solid #fed7aa;background:#fff7ed;color:#c2410c;cursor:pointer;font-family:inherit">自動値に戻す</button>
           </label>
+
           <input type="number" id="sale-price" value="24" min="1" max="50" step="0.5"
+
+          <input type="number" id="sale-price" value="16" min="1" max="50" step="0.5"
+
             style="border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:15px;background:#fff;font-family:inherit;max-width:160px;margin-top:4px"
             oninput="onSalePriceInput()">
           <div id="sale-price-note" style="font-size:11px;color:var(--muted);margin-top:3px"></div>
@@ -811,6 +863,7 @@ const PROPOSAL_MODE_CONFIG = {
   },
 };
 
+
 // ══════════════════════════════════════════
 // 売電設定
 // ══════════════════════════════════════════
@@ -872,6 +925,34 @@ function fitAutoNote() {
   if (rate.earlyPrice !== undefined)
     return `${p.label}・${capLabel}：1〜${rate.earlyYears}年目 ${rate.earlyPrice}円 / ${rate.earlyYears + 1}〜${rate.years}年目 ${rate.latePrice}円`;
   return `${p.label}・${capLabel}：固定 ${rate.price}円/kWh（${rate.years}年間）`;
+
+
+
+// ══════════════════════════════════════════
+// 売電設定
+// ══════════════════════════════════════════
+const FIT_MASTER = {
+  2019: { under10: 24, over10: 14 },
+  2020: { under10: 21, over10: 13 },
+  2021: { under10: 19, over10: 12 },
+  2022: { under10: 17, over10: 11 },
+  2023: { under10: 16, over10: 10 },
+  2024: { under10: 16, over10: 10 },
+  2025: { under10: 16, over10: 10 },
+  2026: { under10: 15, over10:  9 },
+};
+const POST_FIT_DEFAULT = 8;
+
+let saleMode      = 'fit';
+let fitYear       = 2025;
+let fitCapacity   = 'under10';
+let salePriceEdited = false;
+
+function fitAutoPrice() {
+  const row = FIT_MASTER[fitYear] || FIT_MASTER[2025];
+  return row[fitCapacity];
+
+
 }
 
 function setSalePrice(price, isAuto) {
@@ -905,9 +986,20 @@ function onSaleModeChange(mode) {
   fitOpts.style.display = mode === 'fit' ? '' : 'none';
   const noteEl = document.getElementById('sale-price-note');
   if (mode === 'fit') {
+
     const price = fitAutoPrice();
     if (!salePriceEdited && price !== null) setSalePrice(price, true);
     noteEl.textContent = fitAutoNote();
+
+
+    const price = fitAutoPrice();
+    if (!salePriceEdited && price !== null) setSalePrice(price, true);
+    noteEl.textContent = fitAutoNote();
+
+    if (!salePriceEdited) setSalePrice(fitAutoPrice(), true);
+    noteEl.textContent = `FIT ${fitYear}年度・${fitCapacity === 'under10' ? '10kW未満' : '10kW以上'} 買取単価`;
+
+
   } else if (mode === 'post_fit') {
     setSalePrice(POST_FIT_DEFAULT, true);
     noteEl.textContent = '卒FIT後の買取目安単価（電力会社によって異なります）';
@@ -919,6 +1011,7 @@ function onSaleModeChange(mode) {
     calc();
   }
 }
+
 
 function onFitPeriodChange() {
   fitPeriodId = document.getElementById('fit-period').value;
@@ -941,15 +1034,26 @@ function updateCapacityButtons() {
     btn.disabled          = isNull;
     btn.title             = isNull ? 'この区分は対象外です' : '';
   });
+
+
+function onFitYearChange() {
+  fitYear = parseInt(document.getElementById('fit-year').value);
+  if (!salePriceEdited) setSalePrice(fitAutoPrice(), true);
+  document.getElementById('sale-price-note').textContent =
+    `FIT ${fitYear}年度・${fitCapacity === 'under10' ? '10kW未満' : '10kW以上'} 買取単価`;
+in
+
 }
 
 function onFitCapacityChange(cap) {
   fitCapacity = cap;
+
   updateCapacityButtons();
   const price = fitAutoPrice();
   if (!salePriceEdited && price !== null) setSalePrice(price, true);
   document.getElementById('sale-price-note').textContent = fitAutoNote();
 }
+
 
 function fitSlideSaleInfo() {
   const p = FIT_MASTER.find(p => p.id === fitPeriodId) || FIT_MASTER[FIT_MASTER.length - 1];
@@ -963,11 +1067,34 @@ function fitSlideSaleInfo() {
   return { value: `${rate.price}円`, sub: `/kWh（${p.label}）` };
 }
 
+
+
 function initSaleSetting() {
   document.getElementById('fit-period').value = fitPeriodId;
   updateCapacityButtons();
   onSaleModeChange('fit');
 }
+
+
+
+  ['under10','over10'].forEach(c => {
+    const btn = document.getElementById('cap-btn-' + c);
+    const active = c === cap;
+    btn.style.background    = active ? 'var(--mg)' : '#fff';
+    btn.style.color         = active ? '#fff' : 'var(--muted)';
+    btn.style.borderColor   = active ? 'var(--mg)' : 'var(--border)';
+  });
+  if (!salePriceEdited) setSalePrice(fitAutoPrice(), true);
+  document.getElementById('sale-price-note').textContent =
+    `FIT ${fitYear}年度・${cap === 'under10' ? '10kW未満' : '10kW以上'} 買取単価`;
+}
+
+function initSaleSetting() {
+  onSaleModeChange('fit');
+}
+
+
+
 
 function setProposalMode(mode) {
   proposalMode = mode;
@@ -992,8 +1119,22 @@ function applyProposalMode() {
   // パッケージ選択（全パッケージが太陽光＋蓄電池のため pv_battery のみ表示）
   document.getElementById('pkg-area').style.display = proposalMode === 'pv_battery' ? '' : 'none';
 
+
   // 売電設定（太陽光がある場合のみ表示）
   document.getElementById('sale-setting-area').style.display = hasSolar ? '' : 'none';
+
+
+
+  // 売電設定（太陽光がある場合のみ表示）
+  document.getElementById('sale-setting-area').style.display = hasSolar ? '' : 'none';
+
+
+
+  // 売電設定（太陽光がある場合のみ表示）
+  document.getElementById('sale-setting-area').style.display = hasSolar ? '' : 'none';
+
+
+
 
   // 蓄電池KPI：再計算で更新されるので reset のみ
   document.getElementById('bk-remain-disp').style.display = 'none';
@@ -1196,11 +1337,29 @@ function saveFormToData(data) {
   data.sysName = document.getElementById('sys-name').value;
   HEARING_KEYS.forEach(k => { data[k] = data[k] || false; }); // preserve current values
   data.proposalMode = proposalMode;
+
   data.saleMode     = saleMode;
   data.fitPeriodId  = fitPeriodId;
   data.fitCapacity  = fitCapacity;
   data.salePrice    = parseFloat(document.getElementById('sale-price').value) || fitAutoPrice() || 24;
   data.salePriceEdited = salePriceEdited;
+
+
+  data.saleMode     = saleMode;
+  data.fitPeriodId  = fitPeriodId;
+  data.fitCapacity  = fitCapacity;
+  data.salePrice    = parseFloat(document.getElementById('sale-price').value) || 16;
+  data.salePriceEdited = salePriceEdited;
+
+
+  data.saleMode     = saleMode;
+  data.fitYear      = fitYear;
+  data.fitCapacity  = fitCapacity;
+  data.salePrice    = parseFloat(document.getElementById('sale-price').value) || 16;
+  data.salePriceEdited = salePriceEdited;
+
+
+
 }
 
 function loadDataToForm(data) {
@@ -1231,6 +1390,7 @@ function loadDataToForm(data) {
   updatePkgSummary();
   toggleLoan();
   onHearingChange(data);
+
   // 売電設定の復元
   saleMode      = data.saleMode     || 'fit';
   fitPeriodId   = data.fitPeriodId  || 'fy2026';
@@ -1238,6 +1398,17 @@ function loadDataToForm(data) {
   if (fitCapacity === 'over10') fitCapacity = 'over10_roof'; // legacy migration
   salePriceEdited = data.salePriceEdited || false;
   document.getElementById('fit-period').value = fitPeriodId;
+
+
+
+  // 売電設定の復元
+  saleMode      = data.saleMode     || 'fit';
+  fitYear       = data.fitYear      || 2025;
+  fitCapacity   = data.fitCapacity  || 'under10';
+  salePriceEdited = data.salePriceEdited || false;
+  document.getElementById('fit-year').value = fitYear;
+
+
   onFitCapacityChange(fitCapacity);
   onSaleModeChange(saleMode);
   if (data.salePriceEdited && data.salePrice) {
@@ -1246,6 +1417,7 @@ function loadDataToForm(data) {
     document.getElementById('sale-edited-badge').style.display = 'inline-block';
     document.getElementById('sale-reset-btn').style.display    = 'inline-block';
   }
+
   setProposalMode(data.proposalMode || 'pv_battery');
 }
 
@@ -1998,10 +2170,21 @@ function clearForm() {
   document.getElementById('lr').value=4.1;
   document.getElementById('lc').value=180;
   document.getElementById('le').checked=false; document.getElementById('lp-manual').value=0; setLoanInputMode('auto'); setLoanMethod('zansai'); toggleLoan();
+
   salePriceEdited = false; fitPeriodId = 'fy2026'; fitCapacity = 'under10';
   document.getElementById('fit-period').value = 'fy2026';
   onFitCapacityChange('under10');
   onSaleModeChange('fit');
+
+
+
+  salePriceEdited = false; fitYear = 2025; fitCapacity = 'under10';
+  document.getElementById('fit-year').value = 2025;
+  onFitCapacityChange('under10');
+  onSaleModeChange('fit');
+
+
+
   setProposalMode('pv_battery');
 }
 
@@ -2061,11 +2244,23 @@ function loadCustomer(id) {
     hasBattery:   entry.hasBattery   || false,
     isAllElectric:entry.isAllElectric|| false,
     proposalMode: entry.proposalMode || 'pv_battery',
+
     saleMode:     entry.saleMode     || 'fit',
     fitPeriodId:  entry.fitPeriodId  || 'fy2026',
     fitCapacity:  entry.fitCapacity === 'over10' ? 'over10_roof' : (entry.fitCapacity || 'under10'),
     salePrice:    entry.salePrice    || 24,
     salePriceEdited: entry.salePriceEdited || false,
+
+
+
+    saleMode:     entry.saleMode     || 'fit',
+    fitYear:      entry.fitYear      || 2025,
+    fitCapacity:  entry.fitCapacity  || 'under10',
+    salePrice:    entry.salePrice    || 16,
+    salePriceEdited: entry.salePriceEdited || false,
+
+
+
   };
   loanAmountEdited = false;
   if (activeTab === 'customer') {
@@ -2882,6 +3077,7 @@ async function generatePPTX(mode) {
 }
 
 // ── 初期化 ──
+
 onPkgChange();       // 7+7パッケージのデフォルト値を適用
 initSaleSetting();   // 売電設定UIを初期化
 applyProposalMode(); // 提案モードUIを初期化（内部でcalc()を呼ぶ）
