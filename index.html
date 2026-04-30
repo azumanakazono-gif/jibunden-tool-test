@@ -1272,6 +1272,7 @@ function onPkgChangePv() {
     document.getElementById('ag').value = p.ag;
     document.getElementById('ck').value = p.cost;
   }
+  updatePkgSummaryPv();
   calc();
 }
 
@@ -1293,6 +1294,26 @@ function updatePkgSummary() {
     const total = pkgBaseCost + extra;
     el.style.display = '';
     el.innerHTML = `標準パッケージ：<b>${pkgBaseCost}万円</b>　＋　追加費用：<b>${extra}万円</b>　＝　最終税込総工事費用：<b style="color:var(--dg);font-size:13px">${total}万円</b>`;
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+function updatePkgSummaryPv() {
+  const key = document.getElementById('pkg-select-pv').value;
+  const el = document.getElementById('pkg-cost-summary');
+  if (!key) {
+    const ck = parseFloat(document.getElementById('ck').value) || 0;
+    if (ck > 0) {
+      el.style.display = '';
+      el.innerHTML = `税込総工事費用：<b style="color:var(--dg);font-size:13px">${ck}万円</b>　<span style="font-size:10px;color:var(--muted)">（手動入力値）</span>`;
+    } else {
+      el.style.display = 'none';
+    }
+  } else if (PACKAGES_PV[key]) {
+    const p = PACKAGES_PV[key];
+    el.style.display = '';
+    el.innerHTML = `標準パッケージ：<b>${p.cost}万円</b>　＝　最終税込総工事費用：<b style="color:var(--dg);font-size:13px">${p.cost}万円</b>`;
   } else {
     el.style.display = 'none';
   }
@@ -2054,6 +2075,7 @@ function calc() {
     // ミニチャート（ローンOFF: 2系列）
     renderMiniChart(m, mb, wy, m.remainBill, 0, 0, 0, false);
   }
+  if (proposalMode === 'pv_only') updatePkgSummaryPv();
 }
 
 function renderMiniChart(m, mb, wy, re, lp, ly, mt, showLoan) {
