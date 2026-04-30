@@ -2000,8 +2000,9 @@ function calc() {
     const hasSolarMode = proposalMode !== 'battery_only';
     const saleP = parseFloat(document.getElementById('sale-price').value) || 0;
     const surplusKwhCalc = Math.max(0, ag - (dc + bc_eff));
-    const annualSellRevenue = hasSolarMode ? Math.round(surplusKwhCalc * saleP) : 0;
-    return m.annualSaving + annualSellRevenue;
+    const annualSelfSaving    = Math.round((dc + bc_eff) * up);          // updateSelfSummary と同一式
+    const annualSellRevenue   = hasSolarMode ? Math.round(surplusKwhCalc * saleP) : 0;
+    return annualSelfSaving + annualSellRevenue;
   })();
   document.getElementById('rs').textContent = fmt(_annualTotal);
   document.getElementById('rs-month').textContent = fmt(Math.round(_annualTotal / 12));
