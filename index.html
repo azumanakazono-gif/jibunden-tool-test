@@ -444,7 +444,8 @@ canvas#mini-chart { height: 150px !important; }
       <div class="section-title" id="system-design-title">☀️ システム設計（太陽光＋蓄電池）</div>
       <!-- パッケージ選択（お客様ヒアリング入力時のみ表示） -->
       <div id="pkg-area" style="background:var(--pg);border-radius:8px;border:1px solid var(--border);padding:10px 14px;margin-bottom:12px">
-        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+        <!-- pv_battery 用 -->
+        <div id="pkg-row-pv-battery" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
           <div class="field" style="flex:2;min-width:200px">
             <label>📦 システムパッケージ</label>
             <select id="pkg-select" onchange="onPkgChange()" style="border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:14px;background:#fff;color:var(--text);font-family:inherit;width:100%">
@@ -474,16 +475,25 @@ canvas#mini-chart { height: 150px !important; }
             <input type="text" id="pkg-extra-note" placeholder="例：配線延長工事・足場追加など" oninput="calc()">
           </div>
         </div>
+        <!-- pv_only 用 -->
+        <div id="pkg-row-pv-only" style="display:none">
+          <div class="field">
+            <label>📦 システムパッケージ（太陽光のみ）</label>
+            <select id="pkg-select-pv" onchange="onPkgChangePv()" style="border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:14px;background:#fff;color:var(--text);font-family:inherit;width:100%">
+              <option value="">— 手動入力（パッケージ選択なし）—</option>
+            </select>
+          </div>
+        </div>
         <div id="pkg-cost-summary" style="margin-top:8px;font-size:12px;color:var(--dg);display:none"></div>
         <!-- 手動入力時のみ表示 -->
-        <div id="pkg-manual-area" style="display:none;margin-top:8px;display:none">
+        <div id="pkg-manual-area" style="display:none;margin-top:8px">
           <div class="grid2">
             <div class="field">
               <label>システム名（任意）<span style="font-size:10px;color:var(--mg);margin-left:4px">スライドの識別用</span></label>
               <input type="text" id="sys-name" placeholder="例：オリジナル10kWプラン" oninput="calc()">
             </div>
           </div>
-          <div style="font-size:11px;color:var(--muted);margin-top:6px">💡 下のフィールドに直接、太陽光容量・蓄電池容量・年間発電量・税込総工事費用を入力してください。</div>
+          <div id="pkg-manual-note" style="font-size:11px;color:var(--muted);margin-top:6px">💡 下のフィールドに直接、太陽光容量・蓄電池容量・年間発電量・税込総工事費用を入力してください。</div>
         </div>
       </div>
       <div class="grid3" style="margin-bottom:12px">
@@ -1057,7 +1067,15 @@ function applyProposalMode() {
   document.getElementById('field-bc-wrap').style.display   = hasBattery ? '' : 'none';
 
   // パッケージ選択（全パッケージが太陽光＋蓄電池のため pv_battery のみ表示）
-  document.getElementById('pkg-area').style.display = proposalMode === 'pv_battery' ? '' : 'none';
+  document.getElementById('pkg-area').style.display           = proposalMode !== 'battery_only' ? '' : 'none';
+  document.getElementById('pkg-row-pv-battery').style.display = proposalMode === 'pv_battery' ? 'flex' : 'none';
+  document.getElementById('pkg-row-pv-only').style.display    = proposalMode === 'pv_only'    ? '' : 'none';
+  // pv_only 切替時は手動入力状態で初期化
+  if (proposalMode === 'pv_only') {
+    document.getElementById('pkg-select-pv').value = '';
+    document.getElementById('pkg-manual-area').style.display = '';
+    document.getElementById('pkg-manual-note').textContent = '💡 パッケージを使わず個別入力します。下のフィールドに太陽光容量・年間発電量・税込総工事費用を入力してください。';
+  }
 
   // 売電設定（太陽光がある場合のみ表示）
   document.getElementById('sale-setting-area').style.display = hasSolar ? '' : 'none';
@@ -1154,6 +1172,11 @@ let modelUnlocked = false;
 
 const TAB_FIELDS = ['mb','mkwh','ag','sk','bk','ck','dc','bc','sub','wy','er','la2','lr','lc'];
 
+const PACKAGES_PV = {
+  // PVのみパッケージ（太陽光容量・年間発電量・工事費を定義）
+  // 例: 'pv7': {panels:18, sk:7.02, ag:7722, cost:185},
+};
+
 const PACKAGES = {
   '5+7' :{panels:14,sk:5.46, bk:7.7, cost:265,ag:6006, bc:1967},
   '5+15':{panels:14,sk:5.46, bk:15.4,cost:365,ag:6006, bc:3935},
@@ -1219,6 +1242,24 @@ function onPkgChange() {
     document.getElementById('daytime-auto-text').textContent = '';
   }
   updatePkgSummary();
+  calc();
+}
+
+function onPkgChangePv() {
+  loanAmountEdited = false;
+  const key = document.getElementById('pkg-select-pv').value;
+  const isManual = !key;
+  document.getElementById('pkg-manual-area').style.display = isManual ? '' : 'none';
+  document.getElementById('pkg-manual-note').textContent =
+    isManual ? '💡 パッケージを使わず個別入力します。下のフィールドに太陽光容量・年間発電量・税込総工事費用を入力してください。'
+             : '💡 下のフィールドに直接、太陽光容量・年間発電量・税込総工事費用を入力してください。';
+  if (!isManual && PACKAGES_PV[key]) {
+    const p = PACKAGES_PV[key];
+    pkgBaseCost = p.cost;
+    document.getElementById('sk').value = p.sk;
+    document.getElementById('ag').value = p.ag;
+    document.getElementById('ck').value = p.cost;
+  }
   calc();
 }
 
