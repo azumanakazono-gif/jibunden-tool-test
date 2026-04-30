@@ -481,6 +481,13 @@ canvas#mini-chart { height: 150px !important; }
             <label>📦 システムパッケージ（太陽光のみ）</label>
             <select id="pkg-select-pv" onchange="onPkgChangePv()" style="border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:14px;background:#fff;color:var(--text);font-family:inherit;width:100%">
               <option value="">— 手動入力（パッケージ選択なし）—</option>
+              <option value="pv5"> 5kWパッケージ（14枚 / 5.46kW）</option>
+              <option value="pv6"> 6kWパッケージ（16枚 / 6.24kW）</option>
+              <option value="pv7"> 7kWパッケージ（18枚 / 7.02kW）</option>
+              <option value="pv8"> 8kWパッケージ（21枚 / 8.16kW）</option>
+              <option value="pv9"> 9kWパッケージ（24枚 / 9.36kW）</option>
+              <option value="pv10">10kWパッケージ（27枚 / 10.53kW）</option>
+              <option value="pv14">14kWパッケージ（36枚 / 14.04kW）</option>
             </select>
           </div>
         </div>
@@ -1173,8 +1180,13 @@ let modelUnlocked = false;
 const TAB_FIELDS = ['mb','mkwh','ag','sk','bk','ck','dc','bc','sub','wy','er','la2','lr','lc'];
 
 const PACKAGES_PV = {
-  // PVのみパッケージ（太陽光容量・年間発電量・工事費を定義）
-  // 例: 'pv7': {panels:18, sk:7.02, ag:7722, cost:185},
+  pv5:  {panels:14, sk:5.46,  ag:6006,  cost:100},
+  pv6:  {panels:16, sk:6.24,  ag:6864,  cost:110},
+  pv7:  {panels:18, sk:7.02,  ag:7722,  cost:120},
+  pv8:  {panels:21, sk:8.16,  ag:8976,  cost:140},
+  pv9:  {panels:24, sk:9.36,  ag:10296, cost:160},
+  pv10: {panels:27, sk:10.53, ag:11583, cost:190},
+  pv14: {panels:36, sk:14.04, ag:15444, cost:230},
 };
 
 const PACKAGES = {
