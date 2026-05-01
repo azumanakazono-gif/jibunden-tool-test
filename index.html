@@ -1903,6 +1903,8 @@ function updateRatioPanel() {
   const hasBill = !!data.hasBill;
   panel.style.display = (!hasBill && (isDenka || isKiji)) ? '' : 'none';
   if (!(!hasBill && (isDenka || isKiji))) return;
+  const _autoBtn = document.getElementById('btn-auto-night');
+  if (_autoBtn) _autoBtn.textContent = isKiji ? 'ナイトで自動調整' : '夜間で自動調整';
 
   const prefix  = isDenka ? 'dn' : 'kj';
   const ratios  = getEffectiveRatios(kp);
@@ -1918,9 +1920,9 @@ function updateRatioPanel() {
           { key:'ngt', label:'夜間',       pct: Math.round(ratios.ngt*100)    },
         ]
       : [
-          { key:'day',    label:'昼間',       pct: Math.round(ratios.day*100)    },
-          { key:'living', label:'生活時間帯', pct: Math.round(ratios.living*100) },
-          { key:'ngt',    label:'夜間',       pct: Math.round(ratios.ngt*100)    },
+          { key:'day',    label:'デイ',     pct: Math.round(ratios.day*100)    },
+          { key:'living', label:'リビング', pct: Math.round(ratios.living*100) },
+          { key:'ngt',    label:'ナイト',   pct: Math.round(ratios.ngt*100)    },
         ];
     const monthlyTotal = Math.round(mkwh);
     const annualTotal  = Math.round(annualKwh);
@@ -2022,9 +2024,9 @@ function _updatePriceBreakdown(kp) {
     const eff  = Math.round((base + ADJUSTMENT_UNIT_PRICE) * 100) / 100;
     bodyEl.innerHTML =
       `<div style="color:var(--muted)">🏷 公式単価（夏季3ヶ月・その他季9ヶ月 加重平均）</div>` +
-      `<div style="padding-left:8px">昼間 ${wDay.toFixed(2)}円 × ${Math.round(ratios.day*100)}% = ${(ratios.day*wDay).toFixed(2)}円</div>` +
-      `<div style="padding-left:8px">生活時間帯 ${t.living}円 × ${Math.round(ratios.living*100)}% = ${(ratios.living*t.living).toFixed(2)}円</div>` +
-      `<div style="padding-left:8px">夜間 ${t.night}円 × ${Math.round(ratios.ngt*100)}% = ${(ratios.ngt*t.night).toFixed(2)}円</div>` +
+      `<div style="padding-left:8px">デイ ${wDay.toFixed(2)}円 × ${Math.round(ratios.day*100)}% = ${(ratios.day*wDay).toFixed(2)}円</div>` +
+      `<div style="padding-left:8px">リビング ${t.living}円 × ${Math.round(ratios.living*100)}% = ${(ratios.living*t.living).toFixed(2)}円</div>` +
+      `<div style="padding-left:8px">ナイト ${t.night}円 × ${Math.round(ratios.ngt*100)}% = ${(ratios.ngt*t.night).toFixed(2)}円</div>` +
       `<div style="margin-top:2px">▶ 生活スタイル加重平均：<b>${base}円/kWh</b></div>` +
       `<div>＋ 燃料費調整・再エネ賦課金等：+${ADJUSTMENT_UNIT_PRICE}円/kWh</div>` +
       `<div style="color:var(--dg);font-weight:700">＝ 概算実質単価：<b>${eff}円/kWh</b></div>` +
@@ -2051,7 +2053,9 @@ function _applyRatioDc(kp) {
   const textEl = document.getElementById('daytime-auto-text');
   if (noteEl && textEl) {
     noteEl.style.display = '';
-    textEl.textContent   = `昼間直接消費率 約${pct}%（時間帯比率から算出）：昼間直接 ${dc.toLocaleString()} kWh / 年`;
+    textEl.textContent   = kp === 'kyushu_kiji'
+      ? `デイ＋リビング×0.5 の割合 約${pct}%：昼間直接 ${dc.toLocaleString()} kWh / 年`
+      : `昼間直接消費率 約${pct}%（時間帯比率から算出）：昼間直接 ${dc.toLocaleString()} kWh / 年`;
   }
 }
 
@@ -2618,9 +2622,9 @@ function calc() {
         ? (_ratiosD.day||0) + (_ratiosD.hol||0)
         : (_ratiosD.day||0) + (_ratiosD.living||0) * 0.5;
     }
-    document.getElementById('daytime-rate-disp').innerHTML =
-      `昼間直接消費対象割合：${Math.round(_demandRatio*100)}%（時間帯比率から算出）<br>` +
-      `昼間需要量：${fmt(dc)}kWh/年（約${fmt(dcMonthly)}kWh/月）`;
+    document.getElementById('daytime-rate-disp').innerHTML = _kpDisp === 'kyushu_kiji'
+      ? `デイ＋リビング×0.5 の昼間直接消費対象割合：${Math.round(_demandRatio*100)}%<br>昼間需要量：${fmt(dc)}kWh/年（約${fmt(dcMonthly)}kWh/月）`
+      : `昼間直接消費対象割合：${Math.round(_demandRatio*100)}%（時間帯比率から算出）<br>昼間需要量：${fmt(dc)}kWh/年（約${fmt(dcMonthly)}kWh/月）`;
   } else {
     document.getElementById('daytime-rate-disp').innerHTML =
       `昼間使用率（目安）：${daytimePct}%<br>` +
