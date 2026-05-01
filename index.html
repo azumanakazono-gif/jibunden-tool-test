@@ -339,7 +339,7 @@ canvas#mini-chart { height: 150px !important; }
             <option value="30">従量電灯B（目安 30円/kWh）</option>
           </optgroup>
           <optgroup label="▼ 九州電力 時間帯別・太陽光向け（概算）">
-            <option value="kyushu_kiji">季時別電灯（生活スタイル別概算単価）</option>
+            <option value="kyushu_kiji">季時別電灯（公式単価ベース）</option>
             <option value="kyushu_ohisama">おひさま昼トクプラン（概算単価 30円/kWh）</option>
           </optgroup>
           <optgroup label="▼ 九州電力 オール電化（生活スタイル別概算）">
@@ -2335,8 +2335,8 @@ function calc() {
       `昼間需要量：${fmt(dc)}kWh/年（約${fmt(dcMonthly)}kWh/月）`;
   } else {
     document.getElementById('daytime-rate-disp').innerHTML =
-      `推定昼間使用率：${daytimePct}%<br>` +
-      `推定昼間使用量：${fmt(dc)}kWh/年（約${fmt(dcMonthly)}kWh/月）`;
+      `昼間使用率（目安）：${daytimePct}%<br>` +
+      `昼間使用量（目安）：${fmt(dc)}kWh/年（約${fmt(dcMonthly)}kWh/月）`;
   }
   const c = { monthlyElectricBill:mb, currentUnitPrice:up, annualGenerationKWh:ag,
                solarCapacityKW:sk, totalConstructionCost, subsidyAmount, warrantyYears:wy,
