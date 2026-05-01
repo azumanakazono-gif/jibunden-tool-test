@@ -489,8 +489,8 @@ canvas#mini-chart { height: 150px !important; }
         </div>
         <div id="self-detail-bk" style="display:none"></div>
         <div id="bk-error" style="display:none;padding:12px 14px;border-radius:8px;background:#FEF2F2;border-left:4px solid #DC2626;font-size:13px;font-weight:700;color:#B91C1C">
-          ⚠️ 蓄電池の放電量設定が上限を超えています<br>
-          <span style="font-size:12px;font-weight:400;margin-top:4px;display:inline-block">蓄電池容量（kWh）×365日を超える放電量は物理的に不可能です。「蓄電池で賄う量（kWh/年）」または「蓄電池容量（kWh）」を見直してください。</span>
+          ⚠️ 蓄電池で賄う量が実効蓄電容量を超えています<br>
+          <span style="font-size:12px;font-weight:400;margin-top:4px;display:inline-block">実効蓄電容量×365日を上限に自動補正しました。「蓄電池で賄う量（kWh/年）」を見直してください。</span>
         </div>
       </div>
     </div>
@@ -560,7 +560,7 @@ canvas#mini-chart { height: 150px !important; }
       </div>
       <div class="grid3" style="margin-bottom:12px">
         <div class="field" id="field-sk-wrap"><label>太陽光容量（kW）</label><input type="number" id="sk" value="7.02" min="3" max="20" step="0.01" oninput="calc()"></div>
-        <div class="field" id="field-bk-wrap"><label>蓄電池容量（kWh）</label><input type="number" id="bk" value="7.7" min="3" max="30" step="0.1" oninput="calc()"></div>
+        <div class="field" id="field-bk-wrap"><label>蓄電池容量（kWh）</label><input type="number" id="bk" value="7.7" min="3" max="30" step="0.1" oninput="calc()"><span id="bk-eff-disp" style="font-size:11px;color:var(--muted)"></span></div>
         <div class="field" id="field-ck-wrap">
           <label id="ck-label">税込総工事費用（万円）<span style="font-size:10px;color:var(--mg);margin-left:4px">太陽光＋蓄電池 工事込み</span></label>
           <input type="number" id="ck" value="280" min="50" max="2000" step="10" oninput="calc()">
@@ -1185,9 +1185,9 @@ const HEARING_KEYS = ['hasBill','hasPV','hasBattery','isAllElectric'];
 // 変更する場合はここのみ更新。未収録機種は BATTERY_EFFECTIVE_RATIO で按分
 const SMART_PV_PLUS_EFFECTIVE = {
   5.4:  3.8,  // 公称5.4kWh
-  7.7:  5.4,  // 公称7.7kWh  → 1967kWh/年 ÷ 365日
+  7.7:  6.2,  // 公称7.7kWh  → 長州産業スマートPVプラス初期実効容量
   10.2: 7.1,  // 公称10.2kWh
-  15.4: 10.8, // 公称15.4kWh → 3935kWh/年 ÷ 365日
+  15.4: 12.4, // 公称15.4kWh → 長州産業スマートPVプラス2台構成初期実効容量
 };
 const BATTERY_EFFECTIVE_RATIO = 0.70; // 未収録機種のフォールバック比率
 
@@ -2600,7 +2600,15 @@ function calc() {
     document.getElementById('bc').value = _bc;
   }
   const mb=v('mb'),mkwh=v('mkwh'),ag=v('ag'),sk=v('sk'),wy=v('wy');
-  const dc=v('dc'), bc=v('bc'), bk=v('bk'), er=v('er');
+  let bc=v('bc'); const bk=v('bk'), dc=v('dc'), er=v('er');
+  // 実効蓄電容量表示・上限補正
+  const _bkEffVal = effectiveBatteryKwh(bk);
+  const _bkEffDispEl = document.getElementById('bk-eff-disp');
+  if (_bkEffDispEl) _bkEffDispEl.textContent = bk > 0 ? `実効 ${_bkEffVal} kWh` : '';
+  if (bk > 0 && bc > _bkEffVal * 365) {
+    bc = Math.round(_bkEffVal * 365);
+    document.getElementById('bc').value = bc;
+  }
   // pv_only モードでは蓄電池消費を 0 として計算（フィールド値は保持）
   const bc_eff = proposalMode === 'pv_only' ? 0 : bc;
   document.getElementById('dc-monthly-hint').textContent = dc > 0 ? `約 ${Math.round(dc/12).toLocaleString()} kWh/月・約 ${(dc/365).toFixed(1)} kWh/日` : '';
