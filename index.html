@@ -361,6 +361,7 @@ canvas#mini-chart { height: 150px !important; }
         </div>
         <div id="ratio-zones" style="display:flex;flex-direction:column;gap:6px"></div>
         <div id="ratio-sum-warn" style="display:none;margin-top:4px;font-size:11px;color:#dc2626;font-weight:700">⚠ 合計が100%になるよう設定してください（現在 <span id="ratio-sum-val">0</span>%）</div>
+        <div id="ratio-style-status" style="display:none;margin-top:6px;font-size:11px;padding:4px 8px;background:#fff;border-radius:4px;border:1px solid var(--border)"></div>
         <details id="price-breakdown" style="margin-top:10px">
           <summary style="cursor:pointer;color:var(--muted);font-size:11px;font-weight:600">📊 単価内訳を見る</summary>
           <div id="price-breakdown-body" style="margin-top:6px;padding:8px;background:#fff;border-radius:6px;border:1px solid var(--border);font-size:11px;line-height:1.8"></div>
@@ -1153,12 +1154,12 @@ const KYUSHU_KIJI = {
     night:         14.59, // 夜間
   },
   styles: {
-    even:        { day:0.25, living:0.50, ngt:0.25, label:'昼夜バランスよく（標準）' },
-    away:        { day:0.15, living:0.50, ngt:0.35, label:'共働き・日中外出多め' },
-    home:        { day:0.35, living:0.45, ngt:0.20, label:'日中在宅・在宅ワーク多め' },
-    allelectric: { day:0.40, living:0.45, ngt:0.15, label:'高齢者在宅・昼間多用' },
-    night:       { day:0.10, living:0.45, ngt:0.45, label:'夜型・深夜利用多め' },
-    custom:      { day:0.25, living:0.50, ngt:0.25, label:'カスタム' },
+    even:        { day:0.12, living:0.43, ngt:0.45, label:'昼夜バランスよく（標準）' },
+    away:        { day:0.10, living:0.35, ngt:0.55, label:'共働き・日中外出多め' },
+    home:        { day:0.20, living:0.45, ngt:0.35, label:'日中在宅・在宅ワーク多め' },
+    allelectric: { day:0.39, living:0.29, ngt:0.32, label:'高齢者在宅・昼間多用' },
+    night:       { day:0.05, living:0.30, ngt:0.65, label:'夜型・深夜利用多め' },
+    custom:      { day:0.12, living:0.43, ngt:0.45, label:'カスタム' },
   },
 };
 
@@ -1619,9 +1620,16 @@ function getDaytimeRate() {
 }
 
 function applyDaytimeRate() {
-  const rate   = getDaytimeRate();
   const noteEl = document.getElementById('daytime-auto-note');
   const textEl = document.getElementById('daytime-auto-text');
+  const kp = document.getElementById('kyuden-plan').value;
+  // 電化でナイト・季時別電灯：時間帯比率からdcを算出
+  if (kp === 'kyushu_denka_night' || kp === 'kyushu_kiji') {
+    _applyRatioDc(kp);
+    calc();
+    return;
+  }
+  const rate = getDaytimeRate();
   if (rate === null) { noteEl.style.display = 'none'; calc(); return; }
   const pct = Math.round(rate * 100);
   const annualConsumption = v('mkwh') * 12;
@@ -1713,7 +1721,7 @@ function calcEffectiveUnitPrice(plan) {
   if (plan === 'kyushu_denka_night') base = calcDenkiNightBaseRate(ratios);
   else if (plan === 'kyushu_kiji')   base = calcKijibetsuBaseRate(ratios);
   else return null;
-  return Math.round((base + ADJUSTMENT_UNIT_PRICE) * 10) / 10;
+  return Math.round((base + ADJUSTMENT_UNIT_PRICE) * 100) / 100;
 }
 
 function updateRatioPanel() {
@@ -1744,17 +1752,23 @@ function updateRatioPanel() {
           { key:'living', label:'生活時間帯', pct: Math.round(ratios.living*100) },
           { key:'ngt',    label:'夜間',       pct: Math.round(ratios.ngt*100)    },
         ];
+    const monthlyTotal = Math.round(mkwh);
+    const annualTotal  = Math.round(annualKwh);
     document.getElementById('ratio-zones').innerHTML = zones.map(z => {
-      const kwh = Math.round(annualKwh * z.pct / 100);
+      const zoneAnnual  = Math.round(annualKwh  * z.pct / 100);
+      const zoneMonthly = Math.round(monthlyTotal * z.pct / 100);
       return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <span style="min-width:72px;font-size:12px;color:var(--muted)">${z.label}</span>
         <input type="number" id="r-${prefix}-${z.key}" value="${z.pct}" min="0" max="100" step="1"
           style="width:54px;padding:4px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;text-align:center"
           oninput="onRatioChange('${prefix}')">
         <span style="font-size:11px;color:var(--muted)">%</span>
-        <span id="r-${prefix}-${z.key}-kwh" style="font-size:11px;color:var(--dg);margin-left:4px">${kwh.toLocaleString()} kWh/年</span>
+        <span id="r-${prefix}-${z.key}-kwh" style="font-size:11px;color:var(--dg);margin-left:4px">月平均：約${zoneMonthly.toLocaleString()} kWh / 年間：約${zoneAnnual.toLocaleString()} kWh</span>
       </div>`;
-    }).join('');
+    }).join('') +
+    `<div id="ratio-total-row" style="margin-top:6px;font-size:11px;color:var(--mg);font-weight:700;border-top:1px solid var(--border);padding-top:6px">
+      合計：100% / 月平均：約${monthlyTotal.toLocaleString()} kWh / 年間：約${annualTotal.toLocaleString()} kWh
+    </div>`;
   } else {
     if (!isCustomRatio) {
       if (isDenka) {
@@ -1775,14 +1789,23 @@ function updateRatioPanel() {
 
 function _updateRatioKwhDisplay(kp, prefix, annualKwh) {
   const keys = kp === 'kyushu_denka_night' ? ['day','hol','ngt'] : ['day','living','ngt'];
+  const monthlyKwh = annualKwh / 12;
+  let sumPct = 0;
   keys.forEach(k => {
     const pctEl = document.getElementById(`r-${prefix}-${k}`);
     const kwhEl = document.getElementById(`r-${prefix}-${k}-kwh`);
     if (pctEl && kwhEl) {
       const pct = parseFloat(pctEl.value) || 0;
-      kwhEl.textContent = Math.round(annualKwh * pct / 100).toLocaleString() + ' kWh/年';
+      sumPct += pct;
+      const zoneAnnual  = Math.round(annualKwh  * pct / 100);
+      const zoneMonthly = Math.round(monthlyKwh * pct / 100);
+      kwhEl.textContent = `月平均：約${zoneMonthly.toLocaleString()} kWh / 年間：約${zoneAnnual.toLocaleString()} kWh`;
     }
   });
+  const totalEl = document.getElementById('ratio-total-row');
+  if (totalEl) {
+    totalEl.textContent = `合計：${Math.round(sumPct)}% / 月平均：約${Math.round(monthlyKwh).toLocaleString()} kWh / 年間：約${Math.round(annualKwh).toLocaleString()} kWh`;
+  }
 }
 
 function _updatePriceBreakdown(kp) {
@@ -1795,7 +1818,7 @@ function _updatePriceBreakdown(kp) {
     const wDay = t.weekdaySummerWinter * 4/12 + t.weekdaySpringFall * 8/12;
     const wHol = t.weekendSummerWinter * 4/12 + t.weekendSpringFall * 8/12;
     const base = Math.round(calcDenkiNightBaseRate(ratios) * 100) / 100;
-    const eff  = Math.round((base + ADJUSTMENT_UNIT_PRICE) * 10) / 10;
+    const eff  = Math.round((base + ADJUSTMENT_UNIT_PRICE) * 100) / 100;
     bodyEl.innerHTML =
       `<div style="color:var(--muted)">🏷 公式単価（夏冬4ヶ月・春秋8ヶ月 加重平均）</div>` +
       `<div style="padding-left:8px">平日昼 ${wDay.toFixed(2)}円 × ${Math.round(ratios.day*100)}% = ${(ratios.day*wDay).toFixed(2)}円</div>` +
@@ -1808,7 +1831,7 @@ function _updatePriceBreakdown(kp) {
     const t    = KYUSHU_KIJI.tariff;
     const wDay = t.daytimeSummer * 3/12 + t.daytimeOther * 9/12;
     const base = Math.round(calcKijibetsuBaseRate(ratios) * 100) / 100;
-    const eff  = Math.round((base + ADJUSTMENT_UNIT_PRICE) * 10) / 10;
+    const eff  = Math.round((base + ADJUSTMENT_UNIT_PRICE) * 100) / 100;
     bodyEl.innerHTML =
       `<div style="color:var(--muted)">🏷 公式単価（夏季3ヶ月・その他季9ヶ月 加重平均）</div>` +
       `<div style="padding-left:8px">昼間 ${wDay.toFixed(2)}円 × ${Math.round(ratios.day*100)}% = ${(ratios.day*wDay).toFixed(2)}円</div>` +
@@ -1817,6 +1840,53 @@ function _updatePriceBreakdown(kp) {
       `<div style="margin-top:2px">▶ 生活スタイル加重平均：<b>${base}円/kWh</b></div>` +
       `<div>＋ 燃料費調整・再エネ賦課金等：+${ADJUSTMENT_UNIT_PRICE}円/kWh</div>` +
       `<div style="color:var(--dg);font-weight:700">＝ 概算実質単価：<b>${eff}円/kWh</b></div>`;
+  }
+}
+
+function _applyRatioDc(kp) {
+  const ratios = getEffectiveRatios(kp);
+  if (!ratios) return;
+  let daytimeDemandRatio;
+  if (kp === 'kyushu_denka_night') {
+    daytimeDemandRatio = (ratios.day || 0) + (ratios.hol || 0);
+  } else {
+    daytimeDemandRatio = (ratios.day || 0) + (ratios.living || 0) * 0.5;
+  }
+  const mkwh = parseFloat(document.getElementById('mkwh').value) || 667;
+  const annualConsumption = mkwh * 12;
+  const ag   = parseFloat(document.getElementById('ag').value) || 0;
+  const dc   = Math.round(Math.min(annualConsumption * daytimeDemandRatio, ag));
+  document.getElementById('dc').value = dc;
+  const pct    = Math.round(daytimeDemandRatio * 100);
+  const noteEl = document.getElementById('daytime-auto-note');
+  const textEl = document.getElementById('daytime-auto-text');
+  if (noteEl && textEl) {
+    noteEl.style.display = '';
+    textEl.textContent   = `昼間直接消費率 約${pct}%（時間帯比率から算出）：昼間直接 ${dc.toLocaleString()} kWh / 年`;
+  }
+}
+
+function updateRatioStyleStatus() {
+  const el = document.getElementById('ratio-style-status');
+  if (!el) return;
+  const kp = document.getElementById('kyuden-plan').value;
+  if (kp !== 'kyushu_denka_night' && kp !== 'kyushu_kiji') {
+    el.style.display = 'none'; return;
+  }
+  el.style.display = '';
+  const ls          = document.getElementById('ls-preset').value;
+  const presetRatios = getPresetRatios(kp, ls);
+  const presetLabel  = presetRatios ? presetRatios.label : '';
+  const data    = activeTab === 'hypothesis' ? hypData : custData;
+  const hasBill = !!data.hasBill;
+  if (!isCustomRatio) {
+    el.innerHTML  = `現在の使用割合：<b>${presetLabel}</b>の既定比率を使用中`;
+    el.style.color = 'var(--mg)';
+  } else {
+    let html = `現在の使用割合：<b>${presetLabel}</b>をベースに調整中`;
+    if (hasBill) html += `<br><span style="font-size:10px;color:var(--muted)">※単価は請求書実績値を使用し、昼間直接消費量は調整後の使用割合を反映しています。</span>`;
+    el.innerHTML   = html;
+    el.style.color = '#92400e';
   }
 }
 
@@ -1850,8 +1920,10 @@ function onRatioChange(prefix) {
 
   const data = activeTab === 'hypothesis' ? hypData : custData;
   if (!data.hasBill) {
-    onHearingChange(data);
+    onHearingChange(data); // updates mkwh → _applyRatioDc → updateRatioStyleStatus → calc
   } else {
+    _applyRatioDc(kp);
+    updateRatioStyleStatus();
     updatePriceStatus(data);
     calc();
   }
@@ -1862,7 +1934,7 @@ function resetToPresetRatio() {
   customRatios    = null;
   _ratioPanelPlan = null;
   const data = activeTab === 'hypothesis' ? hypData : custData;
-  onHearingChange(data);
+  onHearingChange(data); // calls updateRatioStyleStatus internally
 }
 
 function updatePriceStatus(data) {
@@ -1876,19 +1948,21 @@ function updatePriceStatus(data) {
   else if (isDenkaOrKiji){ status = isCustomRatio ? 'custom' : 'auto'; }
   else { const up = parseFloat(kp)||0; status = up > 0 ? 'manual-ok' : 'manual-required'; }
   const S = {
-    'bill':            { bg:'#f0fdf4', bd:'#86efac', co:'#166534', tx:'📄 請求書あり：実績単価を使用中' },
-    'auto':            { bg:'#eff6ff', bd:'#93c5fd', co:'#1e40af', tx:'🤖 自動推定：生活スタイル連動の概算単価' },
-    'custom':          { bg:'#fffbeb', bd:'#fcd34d', co:'#92400e', tx:'✏️ 比率カスタム：手動設定の概算単価' },
-    'manual-ok':       { bg:'#f0fdf4', bd:'#86efac', co:'#166534', tx:'✅ 手動設定済みの単価を使用中' },
-    'manual-required': { bg:'#fef2f2', bd:'#fca5a5', co:'#991b1b', tx:'⚠️ 電力プランを選択してください' },
+    'bill':            { bg:'#f0fdf4', bd:'#86efac', co:'#166534', html:'📄 実績単価を使用中' },
+    'auto':            { bg:'#eff6ff', bd:'#93c5fd', co:'#1e40af', html:'🟢 単価自動反映中' },
+    'custom':          { bg:'#f3e8ff', bd:'#d8b4fe', co:'#7e22ce', html:'🟣 カスタム割合単価を使用中' },
+    'manual-ok':       { bg:'#fff7ed', bd:'#fed7aa', co:'#9a3412', html:'🟠 入力値から算出した単価を使用中' },
+    'manual-required': { bg:'#fef2f2', bd:'#fca5a5', co:'#991b1b',
+      html:'🔴 月間電気代・月間使用量の入力が必要です<br><span style="font-size:10px;font-weight:400">この料金プランは単価を自動反映できないため、月間電気代と月間使用量を入力すると実質平均単価を算出できます。</span>' },
   };
-  if (isDenkaOrKiji || hasBill) {
+  const showStatus = isDenkaOrKiji || hasBill || status === 'manual-ok' || status === 'manual-required';
+  if (showStatus) {
     const c = S[status];
     el.style.display    = '';
     el.style.background = c.bg;
     el.style.border     = `1px solid ${c.bd}`;
     el.style.color      = c.co;
-    el.textContent      = c.tx;
+    el.innerHTML        = c.html;
   } else {
     el.style.display = 'none';
   }
@@ -1905,7 +1979,10 @@ function onHearingChange(data) {
     noteEl.textContent = '';
     document.getElementById('estimated-price-disp').style.display = 'none';
     updateRatioPanel();
+    updateRatioStyleStatus();
     updatePriceStatus(data);
+    const kpBill = document.getElementById('kyuden-plan').value;
+    if (kpBill === 'kyushu_denka_night' || kpBill === 'kyushu_kiji') _applyRatioDc(kpBill);
     calc();
   } else {
     guide.style.cssText = 'display:;margin-bottom:8px;padding:8px 12px;border-radius:8px;border:1px solid #fed7aa;font-size:12px;background:#fff7ed;color:#9a3412';
@@ -1939,7 +2016,9 @@ function onHearingChange(data) {
     epDisp.textContent   = priceLabel;
     document.getElementById('mkwh').value = Math.round(mb / unitPrice);
     updateRatioPanel();
+    updateRatioStyleStatus();
     updatePriceStatus(data);
+    if (kp === 'kyushu_denka_night' || kp === 'kyushu_kiji') _applyRatioDc(kp);
     calc();
   }
 }
