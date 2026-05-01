@@ -845,10 +845,24 @@ canvas#mini-chart { height: 150px !important; }
         <div style="border-radius:12px;padding:16px 12px;border:2px solid var(--border);background:var(--surface);box-shadow:0 1px 4px rgba(0,0,0,.06)">
           <div id="rb-up"></div>
           <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:8px">
-            <div style="font-size:11px;font-weight:500;color:var(--muted)">自家消費単価（現金）</div>
+            <div id="rk-self-label" style="font-size:11px;font-weight:500;color:var(--muted)">自家消費単価（現金での設備導入の場合）</div>
             <div id="rk-self" style="font-size:20px;font-weight:800;color:var(--mg)">-</div>
           </div>
         </div>
+      </div>
+      <!-- 発電単価カード -->
+      <div id="lcoe-card" style="border-radius:12px;padding:14px 16px;border:2px solid #bae6fd;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+          <span style="font-size:13px;font-weight:700;color:#0369a1">⚡ 発電単価</span>
+          <span id="lcoe-label" style="font-size:11px;color:#0369a1">（20年発電量ベース）</span>
+        </div>
+        <div id="lcoe-sub" style="font-size:11px;color:#0369a1;margin-bottom:4px"></div>
+        <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:6px">
+          <span id="lcoe-val" style="font-size:24px;font-weight:900;color:#0369a1">-</span>
+          <span style="font-size:13px;font-weight:700;color:#0369a1">円/kWh</span>
+        </div>
+        <div id="lcoe-compare" style="font-size:11px;color:#0369a1;padding:4px 8px;background:rgba(255,255,255,.6);border-radius:6px;margin-bottom:4px"></div>
+        <div style="font-size:10px;color:var(--muted)">設備費を20年間の総発電量で割った発電ポテンシャルの目安単価です。自家消費単価（実際に自家消費した量ベース）とは異なります。</div>
       </div>
       <!-- 棒グラフタイトル -->
       <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)">📊 20年間の総コスト比較</div>
@@ -2658,6 +2672,7 @@ function calc() {
   document.getElementById('rc').textContent = m.totalCostMan+'万円'+(subAmt>0?' （補助金適用後）':'');
   document.getElementById('rk').textContent = m.costPerKWh+'円/kWh';
   document.getElementById('rk-self').textContent = m.selfCostPerKWh > 0 ? m.selfCostPerKWh+'円/kWh' : '-';
+  document.getElementById('rk-self-label').textContent = '自家消費単価（現金での設備導入の場合）';
   // 20年電気代：上昇率があれば上昇後の数値を表示
   document.getElementById('rb').textContent = bill20Show+'万円' + (er>0 ? `（年${er}%上昇）` : '');
   const _annualTotal = (() => {
@@ -2708,9 +2723,17 @@ function calc() {
       `ローン総額 ${loanTotalMan}万円 ＋ 残電気代 ${remain20Man}万円 ＝ 計 ${loanTotalMan+remain20Man}万円`;
     document.getElementById('stacked-legend-loan').style.display = 'flex';
     document.getElementById('stacked-legend-loan-r').style.display = 'flex';
-    const loanCostPerKWh = m.selfKWh > 0 ? Math.round(lp * ly * 12 / (m.selfKWh * wy)) : 0;
+    const loanTotal = lp * ly * 12;
+    const loanCostPerKWh = m.selfKWh > 0 ? Math.round(loanTotal / (m.selfKWh * wy)) : 0;
     document.getElementById('rk-loan').textContent = loanCostPerKWh > 0 ? loanCostPerKWh + '円/kWh' : '-';
     document.getElementById('rk-loan-row').style.display = '';
+    document.getElementById('rk-self').textContent = loanCostPerKWh > 0 ? loanCostPerKWh+'円/kWh' : '-';
+    document.getElementById('rk-self-label').textContent = '自家消費単価（ローン総額ベース）';
+    const _lcoeL = ag > 0 ? (loanTotal / (ag * wy)).toFixed(1) : '-';
+    document.getElementById('lcoe-val').textContent = _lcoeL;
+    document.getElementById('lcoe-label').textContent = '（ローン総額・20年発電量ベース）';
+    document.getElementById('lcoe-sub').textContent = `ローン総支払額 ${loanTotalMan}万円 ÷ 20年総発電量 ${fmt(Math.round(ag*wy))} kWh`;
+    document.getElementById('lcoe-compare').innerHTML = up>0&&ag>0?`現在の買電単価：${up.toFixed(1)}円/kWh　　発電単価：${_lcoeL}円/kWh`:'';
     const loanDiffMan = Math.round((m.bill20Y_rise - lp * ly * 12 - m.remain20Y_rise) / 10000);
     document.getElementById('rd-loan').textContent = '約' + loanDiffMan + '万円';
     document.getElementById('loan-diff-note').textContent = er > 0 ? `電気代年${er}%上昇想定` : '電気代現状維持';
@@ -2737,6 +2760,12 @@ function calc() {
     document.getElementById('stacked-legend-loan').style.display = 'none';
     document.getElementById('stacked-legend-loan-r').style.display = 'none';
     document.getElementById('rk-loan-row').style.display = 'none';
+    const _netCostYen = m.totalCostMan * 10000;
+    const _lcoeC = ag > 0 ? (_netCostYen / (ag * wy)).toFixed(1) : '-';
+    document.getElementById('lcoe-val').textContent = _lcoeC;
+    document.getElementById('lcoe-label').textContent = '（20年発電量ベース）';
+    document.getElementById('lcoe-sub').textContent = `税込総工事費用（補助金後）${m.totalCostMan}万円 ÷ 20年総発電量 ${fmt(Math.round(ag*wy))} kWh`;
+    document.getElementById('lcoe-compare').innerHTML = up>0&&ag>0?`現在の買電単価：${up.toFixed(1)}円/kWh　　発電単価：${_lcoeC}円/kWh`:'';
     // ミニチャート（ローンOFF: 2系列）
     renderMiniChart(m, mb, wy, m.remainBill, 0, 0, 0, false);
   }
