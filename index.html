@@ -331,7 +331,7 @@ canvas#mini-chart { height: 150px !important; }
         <select id="kyuden-plan" onchange="onKyudenPlanChange()">
           <option value="">手動入力</option>
           <optgroup label="▼ 標準家庭プラン（目安単価）">
-            <option value="30">従量電灯B・C / スタンダードプラン（目安 30円/kWh）</option>
+            <option value="30">スタンダードプラン（目安 30円/kWh）</option>
             <option value="32">プレミアム・エコプラン / 新電力標準（目安 32円/kWh）</option>
             <option value="29">ガス・電気セット割引プラン（目安 29円/kWh）</option>
           </optgroup>
@@ -1635,6 +1635,7 @@ function onKyudenPlanChange() {
     onHearingChange(data); // 内部でupdateRatioPanel + calc
   } else {
     updateRatioPanel();
+    updateJuuryoPanel();
     updatePriceStatus(data);
     calc();
   }
