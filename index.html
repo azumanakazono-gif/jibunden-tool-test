@@ -2526,6 +2526,19 @@ function calcMetrics(c) {
 }
 
 function calc() {
+  // 昼間比率カスタム設定がある場合、dc/bc を毎回再計算して入力欄に反映（mkwh/ag変化に追従）
+  const _kpTop = document.getElementById('kyuden-plan').value;
+  if (customDaytimeRate !== null && _kpTop !== 'kyushu_denka_night' && _kpTop !== 'kyushu_kiji') {
+    const _mkwh  = parseFloat(document.getElementById('mkwh').value) || 0;
+    const _ag    = parseFloat(document.getElementById('ag').value)   || 0;
+    const _ann   = _mkwh * 12;
+    const _dem   = Math.round(_ann * customDaytimeRate);
+    const _dc    = Math.round(Math.min(_dem, _ag));
+    const _bcMax = Math.max(0, _ag * 0.65 - _dc);
+    const _bc    = Math.round(Math.min(_bcMax, _ann * (1 - customDaytimeRate) * 0.80));
+    document.getElementById('dc').value = _dc;
+    document.getElementById('bc').value = _bc;
+  }
   const mb=v('mb'),mkwh=v('mkwh'),ag=v('ag'),sk=v('sk'),wy=v('wy');
   const dc=v('dc'), bc=v('bc'), bk=v('bk'), er=v('er');
   // pv_only モードでは蓄電池消費を 0 として計算（フィールド値は保持）
