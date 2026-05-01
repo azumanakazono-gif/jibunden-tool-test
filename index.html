@@ -3692,6 +3692,7 @@ function scrollToTopHandler(e) {
 // ページが完全に読み込まれてから実行するようにします
 window.addEventListener('DOMContentLoaded', () => {
     setLoanMethod('zansai');
+    loadDataToForm(custData); // 初期表示時に plan-required 等のステータスを反映
     const _stb = document.getElementById('scroll-top-btn');
     if (_stb) {
         _stb.addEventListener('touchstart', scrollToTopHandler, { passive: false });
