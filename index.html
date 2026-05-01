@@ -390,13 +390,13 @@ canvas#mini-chart { height: 150px !important; }
           <span style="font-size:11px;color:var(--muted)">契約アンペア：</span>
           <select id="juuryo-amp" onchange="updateJuuryoPanel();autoEstimateJyuryoKwh()" style="font-size:12px;padding:2px 6px;border:1px solid var(--border);border-radius:4px">
             <option value="10">10A</option><option value="15">15A</option><option value="20">20A</option>
-            <option value="30" selected>30A</option><option value="40">40A</option>
-            <option value="50">50A</option><option value="60">60A</option>
+            <option value="30" >30A</option><option value="40">40A</option>
+            <option value="50">50A</option><option value="60" selected>60A</option>
           </select>
         </div>
         <div id="juuryo-contract-c" style="margin-bottom:6px;align-items:center;gap:6px;display:none">
           <span style="font-size:11px;color:var(--muted)">契約容量：</span>
-          <input type="number" id="juuryo-kva" min="6" step="0.5" placeholder="例：6"
+          <input type="number" id="juuryo-kva" value="10" min="6" step="0.5" placeholder="例：10"
             oninput="updateJuuryoPanel();autoEstimateJyuryoKwh()"
             style="width:60px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px">
           <span style="font-size:11px;color:var(--muted)">kVA</span>
@@ -1819,6 +1819,9 @@ function onKyudenPlanChange() {
   _ratioPanelPlan = null; // プラン変更時はパネルを再構築
   isCustomRatio   = false;
   customRatios    = null;
+  const _kpNew = document.getElementById('kyuden-plan').value;
+  if (_kpNew === 'kyushu_juuryo_b') document.getElementById('juuryo-amp').value = '60';
+  if (_kpNew === 'kyushu_juuryo_c') { const _kvaEl = document.getElementById('juuryo-kva'); if (!parseFloat(_kvaEl.value)) _kvaEl.value = '10'; }
   if (!data.hasBill) {
     onHearingChange(data); // 内部でupdateRatioPanel + calc
   } else {
