@@ -336,7 +336,8 @@ canvas#mini-chart { height: 150px !important; }
             <option value="29">ガス・電気セット割引プラン（目安 29円/kWh）</option>
           </optgroup>
           <optgroup label="▼ 九州電力 従量電灯">
-            <option value="30">従量電灯B（目安 30円/kWh）</option>
+            <option value="kyushu_juuryo_b">従量電灯B（公式段階料金）</option>
+            <option value="kyushu_juuryo_c">従量電灯C（公式段階料金）</option>
           </optgroup>
           <optgroup label="▼ 九州電力 時間帯別・太陽光向け（概算）">
             <option value="kyushu_kiji">季時別電灯（公式単価ベース）</option>
@@ -369,6 +370,26 @@ canvas#mini-chart { height: 150px !important; }
           <summary style="cursor:pointer;color:var(--muted);font-size:11px;font-weight:600">📊 単価内訳を見る</summary>
           <div id="price-breakdown-body" style="margin-top:6px;padding:8px;background:#fff;border-radius:6px;border:1px solid var(--border);font-size:11px;line-height:1.8"></div>
         </details>
+      </div>
+      <!-- 従量電灯B/C 段階料金内訳パネル -->
+      <div id="juuryo-panel" style="display:none;margin-bottom:10px;padding:12px 14px;background:var(--pg);border-radius:8px;border:1px solid var(--border)">
+        <div id="juuryo-panel-title" style="font-size:12px;font-weight:700;color:var(--mg);margin-bottom:8px">📋 従量電灯B 段階料金内訳</div>
+        <div id="juuryo-contract-b" style="margin-bottom:6px;display:flex;align-items:center;gap:6px">
+          <span style="font-size:11px;color:var(--muted)">契約アンペア：</span>
+          <select id="juuryo-amp" onchange="updateJuuryoPanel()" style="font-size:12px;padding:2px 6px;border:1px solid var(--border);border-radius:4px">
+            <option value="10">10A</option><option value="15">15A</option><option value="20">20A</option>
+            <option value="30" selected>30A</option><option value="40">40A</option>
+            <option value="50">50A</option><option value="60">60A</option>
+          </select>
+        </div>
+        <div id="juuryo-contract-c" style="margin-bottom:6px;align-items:center;gap:6px;display:none">
+          <span style="font-size:11px;color:var(--muted)">契約容量：</span>
+          <input type="number" id="juuryo-kva" min="6" step="0.5" placeholder="例：6"
+            oninput="updateJuuryoPanel()"
+            style="width:60px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px">
+          <span style="font-size:11px;color:var(--muted)">kVA</span>
+        </div>
+        <div id="juuryo-breakdown" style="font-size:11px;line-height:1.9"></div>
       </div>
       <div id="price-status-disp" style="display:none;margin-bottom:8px;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700"></div>
       <!-- 実効平均単価 入力エリア（実効平均単価プラン選択時のみ表示） -->
@@ -1147,6 +1168,64 @@ function effectiveBatteryKwh(nominalKwh) {
 
 // ── 電気単価 調整額（燃料費調整1.33 + 再エネ賦課金4.18 + 離島ユニバーサル0）──
 const ADJUSTMENT_UNIT_PRICE = 5.51; // 円/kWh（2024年度目安）
+
+// ── 九州電力 従量電灯B・C 段階料金マスタ ──
+const KYUSHU_JUURYO = {
+  basicB: {10:316.24,15:474.36,20:632.48,30:948.72,40:1264.96,50:1581.20,60:1897.44},
+  basicCPerKva: 316.24,
+};
+function calcJuuryoSteps(mkwh) {
+  const s1 = Math.min(mkwh, 120);
+  const s2 = Math.min(Math.max(mkwh-120, 0), 180);
+  const s3 = Math.max(mkwh-300, 0);
+  const energy = Math.round((s1*18.37 + s2*23.97 + s3*26.97)*100)/100;
+  const base   = mkwh > 0 ? Math.round(energy/mkwh*100)/100 : 0;
+  const eff    = Math.round((base + ADJUSTMENT_UNIT_PRICE)*100)/100;
+  return { s1, s2, s3, energy, base, eff };
+}
+function _juuryoBasicCharge(kp) {
+  if (kp === 'kyushu_juuryo_b') {
+    const amp = parseInt(document.getElementById('juuryo-amp').value) || 30;
+    return KYUSHU_JUURYO.basicB[amp] || 948.72;
+  }
+  const kva = parseFloat(document.getElementById('juuryo-kva').value) || 0;
+  return kva > 0 ? Math.round(kva * KYUSHU_JUURYO.basicCPerKva*100)/100 : 0;
+}
+function updateJuuryoPanel() {
+  const kp    = document.getElementById('kyuden-plan').value;
+  const panel = document.getElementById('juuryo-panel');
+  const isB   = kp === 'kyushu_juuryo_b';
+  const isC   = kp === 'kyushu_juuryo_c';
+  if (!isB && !isC) { panel.style.display='none'; return; }
+  panel.style.display = '';
+  document.getElementById('juuryo-panel-title').textContent = isB ? '📋 従量電灯B 段階料金内訳' : '📋 従量電灯C 段階料金内訳';
+  document.getElementById('juuryo-contract-b').style.display = isB ? '' : 'none';
+  document.getElementById('juuryo-contract-c').style.display = isC ? '' : 'none';
+  const mkwh = parseFloat(document.getElementById('mkwh').value) || 0;
+  const body = document.getElementById('juuryo-breakdown');
+  if (mkwh <= 0) {
+    body.innerHTML = '<span style="color:#dc2626">⚠ 月間使用量を入力してください</span>';
+    updatePriceStatus(activeTab === 'hypothesis' ? hypData : custData);
+    return;
+  }
+  const { s1, s2, s3, energy, base, eff } = calcJuuryoSteps(mkwh);
+  const basic = _juuryoBasicCharge(kp);
+  const adj   = Math.round(mkwh * ADJUSTMENT_UNIT_PRICE*100)/100;
+  const total = Math.round(basic + energy + adj);
+  const f2    = n => n.toLocaleString('ja-JP', {maximumFractionDigits:2});
+  body.innerHTML =
+    `<div style="color:var(--muted)">🏷 段階別電力量料金</div>` +
+    `<div style="padding-left:8px">第1段階 〜120kWh：${s1}kWh × 18.37円 = <b>${f2(s1*18.37)}円</b></div>` +
+    (s2>0?`<div style="padding-left:8px">第2段階 121〜300kWh：${s2}kWh × 23.97円 = <b>${f2(s2*23.97)}円</b></div>`:'') +
+    (s3>0?`<div style="padding-left:8px">第3段階 301kWh〜：${s3}kWh × 26.97円 = <b>${f2(s3*26.97)}円</b></div>`:'') +
+    `<div style="margin-top:2px">▶ 電力量のみ平均：<b>${base}円/kWh</b></div>` +
+    `<div>＋ 燃料費等調整：+1.33円/kWh　＋ 再エネ賦課金：+4.18円/kWh</div>` +
+    `<div style="color:var(--dg);font-weight:700">＝ 調整込み実質平均単価：<b>${eff}円/kWh</b></div>` +
+    `<div style="margin-top:4px;border-top:1px solid var(--border);padding-top:4px">` +
+    `基本料金：${f2(basic)}円　／　調整・賦課金：${f2(adj)}円</div>` +
+    `<div style="font-weight:700;color:var(--mg)">概算月額：約${total.toLocaleString()}円</div>`;
+  updatePriceStatus(activeTab === 'hypothesis' ? hypData : custData);
+}
 
 // ── 九州電力 季時別電灯 概算単価マスタ（季節別・時間帯別）──
 const KYUSHU_KIJI = {
@@ -1980,19 +2059,27 @@ function updatePriceStatus(data) {
   const kp = document.getElementById('kyuden-plan').value;
   const hasBill = !!(data || {}).hasBill;
   const isDenkaOrKiji = kp === 'kyushu_denka_night' || kp === 'kyushu_kiji';
+  const isJuuryo = kp === 'kyushu_juuryo_b' || kp === 'kyushu_juuryo_c';
   let status;
-  if (hasBill)           { status = 'bill'; }
-  else if (isDenkaOrKiji){ status = isCustomRatio ? 'custom' : 'auto'; }
+  if (hasBill)            { status = 'bill'; }
+  else if (isDenkaOrKiji) { status = isCustomRatio ? 'custom' : 'auto'; }
+  else if (isJuuryo) {
+    const mkwh = parseFloat(document.getElementById('mkwh').value) || 0;
+    status = mkwh > 0 ? 'juuryo-ok' : 'juuryo-required';
+  }
   else { const up = parseFloat(kp)||0; status = up > 0 ? 'manual-ok' : 'manual-required'; }
   const S = {
     'bill':            { bg:'#f0fdf4', bd:'#86efac', co:'#166534', html:'📄 実績単価を使用中' },
     'auto':            { bg:'#eff6ff', bd:'#93c5fd', co:'#1e40af', html:'🟢 単価自動反映中' },
     'custom':          { bg:'#f3e8ff', bd:'#d8b4fe', co:'#7e22ce', html:'🟣 カスタム割合単価を使用中' },
+    'juuryo-ok':       { bg:'#eff6ff', bd:'#93c5fd', co:'#1e40af', html:'🟢 公式段階料金から自動算出中' },
+    'juuryo-required': { bg:'#fef2f2', bd:'#fca5a5', co:'#991b1b',
+      html:'🔴 月間使用量の入力が必要です<br><span style="font-size:10px;font-weight:400">月間使用量を入力すると、九州電力公式の段階料金から実質単価を自動算出します。</span>' },
     'manual-ok':       { bg:'#fff7ed', bd:'#fed7aa', co:'#9a3412', html:'🟠 入力値から算出した単価を使用中' },
     'manual-required': { bg:'#fef2f2', bd:'#fca5a5', co:'#991b1b',
       html:'🔴 月間電気代・月間使用量の入力が必要です<br><span style="font-size:10px;font-weight:400">この料金プランは単価を自動反映できないため、月間電気代と月間使用量を入力すると実質平均単価を算出できます。</span>' },
   };
-  const showStatus = isDenkaOrKiji || hasBill || status === 'manual-ok' || status === 'manual-required';
+  const showStatus = isDenkaOrKiji || isJuuryo || hasBill || status === 'manual-ok' || status === 'manual-required';
   if (showStatus) {
     const c = S[status];
     el.style.display    = '';
@@ -2017,6 +2104,7 @@ function onHearingChange(data) {
     document.getElementById('estimated-price-disp').style.display = 'none';
     updateRatioPanel();
     updateRatioStyleStatus();
+    updateJuuryoPanel();
     updatePriceStatus(data);
     const kpBill = document.getElementById('kyuden-plan').value;
     if (kpBill === 'kyushu_denka_night' || kpBill === 'kyushu_kiji') _applyRatioDc(kpBill);
@@ -2034,8 +2122,21 @@ function onHearingChange(data) {
       document.getElementById('mkwh').value = Math.round(mb / eff);
       updateRatioPanel();
       updateRatioStyleStatus();
+      updateJuuryoPanel();
       updatePriceStatus(data);
       _applyRatioDc(kp);
+      calc();
+    } else if (kp === 'kyushu_juuryo_b' || kp === 'kyushu_juuryo_c') {
+      // 従量電灯B/C：公式段階料金から自動算出
+      guide.style.cssText = 'display:;margin-bottom:8px;padding:8px 12px;border-radius:8px;border:1px solid #93c5fd;font-size:12px;background:#eff6ff;color:#1e40af';
+      guide.innerHTML = '📋 <b>段階料金プラン</b>：月間使用量を入力すると、九州電力公式の段階料金から実質単価を自動算出します。';
+      noteEl.textContent = '';
+      document.getElementById('estimated-price-disp').style.display = 'none';
+      // mkwhは自動セットしない（ユーザーが入力）
+      updateRatioPanel();
+      updateRatioStyleStatus();
+      updateJuuryoPanel();
+      updatePriceStatus(data);
       calc();
     } else {
       // その他プラン：概算単価から推定
@@ -2344,7 +2445,16 @@ function calc() {
   const bc_eff = proposalMode === 'pv_only' ? 0 : bc;
   document.getElementById('dc-monthly-hint').textContent = dc > 0 ? `約 ${Math.round(dc/12).toLocaleString()} kWh/月・約 ${(dc/365).toFixed(1)} kWh/日` : '';
   document.getElementById('bc-monthly-hint').textContent = bc > 0 ? `約 ${Math.round(bc/12).toLocaleString()} kWh/月・約 ${(bc/365).toFixed(1)} kWh/日` : '';
-  const up = mkwh > 0 ? Math.round(mb / mkwh * 10) / 10 : 0;
+  const _kpCalc = document.getElementById('kyuden-plan').value;
+  const _isJuuryoCalc = _kpCalc === 'kyushu_juuryo_b' || _kpCalc === 'kyushu_juuryo_c';
+  const _calcData = activeTab === 'hypothesis' ? hypData : custData;
+  let up;
+  if (_isJuuryoCalc && !_calcData.hasBill) {
+    up = mkwh > 0 ? calcJuuryoSteps(mkwh).eff : 0;
+    updateJuuryoPanel();
+  } else {
+    up = mkwh > 0 ? Math.round(mb / mkwh * 10) / 10 : 0;
+  }
   const annualConsumptionKWh = mkwh * 12;
   // 最優先表示：mb/mkwhがあれば何があっても必ず更新
   const upEl = document.getElementById('up-auto');
