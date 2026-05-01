@@ -1186,9 +1186,10 @@ function initSaleSetting() {
 
 const WIP_MODES = ['pv_only', 'battery_only'];
 const UNLOCK_PW = 'azuma4001';
+let _proposalEditUnlocked = false;
 
 function isEditUnlocked() {
-  return sessionStorage.getItem('proposalEditUnlocked') === 'true';
+  return _proposalEditUnlocked;
 }
 function _applyWipLock() {
   const unlocked = isEditUnlocked();
@@ -1216,7 +1217,7 @@ function doUnlock() {
   const pw = document.getElementById('unlock-pw').value;
   const msgEl = document.getElementById('unlock-msg');
   if (pw === UNLOCK_PW) {
-    sessionStorage.setItem('proposalEditUnlocked', 'true');
+    _proposalEditUnlocked = true;
     msgEl.textContent = '✅ 編集モードを有効化しました。太陽光のみ・蓄電池のみを選択できます。';
     msgEl.style.color = '#166534';
     _applyWipLock();
