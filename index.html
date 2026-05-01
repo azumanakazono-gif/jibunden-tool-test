@@ -832,8 +832,8 @@ canvas#mini-chart { height: 150px !important; }
       <!-- KPI カード (2×2) -->
       <div class="grid2" style="gap:10px;margin-bottom:12px">
         <div style="border-radius:12px;padding:16px 12px;border:2px solid #bbf7d0;background:linear-gradient(135deg,#f0fdf4,#dcfce7);box-shadow:0 2px 8px rgba(0,0,0,.08)">
-          <div style="font-size:12px;font-weight:700;color:#15803d;margin-bottom:2px">20年間の経済メリット</div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:6px">電力会社継続との差額</div>
+          <div style="font-size:12px;font-weight:700;color:#15803d;margin-bottom:2px">20年間の経済メリット目安</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px">年間メリット×20年の概算（上昇率・FIT変動非反映）</div>
           <div style="display:flex;align-items:baseline;gap:2px">
             <span style="font-size:11px;color:#15803d;font-weight:700">約</span>
             <span id="rd-top" style="font-size:26px;font-weight:900;color:#15803d;line-height:1">-</span>
@@ -2873,7 +2873,9 @@ function calc() {
   // コスト差：電力会社20年総額 - (初期費用 + 残り電気代20年分) ← er=0でも costDiff_with_rise が正しく機能
   const diffShow = m.costDiff_with_rise;
   document.getElementById('rd').textContent = '約'+diffShow+'万円';
-  document.getElementById('rd-top').textContent = diffShow;
+  // KPIカード：年間経済メリット×保証年数（シンプルな目安）
+  const _merit20Man = Math.round(_annualTotal * wy / 10000);
+  document.getElementById('rd-top').textContent = _merit20Man;
   document.getElementById('rb-note').textContent = er > 0 ? `年${er}%上昇想定` : '現状維持';
   document.getElementById('rb-up').innerHTML = up > 0
     ? `<span style="font-size:11px;font-weight:500;opacity:.8">現在の平均単価</span><br><span style="font-size:20px;font-weight:800">${up.toFixed(1)}円/kWh</span>`
