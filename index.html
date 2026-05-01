@@ -1757,13 +1757,18 @@ function updateRatioPanel() {
     document.getElementById('ratio-zones').innerHTML = zones.map(z => {
       const zoneAnnual  = Math.round(annualKwh  * z.pct / 100);
       const zoneMonthly = Math.round(monthlyTotal * z.pct / 100);
-      return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <span style="min-width:72px;font-size:12px;color:var(--muted)">${z.label}</span>
-        <input type="number" id="r-${prefix}-${z.key}" value="${z.pct}" min="0" max="100" step="1"
-          style="width:54px;padding:4px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;text-align:center"
-          oninput="onRatioChange('${prefix}')">
-        <span style="font-size:11px;color:var(--muted)">%</span>
-        <span id="r-${prefix}-${z.key}-kwh" style="font-size:11px;color:var(--dg);margin-left:4px">月平均：約${zoneMonthly.toLocaleString()} kWh / 年間：約${zoneAnnual.toLocaleString()} kWh</span>
+      return `<div style="margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+          <span style="min-width:72px;font-size:12px;color:var(--muted)">${z.label}</span>
+          <input type="range" id="r-${prefix}-${z.key}-sl" value="${z.pct}" min="0" max="100" step="1"
+            style="flex:1;height:4px;accent-color:var(--mg);cursor:pointer;min-width:80px"
+            oninput="onSliderChange('${prefix}','${z.key}')">
+          <input type="number" id="r-${prefix}-${z.key}" value="${z.pct}" min="0" max="100" step="1"
+            style="width:52px;padding:3px 5px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;text-align:center"
+            oninput="onRatioChange('${prefix}')">
+          <span style="font-size:11px;color:var(--muted)">%</span>
+        </div>
+        <div id="r-${prefix}-${z.key}-kwh" style="font-size:11px;color:var(--dg);padding-left:78px">月平均：約${zoneMonthly.toLocaleString()} kWh / 年間：約${zoneAnnual.toLocaleString()} kWh</div>
       </div>`;
     }).join('') +
     `<div id="ratio-total-row" style="margin-top:6px;font-size:11px;color:var(--mg);font-weight:700;border-top:1px solid var(--border);padding-top:6px">
@@ -1771,14 +1776,17 @@ function updateRatioPanel() {
     </div>`;
   } else {
     if (!isCustomRatio) {
+      const _sv = (id, v) => { const e=document.getElementById(id); if(e) e.value=v; };
       if (isDenka) {
-        const de = document.getElementById('r-dn-day'); if(de) de.value = Math.round(ratios.day*100);
-        const he = document.getElementById('r-dn-hol'); if(he) he.value = Math.round(ratios.hol*100);
-        const ne = document.getElementById('r-dn-ngt'); if(ne) ne.value = Math.round(ratios.ngt*100);
+        const dv=Math.round(ratios.day*100), hv=Math.round(ratios.hol*100), nv=Math.round(ratios.ngt*100);
+        _sv('r-dn-day',dv); _sv('r-dn-day-sl',dv);
+        _sv('r-dn-hol',hv); _sv('r-dn-hol-sl',hv);
+        _sv('r-dn-ngt',nv); _sv('r-dn-ngt-sl',nv);
       } else {
-        const de = document.getElementById('r-kj-day');    if(de) de.value = Math.round(ratios.day*100);
-        const le = document.getElementById('r-kj-living'); if(le) le.value = Math.round(ratios.living*100);
-        const ne = document.getElementById('r-kj-ngt');    if(ne) ne.value = Math.round(ratios.ngt*100);
+        const dv=Math.round(ratios.day*100), lv=Math.round(ratios.living*100), nv=Math.round(ratios.ngt*100);
+        _sv('r-kj-day',dv);    _sv('r-kj-day-sl',dv);
+        _sv('r-kj-living',lv); _sv('r-kj-living-sl',lv);
+        _sv('r-kj-ngt',nv);    _sv('r-kj-ngt-sl',nv);
       }
     }
     _updateRatioKwhDisplay(kp, prefix, annualKwh);
@@ -1794,9 +1802,11 @@ function _updateRatioKwhDisplay(kp, prefix, annualKwh) {
   keys.forEach(k => {
     const pctEl = document.getElementById(`r-${prefix}-${k}`);
     const kwhEl = document.getElementById(`r-${prefix}-${k}-kwh`);
+    const slEl  = document.getElementById(`r-${prefix}-${k}-sl`);
     if (pctEl && kwhEl) {
       const pct = parseFloat(pctEl.value) || 0;
       sumPct += pct;
+      if (slEl) slEl.value = pct;
       const zoneAnnual  = Math.round(annualKwh  * pct / 100);
       const zoneMonthly = Math.round(monthlyKwh * pct / 100);
       kwhEl.textContent = `月平均：約${zoneMonthly.toLocaleString()} kWh / 年間：約${zoneAnnual.toLocaleString()} kWh`;
@@ -1890,17 +1900,27 @@ function updateRatioStyleStatus() {
   }
 }
 
+function onSliderChange(prefix, key) {
+  const slEl  = document.getElementById(`r-${prefix}-${key}-sl`);
+  const numEl = document.getElementById(`r-${prefix}-${key}`);
+  if (slEl && numEl) numEl.value = slEl.value;
+  onRatioChange(prefix);
+}
+
 function onRatioChange(prefix) {
   const kp = document.getElementById('kyuden-plan').value;
+  const _sv = (id, v) => { const e=document.getElementById(id); if(e) e.value=v; };
   if (prefix === 'dn') {
     const day = (parseFloat(document.getElementById('r-dn-day').value) || 0) / 100;
     const hol = (parseFloat(document.getElementById('r-dn-hol').value) || 0) / 100;
     const ngt = (parseFloat(document.getElementById('r-dn-ngt').value) || 0) / 100;
+    _sv('r-dn-day-sl', Math.round(day*100)); _sv('r-dn-hol-sl', Math.round(hol*100)); _sv('r-dn-ngt-sl', Math.round(ngt*100));
     customRatios = { day, hol, ngt, label:'カスタム' };
   } else {
     const day    = (parseFloat(document.getElementById('r-kj-day').value)    || 0) / 100;
     const living = (parseFloat(document.getElementById('r-kj-living').value) || 0) / 100;
     const ngt    = (parseFloat(document.getElementById('r-kj-ngt').value)    || 0) / 100;
+    _sv('r-kj-day-sl', Math.round(day*100)); _sv('r-kj-living-sl', Math.round(living*100)); _sv('r-kj-ngt-sl', Math.round(ngt*100));
     customRatios = { day, living, ngt, label:'カスタム' };
   }
   isCustomRatio = true;
