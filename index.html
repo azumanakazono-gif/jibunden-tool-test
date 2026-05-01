@@ -357,7 +357,10 @@ canvas#mini-chart { height: 150px !important; }
       <div id="ratio-panel" style="display:none;margin-bottom:10px;padding:12px 14px;background:var(--pg);border-radius:8px;border:1px solid var(--border)">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
           <span style="font-size:12px;font-weight:700;color:var(--mg)">⏱ 時間帯別使用比率（合計100%）</span>
-          <button id="btn-reset-ratio" onclick="resetToPresetRatio()" style="display:none;font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--muted);cursor:pointer">標準比率に戻す</button>
+          <div style="display:flex;gap:4px">
+            <button id="btn-auto-night" onclick="autoAdjustNight()" style="font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--mg);cursor:pointer">夜間で自動調整</button>
+            <button id="btn-reset-ratio" onclick="resetToPresetRatio()" style="display:none;font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--muted);cursor:pointer">標準比率に戻す</button>
+          </div>
         </div>
         <div id="ratio-zones" style="display:flex;flex-direction:column;gap:6px"></div>
         <div id="ratio-sum-warn" style="display:none;margin-top:4px;font-size:11px;color:#dc2626;font-weight:700">⚠ 合計が100%になるよう設定してください（現在 <span id="ratio-sum-val">0</span>%）</div>
@@ -1898,6 +1901,20 @@ function updateRatioStyleStatus() {
     el.innerHTML   = html;
     el.style.color = '#92400e';
   }
+}
+
+function autoAdjustNight() {
+  const kp     = document.getElementById('kyuden-plan').value;
+  const prefix = kp === 'kyushu_denka_night' ? 'dn' : 'kj';
+  const keys   = prefix === 'dn' ? ['day','hol'] : ['day','living'];
+  let sum = 0;
+  keys.forEach(k => { sum += parseFloat(document.getElementById(`r-${prefix}-${k}`).value) || 0; });
+  const ngt = Math.max(0, 100 - sum);
+  const ngtEl = document.getElementById(`r-${prefix}-ngt`);
+  const ngtSl = document.getElementById(`r-${prefix}-ngt-sl`);
+  if (ngtEl) ngtEl.value = ngt;
+  if (ngtSl) ngtSl.value = ngt;
+  onRatioChange(prefix);
 }
 
 function onSliderChange(prefix, key) {
