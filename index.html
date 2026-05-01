@@ -441,6 +441,21 @@ canvas#mini-chart { height: 150px !important; }
         <span id="daytime-auto-text"></span>
         <span style="color:var(--muted);margin-left:8px;font-size:11px">↓ 下の値を手動で上書きできます</span>
       </div>
+      <!-- 昼間比率手動調整パネル（時間帯別プラン以外で表示） -->
+      <div id="daytime-rate-panel" style="display:none;margin-bottom:10px;padding:12px 14px;background:var(--pg);border-radius:8px;border:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:12px;font-weight:700;color:var(--mg)">☀ 昼間使用比率</span>
+          <button id="btn-reset-daytime" onclick="resetDaytimeRate()" style="display:none;font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--muted);cursor:pointer">生活スタイル既定値に戻す</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <input type="range" id="daytime-rate-sl" min="5" max="80" step="1" oninput="onDaytimeRateSlider()" style="flex:1">
+          <input type="number" id="daytime-rate-num" min="5" max="80" step="1" oninput="onDaytimeRateNum()" style="width:50px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px">
+          <span style="font-size:11px;color:var(--muted)">%</span>
+        </div>
+        <div id="daytime-rate-hint" style="font-size:11px;color:var(--muted);margin-bottom:6px"></div>
+        <div id="daytime-rate-breakdown" style="font-size:11px;line-height:1.9;color:var(--mg)"></div>
+        <div id="daytime-rate-status" style="margin-top:4px;font-size:11px"></div>
+      </div>
       <div class="grid2" style="margin-top:4px">
         <div class="field" id="field-dc-wrap">
           <label>昼間 直接使用量（kWh/年）<span style="font-size:10px;color:var(--mg);margin-left:4px">太陽光→直接消費</span></label>
@@ -1694,6 +1709,74 @@ const LIFESTYLE_LABEL = {
   allelectric:'オール電化・昼夜問わず電気を多用',
 };
 
+function updateDaytimeRatePanel() {
+  const kp = document.getElementById('kyuden-plan').value;
+  const panel = document.getElementById('daytime-rate-panel');
+  if (kp === 'kyushu_denka_night' || kp === 'kyushu_kiji') { panel.style.display = 'none'; return; }
+  panel.style.display = '';
+  const presetRate = getDaytimeRate() || 0.30;
+  const rate = customDaytimeRate !== null ? customDaytimeRate : presetRate;
+  const pct  = Math.round(rate * 100);
+  document.getElementById('daytime-rate-sl').value  = pct;
+  document.getElementById('daytime-rate-num').value = pct;
+  const mkwh = parseFloat(document.getElementById('mkwh').value) || 0;
+  const ag   = parseFloat(document.getElementById('ag').value)   || 0;
+  const annualKwh = mkwh * 12;
+  const demand    = Math.round(annualKwh * rate);
+  const dc        = Math.min(demand, ag);
+  const monthly   = Math.round(demand / 12);
+  const f = n => n.toLocaleString();
+  document.getElementById('daytime-rate-hint').textContent = `月平均：約${f(monthly)} kWh / 年間：約${f(demand)} kWh`;
+  document.getElementById('daytime-rate-breakdown').innerHTML =
+    `<div>年間消費電力量：${f(annualKwh)} kWh</div>` +
+    `<div>昼間使用比率：${pct}%</div>` +
+    `<div>昼間需要量：${f(demand)} kWh/年</div>` +
+    `<div>太陽光年間発電量：${f(ag)} kWh</div>` +
+    `<div style="color:var(--dg);font-weight:700">昼間直接使用量：${f(dc)} kWh/年</div>`;
+  const resetBtn  = document.getElementById('btn-reset-daytime');
+  const statusEl  = document.getElementById('daytime-rate-status');
+  if (customDaytimeRate !== null) {
+    resetBtn.style.display = '';
+    statusEl.textContent   = '⚡ 昼間比率を手動調整中';
+    statusEl.style.color   = '#92400e';
+  } else {
+    resetBtn.style.display = 'none';
+    statusEl.textContent   = '✔ 生活スタイルから算出した昼間比率を使用中';
+    statusEl.style.color   = 'var(--muted)';
+  }
+}
+function _applyCustomDaytimeRate(rate) {
+  customDaytimeRate = rate;
+  const ag  = parseFloat(document.getElementById('ag').value)   || 0;
+  const mkwh = parseFloat(document.getElementById('mkwh').value) || 0;
+  const annualKwh = mkwh * 12;
+  const demand = Math.round(annualKwh * rate);
+  const dc     = Math.round(Math.min(demand, ag));
+  const bcMax  = Math.max(0, ag * 0.65 - dc);
+  const bc     = Math.round(Math.min(bcMax, annualKwh * (1 - rate) * 0.80));
+  document.getElementById('dc').value = dc;
+  document.getElementById('bc').value = bc;
+  updateDaytimeRatePanel();
+  calc();
+}
+function onDaytimeRateSlider() {
+  const val = parseInt(document.getElementById('daytime-rate-sl').value) || 30;
+  document.getElementById('daytime-rate-num').value = val;
+  _applyCustomDaytimeRate(val / 100);
+}
+function onDaytimeRateNum() {
+  const raw = parseInt(document.getElementById('daytime-rate-num').value) || 30;
+  const val = Math.min(80, Math.max(5, raw));
+  document.getElementById('daytime-rate-sl').value  = val;
+  document.getElementById('daytime-rate-num').value = val;
+  _applyCustomDaytimeRate(val / 100);
+}
+function resetDaytimeRate() {
+  customDaytimeRate = null;
+  applyDaytimeRate();
+  updateDaytimeRatePanel();
+}
+
 function getDaytimeRate() {
   const preset = document.getElementById('ls-preset').value;
   const base   = LIFESTYLE_RATE[preset];
@@ -1713,7 +1796,7 @@ function applyDaytimeRate() {
     return;
   }
   const rate = getDaytimeRate();
-  if (rate === null) { noteEl.style.display = 'none'; calc(); return; }
+  if (rate === null) { noteEl.style.display = 'none'; updateDaytimeRatePanel(); calc(); return; }
   const pct = Math.round(rate * 100);
   const annualConsumption = v('mkwh') * 12;
   const ag = v('ag');
@@ -1724,11 +1807,13 @@ function applyDaytimeRate() {
   document.getElementById('bc').value = bc;
   noteEl.style.display = '';
   textEl.textContent = `昼間使用率 約${pct}% をもとに自動計算：昼間直接 ${dc.toLocaleString()} kWh、蓄電池 ${bc.toLocaleString()} kWh`;
+  updateDaytimeRatePanel();
   calc();
 }
 
-function onFamilyChange()    { applyDaytimeRate(); calc(); }
+function onFamilyChange() { customDaytimeRate = null; applyDaytimeRate(); calc(); }
 function onLifestyleChange() {
+  customDaytimeRate = null;
   const preset = document.getElementById('ls-preset').value;
   const lsInput = document.getElementById('ls');
   if (preset !== 'custom') lsInput.value = LIFESTYLE_LABEL[preset] || '';
@@ -1772,6 +1857,7 @@ function updateHearingUI(data) {
 let isCustomRatio = false;
 let customRatios  = null;
 let _ratioPanelPlan = null; // パネルが最後に初期化されたプラン名
+let customDaytimeRate = null; // null=生活スタイル既定値, 0-1=手動設定値
 
 function calcDenkiNightBaseRate(ratios) {
   const t  = KYUSHU_DENKA_NIGHT.tariff;
@@ -2457,6 +2543,7 @@ function calc() {
     up = mkwh > 0 ? Math.round(mb / mkwh * 10) / 10 : 0;
   }
   const annualConsumptionKWh = mkwh * 12;
+  updateDaytimeRatePanel();
   // 最優先表示：mb/mkwhがあれば何があっても必ず更新
   const upEl = document.getElementById('up-auto');
   if (upEl) upEl.textContent = mkwh > 0 ? `${up.toFixed(1)} 円/kWh` : '月間使用量を入力してください';
