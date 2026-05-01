@@ -67,6 +67,7 @@ body { font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; backgroun
 .field input:focus { outline: none; border-color: var(--lg); box-shadow: 0 0 0 3px rgba(82,183,136,.15); }
 .field select { border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 15px; background: #fff; color: var(--text); font-family: inherit; transition: border-color .15s; }
 .field select:focus { outline: none; border-color: var(--lg); box-shadow: 0 0 0 3px rgba(82,183,136,.15); }
+#price-breakdown summary:hover { background:#dbeafe; border-color:#60a5fa; }
 .slider-row { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
 .slider-row label { font-size: 14px; color: var(--muted); min-width: 100px; font-weight: 500; }
 .slider-row input[type=range] { flex: 1; accent-color: var(--mg); }
@@ -366,8 +367,8 @@ canvas#mini-chart { height: 150px !important; }
         <div id="ratio-zones" style="display:flex;flex-direction:column;gap:6px"></div>
         <div id="ratio-sum-warn" style="display:none;margin-top:4px;font-size:11px;color:#dc2626;font-weight:700">⚠ 合計が100%になるよう設定してください（現在 <span id="ratio-sum-val">0</span>%）</div>
         <div id="ratio-style-status" style="display:none;margin-top:6px;font-size:11px;padding:4px 8px;background:#fff;border-radius:4px;border:1px solid var(--border)"></div>
-        <details id="price-breakdown" style="margin-top:10px">
-          <summary style="cursor:pointer;color:var(--muted);font-size:11px;font-weight:600">📊 単価内訳を見る</summary>
+        <details id="price-breakdown" style="margin-top:10px" ontoggle="(function(d){const s=d.querySelector('summary');s.textContent=d.open?'📊 単価内訳・計算根拠を閉じる ▲':'📊 単価内訳・計算根拠を見る ▼';})(this)">
+          <summary style="cursor:pointer;font-size:12px;font-weight:700;padding:7px 12px;background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;color:#1e40af;list-style:none;user-select:none">📊 単価内訳・計算根拠を見る ▼</summary>
           <div id="price-breakdown-body" style="margin-top:6px;padding:8px;background:#fff;border-radius:6px;border:1px solid var(--border);font-size:11px;line-height:1.8"></div>
         </details>
       </div>
