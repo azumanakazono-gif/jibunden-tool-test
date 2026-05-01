@@ -329,7 +329,7 @@ canvas#mini-chart { height: 150px !important; }
           <input type="text" id="utility-company" placeholder="電力会社名（任意）例：○○電力" style="flex:1;min-width:140px;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:14px;background:#fff;font-family:inherit">
         </div>
         <select id="kyuden-plan" onchange="onKyudenPlanChange()">
-          <option value="">手動入力</option>
+          <option value="">── 電気料金プランを選択してください ──</option>
           <optgroup label="▼ 標準家庭プラン（目安単価）">
             <option value="30">スタンダードプラン（目安 30円/kWh）</option>
             <option value="32">プレミアム・エコプラン / 新電力標準（目安 32円/kWh）</option>
@@ -2140,22 +2140,41 @@ function resetToPresetRatio() {
   onHearingChange(data); // calls updateRatioStyleStatus internally
 }
 
+function _styleKyudenSelect(kp) {
+  const sel = document.getElementById('kyuden-plan');
+  if (!sel) return;
+  if (!kp) {
+    sel.style.borderColor = '#fca5a5';
+    sel.style.background  = '#fef2f2';
+    sel.style.boxShadow   = '0 0 0 2px #fee2e2';
+    sel.style.color       = '#991b1b';
+  } else {
+    sel.style.borderColor = '';
+    sel.style.background  = '';
+    sel.style.boxShadow   = '';
+    sel.style.color       = '';
+  }
+}
 function updatePriceStatus(data) {
   const el = document.getElementById('price-status-disp');
   if (!el) return;
   const kp = document.getElementById('kyuden-plan').value;
+  _styleKyudenSelect(kp);
   const hasBill = !!(data || {}).hasBill;
   const isDenkaOrKiji = kp === 'kyushu_denka_night' || kp === 'kyushu_kiji';
   const isJuuryo = kp === 'kyushu_juuryo_b' || kp === 'kyushu_juuryo_c';
   let status;
-  if (hasBill)            { status = 'bill'; }
-  else if (isDenkaOrKiji) { status = isCustomRatio ? 'custom' : 'auto'; }
+  if (!kp && !hasBill)    { status = 'plan-required'; }
+  else if (hasBill)        { status = 'bill'; }
+  else if (isDenkaOrKiji)  { status = isCustomRatio ? 'custom' : 'auto'; }
   else if (isJuuryo) {
     const mkwh = parseFloat(document.getElementById('mkwh').value) || 0;
     status = mkwh > 0 ? 'juuryo-ok' : 'juuryo-required';
   }
   else { const up = parseFloat(kp)||0; status = up > 0 ? 'manual-ok' : 'manual-required'; }
   const S = {
+    'plan-required':  { bg:'#fef2f2', bd:'#fca5a5', co:'#991b1b',
+      html:'🔴 電気料金プランを選択してください<br><span style="font-size:10px;font-weight:400">料金プランを選択すると、単価の自動反映・段階料金計算・手動入力案内が表示されます。</span>' },
     'bill':            { bg:'#f0fdf4', bd:'#86efac', co:'#166534', html:'📄 実績単価を使用中' },
     'auto':            { bg:'#eff6ff', bd:'#93c5fd', co:'#1e40af', html:'🟢 単価自動反映中' },
     'custom':          { bg:'#f3e8ff', bd:'#d8b4fe', co:'#7e22ce', html:'🟣 カスタム割合単価を使用中' },
@@ -2166,7 +2185,7 @@ function updatePriceStatus(data) {
     'manual-required': { bg:'#fef2f2', bd:'#fca5a5', co:'#991b1b',
       html:'🔴 月間電気代・月間使用量の入力が必要です<br><span style="font-size:10px;font-weight:400">この料金プランは単価を自動反映できないため、月間電気代と月間使用量を入力すると実質平均単価を算出できます。</span>' },
   };
-  const showStatus = isDenkaOrKiji || isJuuryo || hasBill || status === 'manual-ok' || status === 'manual-required';
+  const showStatus = !kp || isDenkaOrKiji || isJuuryo || hasBill || status === 'manual-ok' || status === 'manual-required';
   if (showStatus) {
     const c = S[status];
     el.style.display    = '';
@@ -2199,7 +2218,18 @@ function onHearingChange(data) {
   } else {
     const mb = parseFloat(document.getElementById('mb').value) || 20000;
     const kp = document.getElementById('kyuden-plan').value;
-    if (kp === 'kyushu_denka_night' || kp === 'kyushu_kiji') {
+    if (!kp) {
+      // 未選択：プラン選択を促す
+      guide.style.cssText = 'display:;margin-bottom:8px;padding:8px 12px;border-radius:8px;border:1px solid #fca5a5;font-size:12px;background:#fef2f2;color:#991b1b';
+      guide.innerHTML = '🔴 <b>電気料金プランを選択してください</b><br><span style="font-size:11px;font-weight:400">電気料金プランを選択すると、単価の自動計算または入力案内が表示されます。</span>';
+      noteEl.textContent = '';
+      document.getElementById('estimated-price-disp').style.display = 'none';
+      updateRatioPanel();
+      updateRatioStyleStatus();
+      updateJuuryoPanel();
+      updatePriceStatus(data);
+      calc();
+    } else if (kp === 'kyushu_denka_night' || kp === 'kyushu_kiji') {
       // 時間帯別料金プラン：公式単価ベース自動計算
       guide.style.cssText = 'display:;margin-bottom:8px;padding:8px 12px;border-radius:8px;border:1px solid #93c5fd;font-size:12px;background:#eff6ff;color:#1e40af';
       guide.innerHTML = '⏱ <b>時間帯別料金プラン</b>：九州電力公式単価と時間帯使用比率から自動計算します。比率パネルで割合を調整できます。';
