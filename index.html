@@ -1381,6 +1381,7 @@ function buildCfg(data, lp, ly) {
 
 function onPkgChange() {
   loanAmountEdited = false;
+  customDaytimeRate = null;
   const key = document.getElementById('pkg-select').value;
   const isManual = !key;
   document.getElementById('pkg-manual-area').style.display = isManual ? '' : 'none';
@@ -1405,6 +1406,7 @@ function onPkgChange() {
 
 function onPkgChangePv() {
   loanAmountEdited = false;
+  customDaytimeRate = null;
   const key = document.getElementById('pkg-select-pv').value;
   const isManual = !key;
   document.getElementById('pkg-manual-area').style.display = isManual ? '' : 'none';
