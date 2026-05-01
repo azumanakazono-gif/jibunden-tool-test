@@ -856,13 +856,25 @@ canvas#mini-chart { height: 150px !important; }
           <span style="font-size:13px;font-weight:700;color:#0369a1">⚡ 発電単価</span>
           <span id="lcoe-label" style="font-size:11px;color:#0369a1">（20年発電量ベース）</span>
         </div>
-        <div id="lcoe-sub" style="font-size:11px;color:#0369a1;margin-bottom:4px"></div>
-        <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:6px">
-          <span id="lcoe-val" style="font-size:24px;font-weight:900;color:#0369a1">-</span>
+        <div id="lcoe-sub" style="font-size:11px;color:#0369a1;margin-bottom:8px"></div>
+        <div id="lcoe-compare" style="display:none;margin-bottom:10px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px">
+            <div style="background:rgba(255,255,255,.75);border:1px solid #bae6fd;border-radius:8px;padding:8px 10px;text-align:center">
+              <div style="font-size:10px;font-weight:700;color:#64748b;margin-bottom:2px">🏢 買電単価</div>
+              <div><span id="lcoe-grid-val" style="font-size:22px;font-weight:900;color:#dc2626">-</span><span style="font-size:11px;font-weight:700;color:#dc2626"> 円/kWh</span></div>
+            </div>
+            <div style="background:rgba(255,255,255,.75);border:1px solid #bae6fd;border-radius:8px;padding:8px 10px;text-align:center">
+              <div style="font-size:10px;font-weight:700;color:#64748b;margin-bottom:2px">☀️ 発電単価</div>
+              <div><span id="lcoe-val" style="font-size:22px;font-weight:900;color:#0369a1">-</span><span style="font-size:11px;font-weight:700;color:#0369a1"> 円/kWh</span></div>
+            </div>
+          </div>
+          <div id="lcoe-diff" style="text-align:center;font-size:13px;font-weight:700;padding:5px 10px;background:rgba(255,255,255,.7);border-radius:6px;color:#0369a1"></div>
+        </div>
+        <div id="lcoe-solo" style="display:flex;align-items:baseline;gap:4px;margin-bottom:6px">
+          <span id="lcoe-val-solo" style="font-size:24px;font-weight:900;color:#0369a1">-</span>
           <span style="font-size:13px;font-weight:700;color:#0369a1">円/kWh</span>
         </div>
-        <div id="lcoe-compare" style="font-size:11px;color:#0369a1;padding:4px 8px;background:rgba(255,255,255,.6);border-radius:6px;margin-bottom:4px"></div>
-        <div style="font-size:10px;color:var(--muted)">設備費を20年間の総発電量で割った発電ポテンシャルの目安単価です。自家消費単価（実際に自家消費した量ベース）とは異なります。</div>
+        <div style="font-size:10px;color:var(--muted)">電力会社から買う単価と、太陽光でつくる単価の比較です。この差が自家消費メリットの目安になります。</div>
       </div>
       <!-- 棒グラフタイトル -->
       <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)">📊 20年間の総コスト比較</div>
@@ -2740,10 +2752,9 @@ function calc() {
     document.getElementById('rk-self').textContent = loanCostPerKWh > 0 ? loanCostPerKWh+'円/kWh' : '-';
     document.getElementById('rk-self-label').textContent = '自家消費単価（ローン総額ベース）';
     const _lcoeL = ag > 0 ? (loanTotal / (ag * wy)).toFixed(1) : '-';
-    document.getElementById('lcoe-val').textContent = _lcoeL;
     document.getElementById('lcoe-label').textContent = '（ローン総額・20年発電量ベース）';
     document.getElementById('lcoe-sub').textContent = `ローン総支払額 ${loanTotalMan}万円 ÷ 20年総発電量 ${fmt(Math.round(ag*wy))} kWh`;
-    document.getElementById('lcoe-compare').innerHTML = up>0&&ag>0?`現在の買電単価：${up.toFixed(1)}円/kWh　　発電単価：${_lcoeL}円/kWh`:'';
+    _updateLcoeCompare(_lcoeL, up);
     const loanDiffMan = Math.round((m.bill20Y_rise - lp * ly * 12 - m.remain20Y_rise) / 10000);
     document.getElementById('rd-loan').textContent = '約' + loanDiffMan + '万円';
     document.getElementById('loan-diff-note').textContent = er > 0 ? `電気代年${er}%上昇想定` : '電気代現状維持';
@@ -2772,14 +2783,38 @@ function calc() {
     document.getElementById('rk-loan-row').style.display = 'none';
     const _netCostYen = m.totalCostMan * 10000;
     const _lcoeC = ag > 0 ? (_netCostYen / (ag * wy)).toFixed(1) : '-';
-    document.getElementById('lcoe-val').textContent = _lcoeC;
     document.getElementById('lcoe-label').textContent = '（20年発電量ベース）';
     document.getElementById('lcoe-sub').textContent = `税込総工事費用（補助金後）${m.totalCostMan}万円 ÷ 20年総発電量 ${fmt(Math.round(ag*wy))} kWh`;
-    document.getElementById('lcoe-compare').innerHTML = up>0&&ag>0?`現在の買電単価：${up.toFixed(1)}円/kWh　　発電単価：${_lcoeC}円/kWh`:'';
+    _updateLcoeCompare(_lcoeC, up);
     // ミニチャート（ローンOFF: 2系列）
     renderMiniChart(m, mb, wy, m.remainBill, 0, 0, 0, false);
   }
   if (proposalMode === 'pv_only') updatePkgSummaryPv();
+}
+
+function _updateLcoeCompare(lcoeStr, up) {
+  const hasData = lcoeStr !== '-' && up > 0;
+  const compareEl = document.getElementById('lcoe-compare');
+  const soloEl    = document.getElementById('lcoe-solo');
+  if (!compareEl || !soloEl) return;
+  if (hasData) {
+    const lcoe = parseFloat(lcoeStr);
+    const diff = (up - lcoe).toFixed(1);
+    const cheaper = up >= lcoe;
+    const diffText = cheaper
+      ? `発電単価の方が ▲${diff}円/kWh 安い`
+      : `発電単価の方が +${Math.abs(diff).toFixed ? Math.abs(up-lcoe).toFixed(1) : diff}円/kWh 高い`;
+    document.getElementById('lcoe-grid-val').textContent = up.toFixed(1);
+    document.getElementById('lcoe-val').textContent = lcoeStr;
+    document.getElementById('lcoe-diff').textContent = diffText;
+    document.getElementById('lcoe-diff').style.color = cheaper ? '#0369a1' : '#dc2626';
+    compareEl.style.display = '';
+    soloEl.style.display = 'none';
+  } else {
+    document.getElementById('lcoe-val-solo').textContent = lcoeStr;
+    compareEl.style.display = 'none';
+    soloEl.style.display = 'flex';
+  }
 }
 
 function renderMiniChart(m, mb, wy, re, lp, ly, mt, showLoan) {
