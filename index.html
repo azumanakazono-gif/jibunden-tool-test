@@ -252,11 +252,22 @@ canvas#mini-chart { height: 150px !important; }
       <div class="section-title">🏗️ 提案モード</div>
       <div class="proposal-mode-bar">
         <button class="pm-btn active" id="pm-btn-pv_battery" onclick="setProposalMode('pv_battery')">☀️ 太陽光<br>＋蓄電池</button>
-        <button class="pm-btn" id="pm-btn-pv_only" onclick="setProposalMode('pv_only')">☀️ 太陽光<br>のみ</button>
-        <button class="pm-btn" id="pm-btn-battery_only" onclick="setProposalMode('battery_only')">🔋 蓄電池<br>のみ（後付け）</button>
+        <button class="pm-btn" id="pm-btn-pv_only" onclick="onWipModeClick('pv_only')" style="position:relative;cursor:not-allowed;opacity:.55">☀️ 太陽光<br>のみ<br><span style="font-size:9px;background:#f59e0b;color:#fff;border-radius:3px;padding:1px 4px;font-weight:700">🚧 製作中</span></button>
+        <button class="pm-btn" id="pm-btn-battery_only" onclick="onWipModeClick('battery_only')" style="position:relative;cursor:not-allowed;opacity:.55">🔋 蓄電池<br>のみ（後付け）<br><span style="font-size:9px;background:#f59e0b;color:#fff;border-radius:3px;padding:1px 4px;font-weight:700">🚧 製作中</span></button>
       </div>
       <div id="proposal-mode-desc" style="font-size:12px;color:var(--muted);padding:7px 12px;background:var(--pg);border-radius:8px;border:1px solid var(--border)">
         太陽光パネルと蓄電池のセットを提案します（標準モード）。
+      </div>
+      <div id="wip-unlock-area" style="margin-top:8px;text-align:right">
+        <button onclick="toggleUnlockPanel()" style="font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;text-decoration:underline;padding:2px 4px">🔒 編集ロック解除</button>
+        <div id="unlock-panel" style="display:none;margin-top:6px;padding:8px 10px;background:#fefce8;border:1px solid #fde68a;border-radius:8px;flex-direction:column;gap:6px;align-items:flex-start">
+          <div style="font-size:11px;color:#92400e;font-weight:700">編集用パスワードを入力してください</div>
+          <div style="display:flex;gap:6px;width:100%">
+            <input type="password" id="unlock-pw" placeholder="パスワード" style="flex:1;border:1px solid #fcd34d;border-radius:6px;padding:5px 8px;font-size:13px;font-family:inherit" onkeydown="if(event.key==='Enter')doUnlock()">
+            <button onclick="doUnlock()" style="padding:5px 12px;background:#d97706;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">解除</button>
+          </div>
+          <div id="unlock-msg" style="font-size:11px"></div>
+        </div>
       </div>
     </div>
 
@@ -1165,6 +1176,49 @@ function initSaleSetting() {
   document.getElementById('fit-period').value = fitPeriodId;
   updateCapacityButtons();
   onSaleModeChange('fit');
+}
+
+const WIP_MODES = ['pv_only', 'battery_only'];
+const UNLOCK_PW = 'azuma4001';
+
+function isEditUnlocked() {
+  return sessionStorage.getItem('proposalEditUnlocked') === 'true';
+}
+function _applyWipLock() {
+  const unlocked = isEditUnlocked();
+  WIP_MODES.forEach(m => {
+    const btn = document.getElementById('pm-btn-' + m);
+    if (!btn) return;
+    btn.style.opacity = unlocked ? '1' : '.55';
+    btn.style.cursor  = unlocked ? 'pointer' : 'not-allowed';
+  });
+  const area = document.getElementById('wip-unlock-area');
+  if (area) area.style.display = unlocked ? 'none' : '';
+}
+function onWipModeClick(mode) {
+  if (isEditUnlocked()) { setProposalMode(mode); return; }
+  const panel = document.getElementById('unlock-panel');
+  if (panel) { panel.style.display = panel.style.display === 'none' ? 'flex' : 'none'; }
+  document.getElementById('unlock-msg').textContent = '🚧 このモードは現在製作中です。編集ロックを解除すると選択できます。';
+  document.getElementById('unlock-msg').style.color = '#92400e';
+}
+function toggleUnlockPanel() {
+  const panel = document.getElementById('unlock-panel');
+  if (panel) panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+}
+function doUnlock() {
+  const pw = document.getElementById('unlock-pw').value;
+  const msgEl = document.getElementById('unlock-msg');
+  if (pw === UNLOCK_PW) {
+    sessionStorage.setItem('proposalEditUnlocked', 'true');
+    msgEl.textContent = '✅ 編集モードを有効化しました。太陽光のみ・蓄電池のみを選択できます。';
+    msgEl.style.color = '#166534';
+    _applyWipLock();
+  } else {
+    msgEl.textContent = '❌ パスワードが違います。';
+    msgEl.style.color = '#dc2626';
+    document.getElementById('unlock-pw').value = '';
+  }
 }
 
 function setProposalMode(mode) {
@@ -3827,6 +3881,7 @@ function scrollToTopHandler(e) {
 window.addEventListener('DOMContentLoaded', () => {
     setLoanMethod('zansai');
     loadDataToForm(custData); // 初期表示時に plan-required 等のステータスを反映
+    _applyWipLock();
     const _stb = document.getElementById('scroll-top-btn');
     if (_stb) {
         _stb.addEventListener('touchstart', scrollToTopHandler, { passive: false });
