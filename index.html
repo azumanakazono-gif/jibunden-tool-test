@@ -625,6 +625,7 @@ canvas#mini-chart { height: 150px !important; }
             style="border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:15px;background:#fff;font-family:inherit;max-width:160px;margin-top:4px"
             oninput="onSalePriceInput()">
           <div id="sale-price-note" style="font-size:11px;color:var(--muted);margin-top:3px"></div>
+          <div id="fit-stepped-note" style="display:none;margin-top:6px;padding:6px 10px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;font-size:11px;color:#1e40af;line-height:1.7"></div>
         </div>
       </div>
       <!-- 発電効果サマリー -->
@@ -1028,6 +1029,17 @@ function fitAutoPrice() {
   if (!rate) return null;
   return rate.earlyPrice !== undefined ? rate.earlyPrice : rate.price;
 }
+function getSellPriceForYear(year) {
+  if (saleMode !== 'fit') return parseFloat(document.getElementById('sale-price').value) || 0;
+  const rate = fitPeriodRate();
+  if (!rate) return parseFloat(document.getElementById('sale-price').value) || 0;
+  if (rate.earlyPrice !== undefined) {
+    if (year <= rate.earlyYears) return rate.earlyPrice;
+    if (year <= rate.years)      return rate.latePrice;
+    return POST_FIT_DEFAULT;
+  }
+  return year <= rate.years ? rate.price : POST_FIT_DEFAULT;
+}
 function fitAutoNote() {
   const p = FIT_MASTER.find(p => p.id === fitPeriodId) || FIT_MASTER[FIT_MASTER.length - 1];
   const rate = fitPeriodRate();
@@ -1072,15 +1084,18 @@ function onSaleModeChange(mode) {
     const price = fitAutoPrice();
     if (!salePriceEdited && price !== null) setSalePrice(price, true);
     noteEl.textContent = fitAutoNote();
+    _updateFitSteppedNote();
   } else if (mode === 'post_fit') {
     setSalePrice(POST_FIT_DEFAULT, true);
     noteEl.textContent = '卒FIT後の買取目安単価（電力会社によって異なります）';
+    _updateFitSteppedNote();
   } else {
     document.getElementById('sale-price').value = '';
     document.getElementById('sale-auto-badge').style.display  = 'none';
     document.getElementById('sale-edited-badge').style.display = 'none';
     document.getElementById('sale-reset-btn').style.display   = 'none';
     noteEl.textContent = '売電単価を直接入力してください';
+    _updateFitSteppedNote();
     calc();
   }
 }
@@ -1091,6 +1106,7 @@ function onFitPeriodChange() {
   const price = fitAutoPrice();
   if (!salePriceEdited && price !== null) setSalePrice(price, true);
   document.getElementById('sale-price-note').textContent = fitAutoNote();
+  _updateFitSteppedNote();
 }
 
 function updateCapacityButtons() {
@@ -1114,6 +1130,23 @@ function onFitCapacityChange(cap) {
   const price = fitAutoPrice();
   if (!salePriceEdited && price !== null) setSalePrice(price, true);
   document.getElementById('sale-price-note').textContent = fitAutoNote();
+  _updateFitSteppedNote();
+}
+
+function _updateFitSteppedNote() {
+  const el = document.getElementById('fit-stepped-note');
+  if (!el) return;
+  const rate = fitPeriodRate();
+  const isVisible = saleMode === 'fit' && rate && rate.earlyPrice !== undefined;
+  el.style.display = isVisible ? '' : 'none';
+  if (isVisible) {
+    const p = FIT_MASTER.find(p => p.id === fitPeriodId);
+    el.innerHTML =
+      `<b>${p ? p.label : ''}・年別売電単価（シミュレーション反映）</b><br>` +
+      `1〜${rate.earlyYears}年目：${rate.earlyPrice}円/kWh<br>` +
+      `${rate.earlyYears + 1}〜${rate.years}年目：${rate.latePrice}円/kWh<br>` +
+      `${rate.years + 1}〜20年目：${POST_FIT_DEFAULT}円/kWh（FIT終了後）`;
+  }
 }
 
 function fitSlideSaleInfo() {
@@ -1526,7 +1559,17 @@ function loadDataToForm(data) {
   document.getElementById('pkg-extra-note').value = data.pkgExtraNote || '';
   document.getElementById('sys-name').value = data.sysName || '';
   updateHearingUI(data);
-  if (ps && PACKAGES[ps]) pkgBaseCost = PACKAGES[ps].cost;
+  if (ps && PACKAGES[ps]) {
+    const _pp = PACKAGES[ps];
+    pkgBaseCost = _pp.cost;
+    const _extra = parseFloat(document.getElementById('pkg-extra').value) || 0;
+    document.getElementById('sk').value = _pp.sk;
+    document.getElementById('bk').value = _pp.bk;
+    document.getElementById('ag').value = _pp.ag;
+    document.getElementById('bc').value = _pp.bc;
+    document.getElementById('ck').value = _pp.cost + _extra;
+    customDaytimeRate = null;
+  }
   const isManual = !ps;
   document.getElementById('pkg-manual-area').style.display = isManual ? '' : 'none';
   document.getElementById('pkg-extra').closest('.field').style.display = isManual ? 'none' : '';
@@ -2697,10 +2740,11 @@ function calc() {
   document.getElementById('rk-self-label').textContent = '自家消費単価（現金での設備導入の場合）';
   // 20年電気代：上昇率があれば上昇後の数値を表示
   document.getElementById('rb').textContent = bill20Show+'万円' + (er>0 ? `（年${er}%上昇）` : '');
+  const _surplusKwhChart = proposalMode !== 'battery_only' ? Math.max(0, ag - (dc + bc_eff)) : 0;
   const _annualTotal = (() => {
     const hasSolarMode = proposalMode !== 'battery_only';
     const saleP = parseFloat(document.getElementById('sale-price').value) || 0;
-    const surplusKwhCalc = Math.max(0, ag - (dc + bc_eff));
+    const surplusKwhCalc = _surplusKwhChart;
     const annualSelfSaving    = Math.round((dc + bc_eff) * up);          // updateSelfSummary と同一式
     const annualSellRevenue   = hasSolarMode ? Math.round(surplusKwhCalc * saleP) : 0;
     return annualSelfSaving + annualSellRevenue;
@@ -2773,7 +2817,7 @@ function calc() {
     else{dd.textContent='月々 約'+fmt(Math.abs(mdiff))+'円 増加（返済後は削減）';dr.className='loan-row neg';}
 
     // ミニチャート（ローンON: 3系列）
-    renderMiniChart(m, mb, wy, re, lp, ly, mt, true);
+    renderMiniChart(m, mb, wy, re, lp, ly, mt, true, _surplusKwhChart);
   } else {
     document.getElementById('loan-preview-box').style.display='none';
     document.querySelectorAll('.loan-bar-only').forEach(el => el.style.display = 'none');
@@ -2787,7 +2831,7 @@ function calc() {
     document.getElementById('lcoe-sub').textContent = `税込総工事費用（補助金後）${m.totalCostMan}万円 ÷ 20年総発電量 ${fmt(Math.round(ag*wy))} kWh`;
     _updateLcoeCompare(_lcoeC, up);
     // ミニチャート（ローンOFF: 2系列）
-    renderMiniChart(m, mb, wy, m.remainBill, 0, 0, 0, false);
+    renderMiniChart(m, mb, wy, m.remainBill, 0, 0, 0, false, _surplusKwhChart);
   }
   if (proposalMode === 'pv_only') updatePkgSummaryPv();
 }
@@ -2817,19 +2861,21 @@ function _updateLcoeCompare(lcoeStr, up) {
   }
 }
 
-function renderMiniChart(m, mb, wy, re, lp, ly, mt, showLoan) {
+function renderMiniChart(m, mb, wy, re, lp, ly, mt, showLoan, surplusKwh) {
   const er = v('er') / 100;
+  const hasSell = proposalMode !== 'battery_only' && (surplusKwh || 0) > 0;
   const labels=[], nowD=[], cashD=[], loanD=[];
   for(let y=0;y<=wy;y++){
     labels.push(y+'年');
     let cumNow=0;
     for(let i=1;i<=y;i++) cumNow += mb*12*Math.pow(1+er,i-1);
     nowD.push(Math.round(cumNow/10000));
+    const sellRevY = hasSell && y > 0 ? Math.round(surplusKwh * getSellPriceForYear(y)) : 0;
     if(y===0){ cashD.push(Math.round(m.totalCost/10000)); }
-    else { const rY=re*Math.pow(1+er,y-1); cashD.push(Math.round(cashD[y-1]+rY*12/10000)); }
+    else { const rY=re*Math.pow(1+er,y-1); cashD.push(Math.round(cashD[y-1]+rY*12/10000-sellRevY/10000)); }
     if(y===0){loanD.push(0);continue;}
     const rY=re*Math.pow(1+er,y-1);
-    loanD.push(Math.round(loanD[y-1]+(y<=ly?mt+(rY-re):rY)*12/10000));
+    loanD.push(Math.round(loanD[y-1]+(y<=ly?mt+(rY-re):rY)*12/10000-sellRevY/10000));
   }
   const datasets=[
     {label:'電力会社', data:nowD, borderColor:'#EA580C',backgroundColor:'rgba(234,88,12,.07)',borderWidth:2.5,pointRadius:0,tension:0},
