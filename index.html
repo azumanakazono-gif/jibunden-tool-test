@@ -351,6 +351,7 @@ canvas#mini-chart { height: 150px !important; }
           <option value="night">夜間に消費が集中</option>
           <option value="even">昼夜バランスよく使用</option>
           <option value="allelectric">オール電化（昼夜問わず多用）</option>
+          <option value="living_time">リビングタイム（夕〜夜）に多用</option>
           <option value="custom">その他（任意入力）</option>
         </select>
         <input type="text" id="ls" value="日中は共働きで外出多め・夜間使用が中心" oninput="calc()" placeholder="生活スタイルの詳細（任意）">
@@ -1528,6 +1529,7 @@ const KYUSHU_KIJI = {
     home:        { day:0.40, living:0.15, ngt:0.45, label:'日中在宅・在宅ワーク多め' },
     allelectric: { day:0.50, living:0.15, ngt:0.35, label:'高齢者在宅・昼間多用' },
     night:       { day:0.15, living:0.15, ngt:0.70, label:'夜型・深夜利用多め' },
+    living_time: { day:0.25, living:0.40, ngt:0.35, label:'リビングタイム多用（夕〜夜）' },
     custom:      { day:0.30, living:0.20, ngt:0.50, label:'カスタム' },
   },
 };
@@ -1552,6 +1554,7 @@ const KYUSHU_DENKA_NIGHT = {
     home:        { day:0.40, hol:0.15, ngt:0.45, label:'在宅ワーク多め' },
     allelectric: { day:0.50, hol:0.15, ngt:0.35, label:'高齢者在宅多め' },
     night:       { day:0.15, hol:0.15, ngt:0.70, label:'夜型・深夜利用多め' },
+    living_time: { day:0.20, hol:0.10, ngt:0.70, label:'リビングタイム多用（夕〜夜）' },
     custom:      { day:0.30, hol:0.20, ngt:0.50, label:'カスタム' },
   },
 };
@@ -1991,7 +1994,7 @@ function calcAvgUnitPrice() {
 // ── 比率を調整する場合は LIFESTYLE_RATE（生活スタイル別基本率）
 //    および FAMILY_MOD（家族構成補正）を変更してください ──
 // ══════════════════════════════════════════
-const LIFESTYLE_RATE = { away:0.20, home:0.45, night:0.18, even:0.35, allelectric:0.40, custom:null };
+const LIFESTYLE_RATE = { away:0.20, home:0.45, night:0.18, even:0.35, allelectric:0.40, living_time:0.25, custom:null };
 const FAMILY_MOD = {
   '1人暮らし':0.85, '2人暮らし（夫婦・カップル）':1.0,
   '3人家族（夫婦＋子ども1人）':1.1, '4人家族（夫婦＋子ども2人）':1.1,
@@ -2001,6 +2004,7 @@ const LIFESTYLE_LABEL = {
   away:'日中は共働きで外出多め・夜間使用が中心', home:'日中在宅が多い・在宅ワーク中心',
   night:'夜間に電気使用が集中', even:'昼夜バランスよく電気を使用',
   allelectric:'オール電化・昼夜問わず電気を多用',
+  living_time:'共働きや習い事などで、夕方から22時頃にかけて家事や在宅が集中するスタイル',
 };
 
 function updateDaytimeRatePanel() {
