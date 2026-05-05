@@ -2280,7 +2280,7 @@ function updateRatioPanel() {
 }
 
 function _updateRatioKwhDisplay(kp, prefix, annualKwh) {
-  const keys = kp === 'kyushu_denka_night' ? ['day','hol','ngt'] : ['day','living','ngt'];
+  const keys = kp === 'kyushu_denka_night' ? ['day','hol','living','ngt'] : ['day','living','ngt'];
   const monthlyKwh = annualKwh / 12;
   let sumPct = 0;
   keys.forEach(k => {
@@ -3093,6 +3093,13 @@ function calc() {
     // 単価比較カード（現金購入ベース）
     const _genUP_cash = (ag > 0 && wy > 0) ? parseFloat((m.totalCostMan * 10000 / (ag * wy)).toFixed(1)) : null;
     _updateUnitPriceCompare(up, _genUP_cash, wy, { isLoan: false });
+  }
+  // 時間帯別比率パネルのkWh表示と単価内訳をリアルタイム同期
+  const _kpRP = document.getElementById('kyuden-plan').value;
+  if (_kpRP === 'kyushu_denka_night' || _kpRP === 'kyushu_kiji') {
+    const _prefixRP = _kpRP === 'kyushu_denka_night' ? 'dn' : 'kj';
+    _updateRatioKwhDisplay(_kpRP, _prefixRP, (parseFloat(document.getElementById('mkwh').value)||0) * 12);
+    _updatePriceBreakdown(_kpRP);
   }
   if (proposalMode === 'pv_only') updatePkgSummaryPv();
 }
