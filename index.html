@@ -240,15 +240,13 @@ canvas#mini-chart { height: 150px !important; }
       <h1 id="main-title">お客様情報を入力してください</h1>
       <div class="sub">入力内容をもとにPPTXを自動生成します</div>
     </div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
-        <button class="gen-btn" onclick="generatePPTX('model')" style="background:#1d4ed8;color:#fff;">
-          <span>🔬</span> モデルケース版を出力
-        </button>
-        <button class="gen-btn" onclick="generatePPTX('real')">
-          <span>👤</span> 実データ版を出力
-        </button>
-      </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <button onclick="generatePPTX('real')" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;max-width:320px;padding:14px 24px;background:#1d4ed8;color:#fff;font-size:15px;font-weight:700;border:none;border-radius:10px;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(29,78,216,.35);letter-spacing:.03em">
+        <span style="font-size:18px">👤</span> 実データ版を出力
+      </button>
+      <button onclick="generatePPTX('model')" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;max-width:320px;padding:8px 16px;background:transparent;color:#9ca3af;font-size:12px;font-weight:400;border:1px solid #d1d5db;border-radius:8px;cursor:pointer;font-family:inherit">
+        <span style="font-size:13px">🔬</span> モデルケース版を出力（サンプル）
+      </button>
     </div>
   </div>
 
