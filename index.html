@@ -1549,13 +1549,13 @@ const KYUSHU_DENKA_NIGHT = {
     night:               14.59, // 夜間
   },
   styles: {
-    even:        { day:0.30, hol:0.20, ngt:0.50, label:'標準（ナイト22想定）' },
-    away:        { day:0.20, hol:0.15, ngt:0.65, label:'共働き・夜間中心' },
-    home:        { day:0.40, hol:0.15, ngt:0.45, label:'在宅ワーク多め' },
-    allelectric: { day:0.50, hol:0.15, ngt:0.35, label:'高齢者在宅多め' },
-    night:       { day:0.15, hol:0.15, ngt:0.70, label:'夜型・深夜利用多め' },
-    living_time: { day:0.20, hol:0.10, ngt:0.70, label:'リビングタイム多用（夕〜夜）' },
-    custom:      { day:0.30, hol:0.20, ngt:0.50, label:'カスタム' },
+    even:        { day:0.30, hol:0.10, living:0.10, ngt:0.50, label:'標準（ナイト22想定）' },
+    away:        { day:0.20, hol:0.08, living:0.07, ngt:0.65, label:'共働き・夜間中心' },
+    home:        { day:0.40, hol:0.08, living:0.07, ngt:0.45, label:'在宅ワーク多め' },
+    allelectric: { day:0.50, hol:0.08, living:0.07, ngt:0.35, label:'高齢者在宅多め' },
+    night:       { day:0.15, hol:0.08, living:0.07, ngt:0.70, label:'夜型・深夜利用多め' },
+    living_time: { day:0.35, hol:0.30, living:0.30, ngt:0.05, label:'リビングタイム多用（夕〜夜）' },
+    custom:      { day:0.30, hol:0.10, living:0.10, ngt:0.50, label:'カスタム' },
   },
 };
 const HEARING_DEFAULTS = { hasBill:false, hasPV:false, hasBattery:false, isAllElectric:false };
@@ -2173,7 +2173,8 @@ function calcDenkiNightBaseRate(ratios) {
   const t  = KYUSHU_DENKA_NIGHT.tariff;
   const wDay = t.weekdaySummerWinter * (4/12) + t.weekdaySpringFall * (8/12);
   const wHol = t.weekendSummerWinter * (4/12) + t.weekendSpringFall * (8/12);
-  return ratios.day * wDay + ratios.hol * wHol + ratios.ngt * t.night;
+  // living（17〜22時）はプラン上「それ以外の時間帯」扱いで hol と同単価
+  return ratios.day * wDay + (ratios.hol + (ratios.living||0)) * wHol + ratios.ngt * t.night;
 }
 
 function calcKijibetsuBaseRate(ratios) {
@@ -2224,9 +2225,10 @@ function updateRatioPanel() {
     _ratioPanelPlan = kp;
     const zones = isDenka
       ? [
-          { key:'day', label:'平日昼',     pct: Math.round(ratios.day*100)    },
-          { key:'hol', label:'休日昼',     pct: Math.round(ratios.hol*100)    },
-          { key:'ngt', label:'夜間',       pct: Math.round(ratios.ngt*100)    },
+          { key:'day',    label:'平日昼（10〜17時）',       pct: Math.round(ratios.day*100)           },
+          { key:'hol',    label:'休日昼（8〜22時）',        pct: Math.round(ratios.hol*100)           },
+          { key:'living', label:'リビング（17〜22時）',     pct: Math.round((ratios.living||0)*100)   },
+          { key:'ngt',    label:'夜間（22〜翌8時）',        pct: Math.round(ratios.ngt*100)           },
         ]
       : [
           { key:'day',    label:'デイ',     pct: Math.round(ratios.day*100)    },
@@ -2259,10 +2261,11 @@ function updateRatioPanel() {
     if (!isCustomRatio) {
       const _sv = (id, v) => { const e=document.getElementById(id); if(e) e.value=v; };
       if (isDenka) {
-        const dv=Math.round(ratios.day*100), hv=Math.round(ratios.hol*100), nv=Math.round(ratios.ngt*100);
-        _sv('r-dn-day',dv); _sv('r-dn-day-sl',dv);
-        _sv('r-dn-hol',hv); _sv('r-dn-hol-sl',hv);
-        _sv('r-dn-ngt',nv); _sv('r-dn-ngt-sl',nv);
+        const dv=Math.round(ratios.day*100), hv=Math.round(ratios.hol*100), lv=Math.round((ratios.living||0)*100), nv=Math.round(ratios.ngt*100);
+        _sv('r-dn-day',dv);    _sv('r-dn-day-sl',dv);
+        _sv('r-dn-hol',hv);    _sv('r-dn-hol-sl',hv);
+        _sv('r-dn-living',lv); _sv('r-dn-living-sl',lv);
+        _sv('r-dn-ngt',nv);    _sv('r-dn-ngt-sl',nv);
       } else {
         const dv=Math.round(ratios.day*100), lv=Math.round(ratios.living*100), nv=Math.round(ratios.ngt*100);
         _sv('r-kj-day',dv);    _sv('r-kj-day-sl',dv);
@@ -2317,10 +2320,12 @@ function _updatePriceBreakdown(kp) {
     const wHol = t.weekendSummerWinter * 4/12 + t.weekendSpringFall * 8/12;
     const base = Math.round(calcDenkiNightBaseRate(ratios) * 100) / 100;
     const eff  = Math.round((base + ADJUSTMENT_UNIT_PRICE) * 100) / 100;
+    const lv = ratios.living || 0;
     bodyEl.innerHTML =
       `<div style="color:var(--muted)">🏷 公式単価（夏冬4ヶ月・春秋8ヶ月 加重平均）</div>` +
       `<div style="padding-left:8px">平日昼 ${wDay.toFixed(2)}円 × ${Math.round(ratios.day*100)}% = ${(ratios.day*wDay).toFixed(2)}円</div>` +
       `<div style="padding-left:8px">休日昼 ${wHol.toFixed(2)}円 × ${Math.round(ratios.hol*100)}% = ${(ratios.hol*wHol).toFixed(2)}円</div>` +
+      `<div style="padding-left:8px">リビング ${wHol.toFixed(2)}円 × ${Math.round(lv*100)}% = ${(lv*wHol).toFixed(2)}円 <span style="font-size:10px;color:var(--muted)">（それ以外の時間帯と同単価）</span></div>` +
       `<div style="padding-left:8px">夜間 ${t.night}円 × ${Math.round(ratios.ngt*100)}% = ${(ratios.ngt*t.night).toFixed(2)}円</div>` +
       `<div style="margin-top:2px">▶ 生活スタイル加重平均：<b>${base}円/kWh</b></div>` +
       `<div>＋ 燃料費調整・再エネ賦課金等：+${ADJUSTMENT_UNIT_PRICE}円/kWh</div>` +
@@ -2348,7 +2353,8 @@ function _applyRatioDc(kp) {
   if (!ratios) return;
   let daytimeDemandRatio;
   if (kp === 'kyushu_denka_night') {
-    daytimeDemandRatio = (ratios.day || 0) + (ratios.hol || 0);
+    // 平日昼=直接消費100%、休日昼（8-22h）=50%、リビング（17-22h）=10%（夕方以降は太陽光減衰）
+    daytimeDemandRatio = (ratios.day || 0) + (ratios.hol || 0) * 0.5 + (ratios.living || 0) * 0.1;
   } else {
     daytimeDemandRatio = (ratios.day || 0) + (ratios.living || 0) * 0.5;
   }
@@ -2395,7 +2401,7 @@ function updateRatioStyleStatus() {
 function autoAdjustNight() {
   const kp     = document.getElementById('kyuden-plan').value;
   const prefix = kp === 'kyushu_denka_night' ? 'dn' : 'kj';
-  const keys   = prefix === 'dn' ? ['day','hol'] : ['day','living'];
+  const keys   = prefix === 'dn' ? ['day','hol','living'] : ['day','living'];
   let sum = 0;
   keys.forEach(k => { sum += parseFloat(document.getElementById(`r-${prefix}-${k}`).value) || 0; });
   const ngt = Math.max(0, 100 - sum);
@@ -2417,11 +2423,13 @@ function onRatioChange(prefix) {
   const kp = document.getElementById('kyuden-plan').value;
   const _sv = (id, v) => { const e=document.getElementById(id); if(e) e.value=v; };
   if (prefix === 'dn') {
-    const day = (parseFloat(document.getElementById('r-dn-day').value) || 0) / 100;
-    const hol = (parseFloat(document.getElementById('r-dn-hol').value) || 0) / 100;
-    const ngt = (parseFloat(document.getElementById('r-dn-ngt').value) || 0) / 100;
-    _sv('r-dn-day-sl', Math.round(day*100)); _sv('r-dn-hol-sl', Math.round(hol*100)); _sv('r-dn-ngt-sl', Math.round(ngt*100));
-    customRatios = { day, hol, ngt, label:'カスタム' };
+    const day    = (parseFloat(document.getElementById('r-dn-day').value)    || 0) / 100;
+    const hol    = (parseFloat(document.getElementById('r-dn-hol').value)    || 0) / 100;
+    const living = (parseFloat(document.getElementById('r-dn-living').value) || 0) / 100;
+    const ngt    = (parseFloat(document.getElementById('r-dn-ngt').value)    || 0) / 100;
+    _sv('r-dn-day-sl', Math.round(day*100)); _sv('r-dn-hol-sl', Math.round(hol*100));
+    _sv('r-dn-living-sl', Math.round(living*100)); _sv('r-dn-ngt-sl', Math.round(ngt*100));
+    customRatios = { day, hol, living, ngt, label:'カスタム' };
   } else {
     const day    = (parseFloat(document.getElementById('r-kj-day').value)    || 0) / 100;
     const living = (parseFloat(document.getElementById('r-kj-living').value) || 0) / 100;
