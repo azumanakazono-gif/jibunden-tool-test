@@ -859,6 +859,36 @@ canvas#mini-chart { height: 150px !important; }
         <span id="rk"></span><div id="rk-loan-row"><span id="rk-loan"></span></div>
       </div>
       <!-- KPI カード (2×2) -->
+      <!-- 単価比較カード：KPI グリッドの直上に配置 -->
+      <div id="unit-price-compare-card" style="border-radius:14px;padding:16px;border:2px solid #bae6fd;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);box-shadow:0 2px 10px rgba(0,0,0,.08);margin-bottom:12px">
+        <div style="font-size:12px;font-weight:700;color:#0369a1;margin-bottom:10px">⚡ 買う電気 vs 作る電気 — 単価比較</div>
+        <div style="display:grid;grid-template-columns:1fr 28px 1fr;align-items:center;gap:6px;margin-bottom:10px">
+          <!-- 左：電力会社 -->
+          <div style="border-radius:10px;padding:12px 10px;background:#fff;border:2px solid #fca5a5;text-align:center">
+            <div style="font-size:10px;font-weight:700;color:#dc2626;margin-bottom:4px">🏢 電力会社から<br>買う電気</div>
+            <div style="display:flex;align-items:baseline;justify-content:center;gap:2px">
+              <span id="upc-buy" style="font-size:26px;font-weight:900;color:#dc2626;line-height:1">-</span>
+              <span style="font-size:11px;font-weight:700;color:#dc2626">円/kWh</span>
+            </div>
+            <div style="font-size:10px;color:#ef4444;margin-top:4px">値上がりリスクあり</div>
+          </div>
+          <!-- VS -->
+          <div style="text-align:center;font-size:12px;font-weight:900;color:#94a3b8">VS</div>
+          <!-- 右：じぶん電気 -->
+          <div style="border-radius:10px;padding:12px 10px;background:#fff;border:2px solid #7dd3fc;text-align:center">
+            <div style="font-size:10px;font-weight:700;color:#0369a1;margin-bottom:4px">☀️ じぶんの屋根で<br>作る電気</div>
+            <div style="display:flex;align-items:baseline;justify-content:center;gap:2px">
+              <span id="upc-gen" style="font-size:26px;font-weight:900;color:#0369a1;line-height:1">-</span>
+              <span style="font-size:11px;font-weight:700;color:#0369a1">円/kWh</span>
+            </div>
+            <div id="upc-gen-years" style="font-size:10px;color:#0284c7;margin-top:4px">単価固定</div>
+          </div>
+        </div>
+        <!-- 差分バッジ -->
+        <div id="upc-diff-badge" style="display:none;text-align:center;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:700;border:1.5px solid #86efac;background:linear-gradient(135deg,#dcfce7,#bbf7d0);color:#15803d;margin-bottom:8px"></div>
+        <!-- 補足テキスト -->
+        <div id="upc-desc" style="display:none;font-size:11px;color:#0369a1;line-height:1.6;padding:8px 10px;background:rgba(255,255,255,.6);border-radius:6px"></div>
+      </div>
       <div class="grid2" style="gap:10px;margin-bottom:12px">
         <div style="border-radius:12px;padding:16px 12px;border:2px solid #bbf7d0;background:linear-gradient(135deg,#f0fdf4,#dcfce7);box-shadow:0 2px 8px rgba(0,0,0,.08)">
           <div style="font-size:12px;font-weight:700;color:#15803d;margin-bottom:2px">20年間の経済メリット目安</div>
@@ -3013,6 +3043,10 @@ function calc() {
   // コスト差：電力会社20年総額 - (初期費用 + 残り電気代20年分) ← er=0でも costDiff_with_rise が正しく機能
   const diffShow = m.costDiff_with_rise;
   document.getElementById('rd').textContent = '約'+diffShow+'万円';
+  // 単価比較カード（買電単価 vs 発電単価）
+  const _genUP = (ag > 0 && wy > 0) ? parseFloat((m.totalCostMan * 10000 / (ag * wy)).toFixed(1)) : null;
+  _updateUnitPriceCompare(up, _genUP, wy);
+
   // KPIカード：年間経済メリット×保証年数（シンプルな目安）
   const _merit20Man = Math.round(_annualTotal * wy / 10000);
   document.getElementById('rd-top').textContent = _merit20Man;
@@ -3081,6 +3115,42 @@ function calc() {
     renderMiniChart(m, mb, wy, m.remainBill, 0, 0, 0, false, _surplusKwhChart);
   }
   if (proposalMode === 'pv_only') updatePkgSummaryPv();
+}
+
+function _updateUnitPriceCompare(buyUP, genUP, years) {
+  const badge  = document.getElementById('upc-diff-badge');
+  const descEl = document.getElementById('upc-desc');
+  const buyEl  = document.getElementById('upc-buy');
+  const genEl  = document.getElementById('upc-gen');
+  const yearsEl = document.getElementById('upc-gen-years');
+  if (!badge || !buyEl || !genEl) return;
+  buyEl.textContent = buyUP > 0 ? buyUP.toFixed(1) : '-';
+  genEl.textContent = genUP !== null ? genUP.toFixed(1) : '-';
+  if (yearsEl) yearsEl.textContent = genUP !== null ? `${years}年間 固定` : '単価固定';
+  const hasData = buyUP > 0 && genUP !== null;
+  if (hasData) {
+    const diff    = buyUP - genUP;
+    const cheaper = diff > 0;
+    badge.style.display = '';
+    if (cheaper) {
+      badge.style.background = 'linear-gradient(135deg,#dcfce7,#bbf7d0)';
+      badge.style.color = '#15803d';
+      badge.style.borderColor = '#86efac';
+      badge.innerHTML = `作るほうが <strong style="font-size:17px">${diff.toFixed(1)}円/kWh</strong> 安い！`;
+    } else {
+      badge.style.background = '#fef2f2';
+      badge.style.color = '#dc2626';
+      badge.style.borderColor = '#fca5a5';
+      badge.innerHTML = `発電単価が <strong style="font-size:17px">${Math.abs(diff).toFixed(1)}円/kWh</strong> 高い`;
+    }
+    if (descEl) {
+      descEl.style.display = '';
+      descEl.textContent = `電力会社から買う電気は将来値上がりのリスクがありますが、じぶんの屋根で作る電気の単価は${years}年間 ${genUP.toFixed(1)}円/kWh で固定されます。`;
+    }
+  } else {
+    badge.style.display = 'none';
+    if (descEl) descEl.style.display = 'none';
+  }
 }
 
 function _updateLcoeCompare(lcoeStr, up) {
