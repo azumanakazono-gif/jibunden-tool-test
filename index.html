@@ -1484,35 +1484,125 @@ function updateJuuryoPanel() {
   const panel = document.getElementById('juuryo-panel');
   const isB   = kp === 'kyushu_juuryo_b';
   const isC   = kp === 'kyushu_juuryo_c';
-  if (!isB && !isC) { panel.style.display='none'; return; }
+  const isDenka   = kp === 'kyushu_denka_night';
+  const isKiji    = kp === 'kyushu_kiji';
+  const isOhisama = kp === 'kyushu_ohisama';
+  const isTou = isDenka || isKiji || isOhisama;
+  if (!isB && !isC && !isTou) { panel.style.display='none'; return; }
   panel.style.display = '';
-  document.getElementById('juuryo-panel-title').textContent = isB ? '📋 従量電灯B 段階料金内訳' : '📋 従量電灯C 段階料金内訳';
-  document.getElementById('juuryo-contract-b').style.display = isB ? '' : 'none';
-  document.getElementById('juuryo-contract-c').style.display = isC ? '' : 'none';
-  const mkwh = parseFloat(document.getElementById('mkwh').value) || 0;
   const body = document.getElementById('juuryo-breakdown');
-  if (mkwh <= 0) {
-    body.innerHTML = '<span style="color:#dc2626">⚠ 月間使用量を入力してください</span>';
+  const f2 = n => n.toLocaleString('ja-JP', {maximumFractionDigits:2});
+  const fr = n => Math.round(n).toLocaleString();
+
+  if (isB || isC) {
+    // ── 従量電灯B/C: 従来の段階料金内訳 ──
+    document.getElementById('juuryo-panel-title').textContent = isB ? '📋 従量電灯B 料金内訳' : '📋 従量電灯C 料金内訳';
+    document.getElementById('juuryo-contract-b').style.display = isB ? '' : 'none';
+    document.getElementById('juuryo-contract-c').style.display = isC ? '' : 'none';
+    const mkwh = parseFloat(document.getElementById('mkwh').value) || 0;
+    if (mkwh <= 0) {
+      body.innerHTML = '<span style="color:#dc2626">⚠ 月間使用量を入力してください</span>';
+      updatePriceStatus(activeTab === 'hypothesis' ? hypData : custData);
+      return;
+    }
+    const { s1, s2, s3, energy, base, eff } = calcJuuryoSteps(mkwh);
+    const basicCharge = _juuryoBasicCharge(kp);
+    const adj   = Math.round(mkwh * ADJUSTMENT_UNIT_PRICE*100)/100;
+    const total = Math.round(basicCharge + energy + adj);
+    body.innerHTML =
+      `<div style="color:var(--muted)">🏷 段階別電力量料金</div>` +
+      `<div style="padding-left:8px">第1段階 〜120kWh：${s1}kWh × 18.37円 = <b>${f2(s1*18.37)}円</b></div>` +
+      (s2>0?`<div style="padding-left:8px">第2段階 121〜300kWh：${s2}kWh × 23.97円 = <b>${f2(s2*23.97)}円</b></div>`:'') +
+      (s3>0?`<div style="padding-left:8px">第3段階 301kWh〜：${s3}kWh × 26.97円 = <b>${f2(s3*26.97)}円</b></div>`:'') +
+      `<div style="margin-top:2px">▶ 電力量のみ平均：<b>${base}円/kWh</b></div>` +
+      `<div>＋ 燃料費調整：+1.33円/kWh　＋ 再エネ賦課金：+4.18円/kWh</div>` +
+      `<div style="color:var(--dg);font-weight:700">＝ 調整込み実質平均単価：<b>${eff}円/kWh</b></div>` +
+      `<div style="margin-top:4px;border-top:1px solid var(--border);padding-top:4px">` +
+      `基本料金：${f2(basicCharge)}円　／　調整・賦課金：${f2(adj)}円</div>` +
+      `<div style="font-weight:700;color:var(--mg)">概算月額：約${total.toLocaleString()}円</div>`;
     updatePriceStatus(activeTab === 'hypothesis' ? hypData : custData);
     return;
   }
-  const { s1, s2, s3, energy, base, eff } = calcJuuryoSteps(mkwh);
-  const basic = _juuryoBasicCharge(kp);
-  const adj   = Math.round(mkwh * ADJUSTMENT_UNIT_PRICE*100)/100;
-  const total = Math.round(basic + energy + adj);
-  const f2    = n => n.toLocaleString('ja-JP', {maximumFractionDigits:2});
+
+  // ── 時間帯別プラン（電化でナイト・季時別・おひさま）: 時間帯別内訳 ──
+  document.getElementById('juuryo-panel-title').textContent =
+    isOhisama ? '📋 おひさま昼トクプラン 料金内訳' :
+    isDenka   ? '📋 電化でナイト・セレクト 料金内訳' :
+                '📋 季時別電灯 料金内訳';
+  document.getElementById('juuryo-contract-b').style.display = 'none';
+  document.getElementById('juuryo-contract-c').style.display = 'none';
+
+  const mkwh = parseFloat(document.getElementById('mkwh').value) || 0;
+  const mb   = parseFloat(document.getElementById('mb').value)   || 0;
+  if (mkwh <= 0 || mb <= 0) {
+    body.innerHTML = '<span style="color:#dc2626">⚠ 月間電気代・使用量を入力してください</span>';
+    return;
+  }
+  const ratios = getEffectiveRatios(kp);
+  if (!ratios) { body.innerHTML = ''; return; }
+
+  const FUEL_UNIT   = 1.33; // 燃料費調整額 円/kWh
+  const SAIENE_UNIT = 4.18; // 再エネ賦課金 円/kWh
+  let zone_total = 0;
+  let zoneRows   = '';
+
+  if (isOhisama) {
+    const t = KYUSHU_OHISAMA.tariff;
+    [
+      { name:'おひさまタイム (10-16時)',           rate:t.ohisama, ratio:ratios.ohisama||0, badge:'★最安',  bc:'#16a34a' },
+      { name:'ピークタイム (朝夕：8-10/16-22時)', rate:t.peak,    ratio:ratios.peak||0,    badge:'★最高値', bc:'#dc2626' },
+      { name:'だんらんタイム (夜間：22-8時)',      rate:t.ngt,     ratio:ratios.ngt||0,     badge:'', bc:'' },
+      { name:'休日 (終日)',                         rate:t.hol,     ratio:ratios.hol||0,     badge:'', bc:'' },
+    ].forEach(z => {
+      const kwh = Math.round(mkwh * z.ratio);
+      const amt = Math.round(kwh * z.rate * 100) / 100;
+      zone_total += amt;
+      const badgeHtml = z.badge ? ` <span style="font-size:10px;color:${z.bc};font-weight:700">${z.badge}</span>` : '';
+      zoneRows += `<div style="padding-left:8px">${z.name}${badgeHtml}：${kwh.toLocaleString()}kWh × ${z.rate}円 = <b>${f2(amt)}円</b></div>`;
+    });
+  } else if (isDenka) {
+    const t = KYUSHU_DENKA_NIGHT.tariff;
+    const wDay = Math.round((t.weekdaySummerWinter*(4/12) + t.weekdaySpringFall*(8/12))*100)/100;
+    const wHol = Math.round((t.weekendSummerWinter*(4/12) + t.weekendSpringFall*(8/12))*100)/100;
+    [
+      { name:'平日デイタイム (10-17時)',  rate:wDay,    ratio:ratios.day||0    },
+      { name:'平日朝夕 (8-10/17-22時)',  rate:wDay,    ratio:ratios.living||0 },
+      { name:'休日 (8-22時)',             rate:wHol,    ratio:ratios.hol||0    },
+      { name:'夜間 (22〜翌8時)',          rate:t.night, ratio:ratios.ngt||0    },
+    ].forEach(z => {
+      const kwh = Math.round(mkwh * z.ratio);
+      const amt = Math.round(kwh * z.rate * 100) / 100;
+      zone_total += amt;
+      zoneRows += `<div style="padding-left:8px">${z.name}：${kwh.toLocaleString()}kWh × ${z.rate.toFixed(2)}円 = <b>${f2(amt)}円</b></div>`;
+    });
+  } else if (isKiji) {
+    const t = KYUSHU_KIJI.tariff;
+    const wDay = Math.round((t.daytimeSummer*(3/12) + t.daytimeOther*(9/12))*100)/100;
+    [
+      { name:'デイ (昼間)',             rate:wDay,     ratio:ratios.day||0    },
+      { name:'リビング (生活時間帯)',   rate:t.living, ratio:ratios.living||0 },
+      { name:'ナイト (夜間)',           rate:t.night,  ratio:ratios.ngt||0    },
+    ].forEach(z => {
+      const kwh = Math.round(mkwh * z.ratio);
+      const amt = Math.round(kwh * z.rate * 100) / 100;
+      zone_total += amt;
+      zoneRows += `<div style="padding-left:8px">${z.name}：${kwh.toLocaleString()}kWh × ${z.rate.toFixed(2)}円 = <b>${f2(amt)}円</b></div>`;
+    });
+  }
+
+  zone_total      = Math.round(zone_total * 100) / 100;
+  const fuel_amt  = Math.round(mkwh * FUEL_UNIT   * 100) / 100;
+  const saiene_amt= Math.round(mkwh * SAIENE_UNIT * 100) / 100;
+  const basic     = Math.round(mb - zone_total - fuel_amt - saiene_amt);
+
   body.innerHTML =
-    `<div style="color:var(--muted)">🏷 段階別電力量料金</div>` +
-    `<div style="padding-left:8px">第1段階 〜120kWh：${s1}kWh × 18.37円 = <b>${f2(s1*18.37)}円</b></div>` +
-    (s2>0?`<div style="padding-left:8px">第2段階 121〜300kWh：${s2}kWh × 23.97円 = <b>${f2(s2*23.97)}円</b></div>`:'') +
-    (s3>0?`<div style="padding-left:8px">第3段階 301kWh〜：${s3}kWh × 26.97円 = <b>${f2(s3*26.97)}円</b></div>`:'') +
-    `<div style="margin-top:2px">▶ 電力量のみ平均：<b>${base}円/kWh</b></div>` +
-    `<div>＋ 燃料費等調整：+1.33円/kWh　＋ 再エネ賦課金：+4.18円/kWh</div>` +
-    `<div style="color:var(--dg);font-weight:700">＝ 調整込み実質平均単価：<b>${eff}円/kWh</b></div>` +
-    `<div style="margin-top:4px;border-top:1px solid var(--border);padding-top:4px">` +
-    `基本料金：${f2(basic)}円　／　調整・賦課金：${f2(adj)}円</div>` +
-    `<div style="font-weight:700;color:var(--mg)">概算月額：約${total.toLocaleString()}円</div>`;
-  updatePriceStatus(activeTab === 'hypothesis' ? hypData : custData);
+    `<div style="color:var(--muted)">🏷 時間帯別電力量料金</div>` +
+    zoneRows +
+    `<div style="margin-top:2px;color:var(--muted)">＋ 燃料費調整額：${f2(fuel_amt)}円　／　再エネ賦課金：${f2(saiene_amt)}円</div>` +
+    (basic > 0
+      ? `<div style="color:var(--muted)">＋ 基本料金等：<b style="color:var(--dg)">${fr(basic)}円</b> <span style="font-size:10px">（基本料金・端数等）</span></div>`
+      : '') +
+    `<div style="margin-top:4px;border-top:1px solid var(--border);padding-top:4px;font-weight:700;color:var(--mg)">概算月額合計：約${fr(mb)}円</div>`;
 }
 
 // ── 九州電力 季時別電灯 概算単価マスタ（季節別・時間帯別）──
@@ -2669,10 +2759,7 @@ function onHearingChange(data) {
       noteEl.textContent = '（概算）';
       let unitPrice = 30;
       let priceLabel = '';
-      if (kp === 'kyushu_ohisama') {
-        unitPrice  = KYUSHU_OHISAMA.unitPrice;
-        priceLabel = `💡 おひさま昼トクプラン 概算実質単価（目安）：${unitPrice}円/kWh`;
-      } else if (kp && !kp.startsWith('avg:') && parseFloat(kp) > 0) {
+      if (kp && !kp.startsWith('avg:') && parseFloat(kp) > 0) {
         unitPrice  = parseFloat(kp);
         priceLabel = `💡 概算実質単価（目安）：${unitPrice}円/kWh を使用`;
       } else {
@@ -3010,10 +3097,10 @@ function calc() {
   let up;
   if (_isJuuryoCalc && !_calcData.hasBill) {
     up = mkwh > 0 ? calcJuuryoSteps(mkwh).eff : 0;
-    updateJuuryoPanel();
   } else {
     up = mkwh > 0 ? Math.round(mb / mkwh * 10) / 10 : 0;
   }
+  updateJuuryoPanel(); // 全プランで料金内訳パネルを更新（内部でshow/hide判定）
   const annualConsumptionKWh = mkwh * 12;
   updateDaytimeRatePanel();
   // 最優先表示：mb/mkwhがあれば何があっても必ず更新
