@@ -505,9 +505,14 @@ canvas#mini-chart { height: 150px !important; }
           <span id="dc-monthly-hint" style="font-size:11px;color:var(--muted)"></span>
         </div>
         <div class="field" id="field-bc-wrap">
-          <label>蓄電池で賄う量（kWh/年）<span style="font-size:10px;color:var(--mg);margin-left:4px">夜間・曇天時に放電</span></label>
-          <input type="number" id="bc" value="2520" min="0" max="15000" step="10" oninput="calc()">
+          <label style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            蓄電池で賄う量（kWh/年）<span style="font-size:10px;color:var(--mg);margin-left:2px">夜間・曇天時に放電</span>
+            <span id="bc-manual-badge" style="display:none;font-size:10px;font-weight:700;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:4px;padding:1px 6px">手動入力中</span>
+            <button id="bc-reset-btn" onclick="resetBcManual()" style="display:none;font-size:10px;padding:2px 7px;border:1px solid var(--border);border-radius:5px;background:#fff;color:var(--muted);cursor:pointer;font-family:inherit">自動計算に戻す</button>
+          </label>
+          <input type="number" id="bc" value="2520" min="0" max="15000" step="10" oninput="onBcInput()">
           <span id="bc-monthly-hint" style="font-size:11px;color:var(--muted)"></span>
+          <span id="bc-warn" style="display:none;font-size:11px;color:#dc2626;font-weight:600"></span>
         </div>
       </div>
       <!-- ── 結果エリア（入力直後のひとまとまりブロック） ── -->
@@ -1355,6 +1360,7 @@ function _juuryoBasicCharge(kp) {
 }
 
 let mkwhManualEdited = false;
+let bcManualEdited = false;
 
 function estimateJyuryoKwhFromBill(monthlyBill, basicCharge) {
   let bestKwh = 0, bestDiff = Infinity;
@@ -1430,6 +1436,44 @@ function onMkwhInput() {
     }
   }
   calc();
+}
+
+function onBcInput() {
+  bcManualEdited = true;
+  _updateBcManualUI();
+  const bcEl = document.getElementById('bc');
+  const bk   = parseFloat(document.getElementById('bk').value) || 0;
+  const kwh  = parseFloat(bcEl.value) || 0;
+  const warnEl = document.getElementById('bc-warn');
+  if (bk > 0 && warnEl) {
+    const { effectiveBatteryKwh: _eff } = window;
+    const effVal = typeof effectiveBatteryKwh === 'function' ? effectiveBatteryKwh(bk) : bk;
+    const maxAnnual = Math.round(effVal * 365);
+    if (kwh > maxAnnual) {
+      warnEl.textContent = `⚠ 実効容量 ${effVal} kWh の年間上限（${maxAnnual.toLocaleString()} kWh）を超えています`;
+      warnEl.style.display = '';
+    } else {
+      warnEl.style.display = 'none';
+    }
+  } else if (warnEl) {
+    warnEl.style.display = 'none';
+  }
+  calc();
+}
+
+function _updateBcManualUI() {
+  const badge  = document.getElementById('bc-manual-badge');
+  const btn    = document.getElementById('bc-reset-btn');
+  if (badge) badge.style.display = bcManualEdited ? '' : 'none';
+  if (btn)   btn.style.display   = bcManualEdited ? '' : 'none';
+}
+
+function resetBcManual() {
+  bcManualEdited = false;
+  _updateBcManualUI();
+  const warnEl = document.getElementById('bc-warn');
+  if (warnEl) warnEl.style.display = 'none';
+  applyDaytimeRate();
 }
 
 function updateJuuryoPanel() {
@@ -1593,6 +1637,8 @@ function buildCfg(data, lp, ly) {
 function onPkgChange() {
   loanAmountEdited = false;
   customDaytimeRate = null;
+  bcManualEdited = false;
+  _updateBcManualUI();
   const key = document.getElementById('pkg-select').value;
   const isManual = !key;
   document.getElementById('pkg-manual-area').style.display = isManual ? '' : 'none';
@@ -1618,6 +1664,8 @@ function onPkgChange() {
 function onPkgChangePv() {
   loanAmountEdited = false;
   customDaytimeRate = null;
+  bcManualEdited = false;
+  _updateBcManualUI();
   const key = document.getElementById('pkg-select-pv').value;
   const isManual = !key;
   document.getElementById('pkg-manual-area').style.display = isManual ? '' : 'none';
@@ -1706,6 +1754,8 @@ function saveFormToData(data) {
 }
 
 function loadDataToForm(data) {
+  bcManualEdited = false;
+  _updateBcManualUI();
   document.getElementById('cn').value = data.cn || '';
   document.getElementById('fm').value = data.fm || '4人家族（夫婦＋子ども2人）';
   document.getElementById('ls-preset').value = data.lsPreset || 'away';
@@ -1989,6 +2039,9 @@ function updateDaytimeRatePanel() {
 }
 function _applyCustomDaytimeRate(rate) {
   customDaytimeRate = rate;
+  // 昼間比率スライダーを明示的に動かした場合はbc手動フラグをリセット
+  bcManualEdited = false;
+  _updateBcManualUI();
   const ag  = parseFloat(document.getElementById('ag').value)   || 0;
   const mkwh = parseFloat(document.getElementById('mkwh').value) || 0;
   const annualKwh = mkwh * 12;
@@ -1998,6 +2051,8 @@ function _applyCustomDaytimeRate(rate) {
   const bc     = Math.round(Math.min(bcMax, annualKwh * (1 - rate) * 0.80));
   document.getElementById('dc').value = dc;
   document.getElementById('bc').value = bc;
+  const warnEl = document.getElementById('bc-warn');
+  if (warnEl) warnEl.style.display = 'none';
   updateDaytimeRatePanel();
   calc();
 }
@@ -2015,6 +2070,8 @@ function onDaytimeRateNum() {
 }
 function resetDaytimeRate() {
   customDaytimeRate = null;
+  bcManualEdited = false;
+  _updateBcManualUI();
   applyDaytimeRate();
   updateDaytimeRatePanel();
 }
@@ -2043,19 +2100,23 @@ function applyDaytimeRate() {
   const annualConsumption = v('mkwh') * 12;
   const ag = v('ag');
   const dc  = Math.round(Math.min(ag * 0.65, annualConsumption * rate));
-  const bcMax = Math.max(0, ag * 0.65 - dc);
-  const bc  = Math.round(Math.min(bcMax, annualConsumption * (1 - rate) * 0.80));
   document.getElementById('dc').value = dc;
-  document.getElementById('bc').value = bc;
+  if (!bcManualEdited) {
+    const bcMax = Math.max(0, ag * 0.65 - dc);
+    const bc  = Math.round(Math.min(bcMax, annualConsumption * (1 - rate) * 0.80));
+    document.getElementById('bc').value = bc;
+  }
   noteEl.style.display = '';
   textEl.textContent = `昼間使用率 約${pct}% をもとに自動計算：昼間直接 ${dc.toLocaleString()} kWh、蓄電池 ${bc.toLocaleString()} kWh`;
   updateDaytimeRatePanel();
   calc();
 }
 
-function onFamilyChange() { customDaytimeRate = null; applyDaytimeRate(); calc(); }
+function onFamilyChange() { customDaytimeRate = null; bcManualEdited = false; _updateBcManualUI(); applyDaytimeRate(); calc(); }
 function onLifestyleChange() {
   customDaytimeRate = null;
+  bcManualEdited = false;
+  _updateBcManualUI();
   const preset = document.getElementById('ls-preset').value;
   const lsInput = document.getElementById('ls');
   if (preset !== 'custom') lsInput.value = LIFESTYLE_LABEL[preset] || '';
@@ -2819,10 +2880,12 @@ function calc() {
     const _ann   = _mkwh * 12;
     const _dem   = Math.round(_ann * customDaytimeRate);
     const _dc    = Math.round(Math.min(_dem, _ag));
-    const _bcMax = Math.max(0, _ag * 0.65 - _dc);
-    const _bc    = Math.round(Math.min(_bcMax, _ann * (1 - customDaytimeRate) * 0.80));
     document.getElementById('dc').value = _dc;
-    document.getElementById('bc').value = _bc;
+    if (!bcManualEdited) {
+      const _bcMax = Math.max(0, _ag * 0.65 - _dc);
+      const _bc    = Math.round(Math.min(_bcMax, _ann * (1 - customDaytimeRate) * 0.80));
+      document.getElementById('bc').value = _bc;
+    }
   }
   const mb=v('mb'),mkwh=v('mkwh'),ag=v('ag'),sk=v('sk'),wy=v('wy');
   let bc=v('bc'); const bk=v('bk'), dc=v('dc'), er=v('er');
@@ -2831,8 +2894,20 @@ function calc() {
   const _bkEffDispEl = document.getElementById('bk-eff-disp');
   if (_bkEffDispEl) _bkEffDispEl.textContent = bk > 0 ? `実効 ${_bkEffVal} kWh` : '';
   if (bk > 0 && bc > _bkEffVal * 365) {
-    bc = Math.round(_bkEffVal * 365);
-    document.getElementById('bc').value = bc;
+    if (!bcManualEdited) {
+      bc = Math.round(_bkEffVal * 365);
+      document.getElementById('bc').value = bc;
+    }
+    // 手動入力中は値を書き換えず bc-warn でインライン警告を表示（bk-error は別途）
+    const _warnEl = document.getElementById('bc-warn');
+    if (_warnEl && bcManualEdited) {
+      const _max = Math.round(_bkEffVal * 365);
+      _warnEl.textContent = `⚠ 実効容量 ${_bkEffVal} kWh の年間上限（${_max.toLocaleString()} kWh）を超えています`;
+      _warnEl.style.display = '';
+    }
+  } else {
+    const _warnEl = document.getElementById('bc-warn');
+    if (_warnEl && !bcManualEdited) _warnEl.style.display = 'none';
   }
   // pv_only モードでは蓄電池消費を 0 として計算（フィールド値は保持）
   const bc_eff = proposalMode === 'pv_only' ? 0 : bc;
