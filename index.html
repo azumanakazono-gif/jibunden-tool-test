@@ -2122,6 +2122,7 @@ function onLifestyleChange() {
   const preset = document.getElementById('ls-preset').value;
   const lsInput = document.getElementById('ls');
   if (preset !== 'custom') lsInput.value = LIFESTYLE_LABEL[preset] || '';
+  else lsInput.value = '';
   applyDaytimeRate();
   const data = activeTab === 'hypothesis' ? hypData : custData;
   const kp   = document.getElementById('kyuden-plan').value;
