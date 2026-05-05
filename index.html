@@ -1363,33 +1363,49 @@ function estimateJyuryoKwhFromBill(monthlyBill, basicCharge) {
     const calc = basicCharge + energy + kwh * ADJUSTMENT_UNIT_PRICE;
     const diff = Math.abs(calc - monthlyBill);
     if (diff < bestDiff) { bestDiff = diff; bestKwh = kwh; }
-    if (calc > monthlyBill + 2000) break; // 大幅超過で打ち切り
+    if (calc > monthlyBill + 2000) break;
   }
   return bestKwh;
 }
-function autoEstimateJyuryoKwh(force) {
-  const kp = document.getElementById('kyuden-plan').value;
-  if (kp !== 'kyushu_juuryo_b' && kp !== 'kyushu_juuryo_c') return;
+
+function autoEstimateKwhFromBill(force) {
+  const data = activeTab === 'hypothesis' ? hypData : custData;
+  if (data.hasBill) return; // 請求書実績モードは逆算しない
   const mb = parseFloat(document.getElementById('mb').value) || 0;
   if (mb <= 0) return;
   const mkwhEl = document.getElementById('mkwh');
   const curKwh = parseFloat(mkwhEl.value) || 0;
   if (!force && mkwhManualEdited && curKwh > 0) return;
-  const basic = _juuryoBasicCharge(kp);
-  if (kp === 'kyushu_juuryo_c' && basic <= 0) return; // kVA未入力
-  const est = estimateJyuryoKwhFromBill(mb, basic);
+  const kp = document.getElementById('kyuden-plan').value;
+  const isJuuryo = kp === 'kyushu_juuryo_b' || kp === 'kyushu_juuryo_c';
+  let est = 0;
+  if (isJuuryo) {
+    const basic = _juuryoBasicCharge(kp);
+    if (kp === 'kyushu_juuryo_c' && basic <= 0) return; // kVA未入力
+    est = estimateJyuryoKwhFromBill(mb, basic);
+  } else {
+    // 他プラン：表示中の平均単価で線形推定、なければ30円/kWhで試算
+    const upText = document.getElementById('up-auto')?.textContent || '';
+    const up = parseFloat(upText) || parseFloat(kp) || 30;
+    est = Math.max(1, Math.min(3000, Math.round(mb / up)));
+  }
+  if (est <= 0) return;
   mkwhEl.value = est;
   mkwhManualEdited = false;
   const noteEl = document.getElementById('mkwh-est-note');
-  if (noteEl) noteEl.style.display = est > 0 ? '' : 'none';
+  if (noteEl) noteEl.style.display = '';
   calc();
 }
+
+// 後方互換エイリアス（juuryo-amp/kva onchange から呼ばれる）
+function autoEstimateJyuryoKwh(force) { autoEstimateKwhFromBill(force); }
+
 function reEstimateJyuryoKwh() {
   mkwhManualEdited = false;
-  autoEstimateJyuryoKwh(true);
+  autoEstimateKwhFromBill(true);
 }
 function onMbInput() {
-  autoEstimateJyuryoKwh();
+  autoEstimateKwhFromBill();
   calc();
 }
 
