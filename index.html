@@ -2004,7 +2004,7 @@ const LIFESTYLE_LABEL = {
   away:'日中は共働きで外出多め・夜間使用が中心', home:'日中在宅が多い・在宅ワーク中心',
   night:'夜間に電気使用が集中', even:'昼夜バランスよく電気を使用',
   allelectric:'オール電化・昼夜問わず電気を多用',
-  living_time:'共働き世帯の標準的なモデル。平日の日中不在を考慮しつつ、朝夕の家事や休日の在宅、深夜の沸き上げをバランスよく配分した設定です。',
+  living_time:'共働き世帯モデル。平日の高い時間帯（8-22時）を避けられない実態を考慮しつつ、深夜の沸き上げもバランスよく配分した設定です。',
 };
 
 function updateDaytimeRatePanel() {
@@ -2173,8 +2173,8 @@ function calcDenkiNightBaseRate(ratios) {
   const t  = KYUSHU_DENKA_NIGHT.tariff;
   const wDay = t.weekdaySummerWinter * (4/12) + t.weekdaySpringFall * (8/12);
   const wHol = t.weekendSummerWinter * (4/12) + t.weekendSpringFall * (8/12);
-  // living（17〜22時）はプラン上「それ以外の時間帯」扱いで hol と同単価
-  return ratios.day * wDay + (ratios.hol + (ratios.living||0)) * wHol + ratios.ngt * t.night;
+  // 平日デイタイム・平日朝夕は同一の平日昼間単価。休日は休日単価。
+  return (ratios.day + (ratios.living||0)) * wDay + ratios.hol * wHol + ratios.ngt * t.night;
 }
 
 function calcKijibetsuBaseRate(ratios) {
@@ -2225,7 +2225,7 @@ function updateRatioPanel() {
     _ratioPanelPlan = kp;
     const zones = isDenka
       ? [
-          { key:'day',    label:'平日ピーク (10-17時)',      pct: Math.round(ratios.day*100)           },
+          { key:'day',    label:'平日デイタイム (10-17時)',   pct: Math.round(ratios.day*100)           },
           { key:'hol',    label:'休日 (8-22時)',             pct: Math.round(ratios.hol*100)           },
           { key:'living', label:'平日朝夕 (8-10/17-22時)',  pct: Math.round((ratios.living||0)*100)   },
           { key:'ngt',    label:'夜間（22〜翌8時）',        pct: Math.round(ratios.ngt*100)           },
@@ -2241,7 +2241,7 @@ function updateRatioPanel() {
       const zoneAnnual  = Math.round(annualKwh  * z.pct / 100);
       const zoneMonthly = Math.round(monthlyTotal * z.pct / 100);
       return `<div style="margin-bottom:8px">
-        <div style="display:grid;grid-template-columns:200px 1fr 52px 14px;align-items:center;gap:6px;margin-bottom:2px">
+        <div style="display:grid;grid-template-columns:250px 1fr 52px 14px;align-items:center;gap:6px;margin-bottom:2px">
           <span style="font-size:12px;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis" title="${z.label}">${z.label}</span>
           <input type="range" id="r-${prefix}-${z.key}-sl" value="${z.pct}" min="0" max="100" step="1"
             style="width:100%;height:4px;accent-color:var(--mg);cursor:pointer"
@@ -2251,7 +2251,7 @@ function updateRatioPanel() {
             oninput="onRatioChange('${prefix}')">
           <span style="font-size:11px;color:var(--muted)">%</span>
         </div>
-        <div id="r-${prefix}-${z.key}-kwh" style="font-size:11px;color:var(--dg);padding-left:206px">月平均：約${zoneMonthly.toLocaleString()} kWh / 年間：約${zoneAnnual.toLocaleString()} kWh</div>
+        <div id="r-${prefix}-${z.key}-kwh" style="font-size:11px;color:var(--dg);padding-left:256px">月平均：約${zoneMonthly.toLocaleString()} kWh / 年間：約${zoneAnnual.toLocaleString()} kWh</div>
       </div>`;
     }).join('') +
     `<div id="ratio-total-row" style="margin-top:6px;font-size:11px;color:var(--mg);font-weight:700;border-top:1px solid var(--border);padding-top:6px">
@@ -2323,9 +2323,9 @@ function _updatePriceBreakdown(kp) {
     const lv = ratios.living || 0;
     bodyEl.innerHTML =
       `<div style="color:var(--muted)">🏷 公式単価（夏冬4ヶ月・春秋8ヶ月 加重平均）</div>` +
-      `<div style="padding-left:8px">平日ピーク(10-17時) ${wDay.toFixed(2)}円 × ${Math.round(ratios.day*100)}% = ${(ratios.day*wDay).toFixed(2)}円</div>` +
+      `<div style="padding-left:8px">平日デイタイム(10-17時) ${wDay.toFixed(2)}円 × ${Math.round(ratios.day*100)}% = ${(ratios.day*wDay).toFixed(2)}円</div>` +
+      `<div style="padding-left:8px">平日朝夕(8-10/17-22時) ${wDay.toFixed(2)}円 × ${Math.round(lv*100)}% = ${(lv*wDay).toFixed(2)}円 <span style="font-size:10px;color:var(--muted)">（平日昼間単価）</span></div>` +
       `<div style="padding-left:8px">休日(8-22時) ${wHol.toFixed(2)}円 × ${Math.round(ratios.hol*100)}% = ${(ratios.hol*wHol).toFixed(2)}円</div>` +
-      `<div style="padding-left:8px">平日朝夕(8-10/17-22時) ${wHol.toFixed(2)}円 × ${Math.round(lv*100)}% = ${(lv*wHol).toFixed(2)}円 <span style="font-size:10px;color:var(--muted)">（それ以外の時間帯と同単価）</span></div>` +
       `<div style="padding-left:8px">夜間 ${t.night}円 × ${Math.round(ratios.ngt*100)}% = ${(ratios.ngt*t.night).toFixed(2)}円</div>` +
       `<div style="margin-top:2px">▶ 生活スタイル加重平均：<b>${base}円/kWh</b></div>` +
       `<div>＋ 燃料費調整・再エネ賦課金等：+${ADJUSTMENT_UNIT_PRICE}円/kWh</div>` +
