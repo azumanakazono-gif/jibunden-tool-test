@@ -1495,7 +1495,7 @@ function updateJuuryoPanel() {
     panel.style.display = 'none';
     return;
   }
-  panel.style.display = '';
+  panel.style.display = 'block';
 
   // Panel title: explicitly set based on plan (never falls back to old title)
   const titleEl = document.getElementById('juuryo-panel-title');
@@ -1512,11 +1512,10 @@ function updateJuuryoPanel() {
   const f2 = n => n.toLocaleString('ja-JP', {maximumFractionDigits:2});
   const fr = n => Math.round(n).toLocaleString();
 
-  // ── Flexbox row builder ──
-  // Label (fixed width) | detail (flexible, muted) | amount (right-aligned)
+  // ── Flexbox row builder (label 250px fixed / detail flexible / amount right-aligned) ──
   const fxRow = (label, detail, amtStr, badgeHtml) =>
     `<div style="display:flex;align-items:center;gap:4px;padding:3px 6px;font-size:11px;background:#fafafa;border-bottom:1px solid var(--border)">` +
-      `<span style="flex:0 0 165px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}${badgeHtml||''}</span>` +
+      `<span style="flex:0 0 250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}${badgeHtml||''}</span>` +
       `<span style="flex:1;color:var(--muted);font-size:10px;white-space:nowrap">${detail}</span>` +
       `<b style="flex:0 0 72px;text-align:right;white-space:nowrap">${amtStr}円</b>` +
     `</div>`;
@@ -1574,17 +1573,19 @@ function updateJuuryoPanel() {
     // おひさま昼トクプラン: 4ゾーン内訳
     const t = KYUSHU_OHISAMA.tariff;
     [
-      { label:'おひさまタイム (10-16時)', rate:t.ohisama, ratio:ratios.ohisama||0, badge:'★最安',  bc:'#16a34a' },
-      { label:'ピークタイム (朝夕)',      rate:t.peak,    ratio:ratios.peak||0,    badge:'★最高値', bc:'#dc2626' },
-      { label:'だんらんタイム (夜間)',    rate:t.ngt,     ratio:ratios.ngt||0,     badge:'', bc:'' },
-      { label:'休日 (終日)',              rate:t.hol,     ratio:ratios.hol||0,     badge:'', bc:'' },
+      { label:'おひさまタイム (10-16時 平日)', rate:t.ohisama, ratio:ratios.ohisama||0, badge:'★最安',  bc:'#16a34a' },
+      { label:'ピークタイム (8-10/16-22時 平日)', rate:t.peak, ratio:ratios.peak||0,   badge:'★最高値', bc:'#dc2626' },
+      { label:'だんらんタイム (22〜翌8時)',    rate:t.ngt,     ratio:ratios.ngt||0,     badge:'', bc:'' },
+      { label:'休日 (終日)',                  rate:t.hol,     ratio:ratios.hol||0,     badge:'', bc:'' },
     ].forEach(z => {
       const kwh = Math.round(mkwh * z.ratio);
+      const pct = Math.round(z.ratio * 100);
       const amt = Math.round(kwh * z.rate * 100) / 100;
       zone_total += amt;
       const badge = z.badge
         ? ` <span style="font-size:9px;color:${z.bc};font-weight:700">${z.badge}</span>` : '';
-      zoneHtml += fxRow(z.label, `${kwh.toLocaleString()}kWh × ${z.rate}円`, f2(amt), badge);
+      const detail = `${z.rate}円 × (${mkwh.toLocaleString()}kWh × ${pct}% = ${kwh.toLocaleString()}kWh)`;
+      zoneHtml += fxRow(z.label, detail, f2(amt), badge);
     });
   } else if (isDenka) {
     // 電化でナイト: 4ゾーン内訳（加重平均単価使用）
@@ -1622,15 +1623,20 @@ function updateJuuryoPanel() {
   const fuel_amt   = Math.round(mkwh * FUEL_UNIT   * 100) / 100;
   const saiene_amt = Math.round(mkwh * SAIENE_UNIT * 100) / 100;
   const basic      = Math.round(mb - zone_total - fuel_amt - saiene_amt);
+  const grand      = Math.round(zone_total + fuel_amt + saiene_amt + (basic > 0 ? basic : 0));
+
+  const fuelLabel   = `＋ 燃料費調整額 (1.33円 × ${mkwh.toLocaleString()}kWh)`;
+  const saieneLabel = `＋ 再エネ賦課金 (4.18円 × ${mkwh.toLocaleString()}kWh)`;
+  const basicLabel  = '＋ 基本料金（プラン規定）';
 
   body.innerHTML =
     `<div style="color:var(--muted);font-size:10px;margin-bottom:2px">🏷 時間帯別電力量料金</div>` +
     `<div style="border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:6px">${zoneHtml}</div>` +
-    fxSubRow('＋ 燃料費調整額', f2(fuel_amt)) +
-    fxSubRow('＋ 再エネ賦課金', f2(saiene_amt)) +
-    (basic > 0 ? fxSubRow('＋ 基本料金等', `<span style="color:var(--dg)">${fr(basic)}</span>`) : '') +
+    fxSubRow(fuelLabel,   f2(fuel_amt)) +
+    fxSubRow(saieneLabel, f2(saiene_amt)) +
+    (basic > 0 ? fxSubRow(basicLabel, `${fr(basic)}`) : '') +
     `<div style="display:flex;justify-content:space-between;margin-top:4px;padding-top:4px;border-top:1px solid var(--border);font-weight:700;color:var(--mg)">` +
-      `<span>概算月額合計</span><span style="font-size:12px">約${fr(mb)}円</span>` +
+      `<span>概算月額合計</span><span style="font-size:12px">約${fr(grand)}円</span>` +
     `</div>`;
 }
 
