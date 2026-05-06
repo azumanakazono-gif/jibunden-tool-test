@@ -2613,7 +2613,7 @@ function _applyRatioDc(kp) {
     textEl.textContent   = kp === 'kyushu_kiji'
       ? `デイ＋リビング×0.5 の割合 約${pct}%：昼間直接 ${dc.toLocaleString()} kWh / 年`
       : kp === 'kyushu_ohisama'
-      ? `おひさま×1.0＋ピーク×0.2＋休日×0.5 の割合 約${pct}%：昼間直接 ${dc.toLocaleString()} kWh / 年`
+      ? `おひさま×1.0＋シフト×0.2 の割合 約${pct}%：昼間直接 ${dc.toLocaleString()} kWh / 年`
       : `昼間直接消費率 約${pct}%（時間帯比率から算出）：昼間直接 ${dc.toLocaleString()} kWh / 年`;
   }
 }
@@ -3208,7 +3208,7 @@ function calc() {
       if (_kpDisp === 'kyushu_denka_night') {
         _demandRatio = (_ratiosD.day||0) + (_ratiosD.hol||0);
       } else if (_kpDisp === 'kyushu_ohisama') {
-        _demandRatio = (_ratiosD.ohisama||0) + (_ratiosD.peak||0) * 0.2 + (_ratiosD.hol||0) * 0.5;
+        _demandRatio = (_ratiosD.ohisama||0) + (_ratiosD.peak||0) * 0.2;
       } else {
         _demandRatio = (_ratiosD.day||0) + (_ratiosD.living||0) * 0.5;
       }
@@ -3216,7 +3216,7 @@ function calc() {
     document.getElementById('daytime-rate-disp').innerHTML = _kpDisp === 'kyushu_kiji'
       ? `デイ＋リビング×0.5 の昼間直接消費対象割合：${Math.round(_demandRatio*100)}%<br>昼間需要量：${fmt(dc)}kWh/年（約${fmt(dcMonthly)}kWh/月）`
       : _kpDisp === 'kyushu_ohisama'
-      ? `おひさま×1.0＋ピーク×0.2＋休日×0.5 の昼間直接消費割合：${Math.round(_demandRatio*100)}%<br>昼間需要量：${fmt(dc)}kWh/年（約${fmt(dcMonthly)}kWh/月）`
+      ? `おひさま×1.0＋シフト×0.2 の昼間直接消費割合：${Math.round(_demandRatio*100)}%<br>昼間需要量：${fmt(dc)}kWh/年（約${fmt(dcMonthly)}kWh/月）`
       : `昼間直接消費対象割合：${Math.round(_demandRatio*100)}%（時間帯比率から算出）<br>昼間需要量：${fmt(dc)}kWh/年（約${fmt(dcMonthly)}kWh/月）`;
   } else {
     document.getElementById('daytime-rate-disp').innerHTML =
