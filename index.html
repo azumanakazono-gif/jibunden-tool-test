@@ -1486,30 +1486,32 @@ function resetBcManual() {
 
 function updateJuuryoPanel() {
   const kp = document.getElementById('kyuden-plan').value;
+  const jp = document.getElementById('juuryo-panel');
+  const op = document.getElementById('ohisama-panel');
 
-  // 1. おひさまプラン専用判定（最優先・強制ガード）
-  if (kp === 'kyushu_ohisama' || kp.includes('ohisama')) {
-    document.getElementById('juuryo-panel').style.display  = 'none';  // 従量電灯を隠す
-    document.getElementById('ohisama-panel').style.display = 'block'; // おひさま用を出す
+  // おひさまプラン判定（最優先）
+  if (kp === 'kyushu_ohisama') {
+    if (jp) jp.style.display = 'none';  // 従量電灯を物理的に隠す
+    if (op) op.style.display = 'block'; // おひさま用を物理的に出す
+    const _ep = document.getElementById('estimated-price-disp');
+    if (_ep) { _ep.style.display = 'none'; _ep.innerHTML = ''; }
     _renderOhisamaBreakdown(); // 3項目のみ描画
-    return; // ★重要：ここで処理を強制終了し、下の従量電灯判定を絶対に実行させない
+    return; // ★ここで強制終了。これ以降のコードは1行も実行されない
   }
 
-  // 2. それ以外のプランの場合（おひさま時はここは絶対に実行されない）
-  document.getElementById('ohisama-panel').style.display = 'none';
-  document.getElementById('juuryo-panel').style.display  = 'block';
+  // それ以外のプラン（おひさまはここに絶対に到達しない）
+  if (op) op.style.display = 'none';
 
   const isJuuryoB = kp === 'kyushu_juuryo_b';
   const isJuuryoC = kp === 'kyushu_juuryo_c';
   const isDenka   = kp === 'kyushu_denka_night';
   const isKiji    = kp === 'kyushu_kiji';
 
-  const juuryoPanel = document.getElementById('juuryo-panel');
   if (!isJuuryoB && !isJuuryoC && !isDenka && !isKiji) {
-    juuryoPanel.style.display = 'none';
+    if (jp) jp.style.display = 'none';
     return;
   }
-  juuryoPanel.style.display = 'block';
+  if (jp) jp.style.display = 'block';
 
   const body    = document.getElementById('juuryo-breakdown');
   const titleEl = document.getElementById('juuryo-panel-title');
