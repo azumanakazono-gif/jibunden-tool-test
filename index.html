@@ -1485,21 +1485,19 @@ function resetBcManual() {
 }
 
 function updateJuuryoPanel() {
-  const kp       = document.getElementById('kyuden-plan').value;
-  const _planSel = document.getElementById('kyuden-plan');
-  const planName = _planSel.options[_planSel.selectedIndex] ? _planSel.options[_planSel.selectedIndex].text : '';
+  const _planSel  = document.getElementById('kyuden-plan');
+  const kp        = _planSel.value;
+  const planName  = _planSel.options[_planSel.selectedIndex].text;
   const isOhisama = planName.includes('おひさま');
 
   const juuryoPanel  = document.getElementById('juuryo-panel');
   const ohisamaPanel = document.getElementById('ohisama-panel');
 
-  // 【最優先ガード】おひさまプランは専用パネルに完全委譲し、即 return
-  // isOhisama = planName.includes('おひさま') → 以降の従量電灯ロジックには絶対到達しない
   if (isOhisama) {
-    juuryoPanel.style.display  = 'none';
-    ohisamaPanel.style.display = 'block';
-    _renderOhisamaBreakdown();
-    return;
+    juuryoPanel.style.display  = 'none';   // 従量電灯パネルを強制非表示
+    ohisamaPanel.style.display = 'block';  // おひさまパネルを強制表示
+    _renderOhisamaBreakdown();             // 3区分（おひさま/シフト/だんらん）を描画
+    return;                                // ここで処理を終了し、下の従量電灯ロジックには絶対に行かせない
   }
 
   // ── おひさま以外：専用パネルを隠す ──────────────────────────────
