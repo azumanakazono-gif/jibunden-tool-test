@@ -2570,11 +2570,11 @@ function _updatePriceBreakdown(kp) {
     bodyEl.innerHTML =
       `<div style="color:var(--muted)">🏷 おひさま昼トクプラン 公式単価</div>` +
       `<div style="padding-left:8px">おひさまタイム(10-16時) ${t.ohisama}円 × ${Math.round((ratios.ohisama||0)*100)}% = ${((ratios.ohisama||0)*t.ohisama).toFixed(2)}円 <span style="font-size:10px;color:#16a34a;font-weight:700">★最安</span></div>` +
-      `<div style="padding-left:8px">シフトタイム(朝夕) ${t.peak}円 × ${Math.round((ratios.peak||0)*100)}% = ${((ratios.peak||0)*t.peak).toFixed(2)}円 <span style="font-size:10px;color:#dc2626;font-weight:700">★最高値・シフト推奨</span></div>` +
-      `<div style="padding-left:8px">だんらんタイム(夜間) ${t.ngt}円 × ${Math.round((ratios.ngt||0)*100)}% = ${((ratios.ngt||0)*t.ngt).toFixed(2)}円</div>` +
+      `<div style="padding-left:8px">シフトタイム(朝夕：8-10/16-22時) ${t.peak}円 × ${Math.round((ratios.peak||0)*100)}% = ${((ratios.peak||0)*t.peak).toFixed(2)}円 <span style="font-size:10px;color:#dc2626;font-weight:700">★最高値・シフト推奨</span></div>` +
+      `<div style="padding-left:8px">だんらんタイム(夜間：22-8時) ${t.ngt}円 × ${Math.round((ratios.ngt||0)*100)}% = ${((ratios.ngt||0)*t.ngt).toFixed(2)}円</div>` +
       `<div style="margin-top:2px">▶ 生活スタイル加重平均：<b>${base}円/kWh</b></div>` +
       `<div>＋ 燃料費調整・再エネ賦課金等：+${ADJUSTMENT_UNIT_PRICE}円/kWh</div>` +
-      `<div style="color:var(--dg);font-weight:700">＝ 概算実質単価：<b>${eff}円/kWh</b></div>` +
+      `<div style="color:var(--dg);font-weight:700">＝ 実質単価：<b>${eff}円/kWh</b></div>` +
       _monthly(eff);
   } else {
     const t    = KYUSHU_KIJI.tariff;
