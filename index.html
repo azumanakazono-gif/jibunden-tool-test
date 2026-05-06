@@ -1487,20 +1487,15 @@ function resetBcManual() {
 function updateJuuryoPanel() {
   const kp = document.getElementById('kyuden-plan').value;
 
-  // ── おひさまプランは専用パネルに完全分離 ──
-  // value のみで判定。planName に依存しないため確実に動作する。
-  // この if に入ったら必ず return → 従量電灯コードに1行も到達しない。
+  // 1. おひさまプラン専用判定（最優先）
   if (kp === 'kyushu_ohisama') {
-    document.getElementById('juuryo-breakdown').innerHTML = '';
-    document.getElementById('juuryo-panel').style.display = 'none';
-    const _ep = document.getElementById('estimated-price-disp');
-    if (_ep) { _ep.style.display = 'none'; _ep.textContent = ''; }
-    document.getElementById('ohisama-panel').style.display = 'block';
+    document.getElementById('juuryo-panel').style.display    = 'none';
+    document.getElementById('ohisama-panel').style.display   = 'block';
     _renderOhisamaBreakdown();
-    return;
+    return; // ★重要：ここで終了。従量電灯判定には絶対に到達しない
   }
 
-  // ── 以下は従量電灯・時間帯別プランのみ（おひさまは絶対に到達しない） ──
+  // 2. それ以外のプランの場合（おひさまはここに到達しない）
   document.getElementById('ohisama-panel').style.display = 'none';
 
   const isJuuryoB = kp === 'kyushu_juuryo_b';
