@@ -378,7 +378,7 @@ canvas#mini-chart { height: 150px !important; }
           </optgroup>
           <optgroup label="▼ 九州電力 時間帯別・太陽光向け（概算）">
             <option value="kyushu_kiji">季時別電灯（公式単価ベース）</option>
-            <option value="kyushu_ohisama">おひさま昼トクプラン（時間帯別・公式単価ベース）</option>
+            <option value="kyushu_ohisama">おひさま昼トクプラン</option>
           </optgroup>
           <optgroup label="▼ 九州電力 オール電化（生活スタイル別概算）">
             <option value="kyushu_denka_night">電化でナイト・セレクト（生活スタイル別概算単価）</option>
@@ -1501,6 +1501,9 @@ function updateJuuryoPanel() {
     // 旧コンテンツを物理クリアしてから非表示（残骸が残らないように）
     document.getElementById('juuryo-breakdown').innerHTML = '';
     juuryoPanel.style.display  = 'none';
+    // 「概算単価 30円/kWh」等の不要ラベルも念のため非表示
+    const _epDisp = document.getElementById('estimated-price-disp');
+    if (_epDisp) _epDisp.style.display = 'none';
     ohisamaPanel.style.display = 'block';
     _renderOhisamaBreakdown();  // おひさまタイム／シフトタイム／だんらんタイム の3区分を描画
     return; // ← ここで確実に終了。従量電灯ロジックには絶対に到達しない
@@ -2821,7 +2824,9 @@ function onHearingChange(data) {
       guide.style.cssText = 'display:;margin-bottom:8px;padding:8px 12px;border-radius:8px;border:1px solid #93c5fd;font-size:12px;background:#eff6ff;color:#1e40af';
       guide.innerHTML = '⏱ <b>時間帯別料金プラン</b>：九州電力公式単価と時間帯使用比率から自動計算します。比率パネルで割合を調整できます。';
       noteEl.textContent = '';
-      document.getElementById('estimated-price-disp').style.display = 'none';
+      const _epEl = document.getElementById('estimated-price-disp');
+      _epEl.style.display = 'none';
+      _epEl.textContent   = ''; // 概算単価テキストを完全クリア
       const eff = calcEffectiveUnitPrice(kp);
       document.getElementById('mkwh').value = Math.round(mb / eff);
       updateRatioPanel();
