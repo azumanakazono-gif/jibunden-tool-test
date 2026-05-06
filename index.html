@@ -1487,36 +1487,34 @@ function resetBcManual() {
 function updateJuuryoPanel() {
   const _planSel = document.getElementById('kyuden-plan');
   const kp       = _planSel.value;
-  // selectedIndex が -1 の場合の TypeError を防ぐ null ガード付き
   const planName = (_planSel.options[_planSel.selectedIndex] || {}).text || '';
 
-  const juuryoPanel  = document.getElementById('juuryo-panel');
-  const ohisamaPanel = document.getElementById('ohisama-panel');
-
   // ══════════════════════════════════════════════════════════════════
-  // 【二重ガード】planName テキスト判定 + value 判定の両方で確認
-  //   どちらか一方でも true なら以降の従量電灯コードは1行も実行しない
+  // 1. おひさまプランの判定（最優先）
+  //    planName テキスト判定 + value 判定の二重チェック
+  //    どちらか一方でも true なら即 return → 従量電灯コードは1行も実行しない
   // ══════════════════════════════════════════════════════════════════
   if (planName.includes('おひさま') || kp === 'kyushu_ohisama') {
-    // 旧コンテンツを物理クリアしてから非表示（残骸が残らないように）
-    document.getElementById('juuryo-breakdown').innerHTML = '';
-    juuryoPanel.style.display  = 'none';
-    // 「概算単価 30円/kWh」等の不要ラベルも念のため非表示
-    const _epDisp = document.getElementById('estimated-price-disp');
-    if (_epDisp) _epDisp.style.display = 'none';
-    ohisamaPanel.style.display = 'block';
-    _renderOhisamaBreakdown();  // おひさまタイム／シフトタイム／だんらんタイム の3区分を描画
-    return; // ← ここで確実に終了。従量電灯ロジックには絶対に到達しない
+    document.getElementById('juuryo-breakdown').innerHTML = ''; // 旧残骸を物理クリア
+    document.getElementById('juuryo-panel').style.display  = 'none';
+    const _ep = document.getElementById('estimated-price-disp');
+    if (_ep) { _ep.style.display = 'none'; _ep.textContent = ''; }
+    document.getElementById('ohisama-panel').style.display = 'block';
+    _renderOhisamaBreakdown(); // おひさまタイム／シフトタイム／だんらんタイム の3区分を描画
+    return; // ★ここで終了。以降の従量電灯ロジックは絶対に実行されない
   }
 
-  // ── おひさま以外：専用パネルを必ず隠す ──────────────────────────
-  ohisamaPanel.style.display = 'none';
+  // ══════════════════════════════════════════════════════════════════
+  // 2. 従量電灯・時間帯別の判定（おひさま以外の時のみ実行）
+  // ══════════════════════════════════════════════════════════════════
+  document.getElementById('ohisama-panel').style.display = 'none';
 
   const isJuuryoB = kp === 'kyushu_juuryo_b';
   const isJuuryoC = kp === 'kyushu_juuryo_c';
   const isDenka   = kp === 'kyushu_denka_night';
   const isKiji    = kp === 'kyushu_kiji';
 
+  const juuryoPanel = document.getElementById('juuryo-panel');
   if (!isJuuryoB && !isJuuryoC && !isDenka && !isKiji) {
     juuryoPanel.style.display = 'none';
     return;
@@ -1546,7 +1544,7 @@ function updateJuuryoPanel() {
       `<span>${label}</span><b>${amtStr}円</b>` +
     `</div>`;
 
-  // ── 従量電灯B/C（※おひさまプランではここに絶対到達しない） ──────
+  // 従量電灯B/C
   if (isJuuryoB || isJuuryoC) {
     const mkwh = parseFloat(document.getElementById('mkwh').value) || 0;
     if (mkwh <= 0) {
@@ -1575,7 +1573,7 @@ function updateJuuryoPanel() {
     return;
   }
 
-  // ── 電化でナイト / 季時別（※おひさまプランではここに絶対到達しない） ──
+  // 電化でナイト / 季時別
   const mkwh = parseFloat(document.getElementById('mkwh').value) || 0;
   const mb   = parseFloat(document.getElementById('mb').value)   || 0;
   if (mkwh <= 0 || mb <= 0) {
