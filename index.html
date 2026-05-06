@@ -1493,8 +1493,7 @@ function updateJuuryoPanel() {
         document.getElementById('ohisama-panel').style.display = 'block';
         _renderOhisamaBreakdown();
         return;
-    }
-
+    } else {
     document.getElementById('ohisama-panel').style.display = 'none';
     document.getElementById('juuryo-panel').style.display = 'block';
 
@@ -1615,10 +1614,12 @@ function updateJuuryoPanel() {
     `<div style="display:flex;justify-content:space-between;margin-top:4px;padding-top:4px;border-top:1px solid var(--border);font-weight:700;color:var(--mg)">` +
       `<span>概算月額合計</span><span style="font-size:12px">約${fr(grand)}円</span>` +
     `</div>`;
+  } // else non-ohisama
 }
 
 // おひさま昼トクプラン専用内訳レンダラー（juuryo-panelとは完全分離）
 function _renderOhisamaBreakdown() {
+  document.getElementById('juuryo-panel').style.display = 'none';
   const body = document.getElementById('ohisama-breakdown');
   if (!body) return;
 
