@@ -1486,25 +1486,27 @@ function resetBcManual() {
 
 function updateJuuryoPanel() {
   const kp          = document.getElementById('kyuden-plan').value;
-  const juuryoPanel = document.getElementById('juuryo-panel');
+  const juuryoPanel  = document.getElementById('juuryo-panel');
   const ohisamaPanel = document.getElementById('ohisama-panel');
+
+  // ══════════════════════════════════════════════════════════════════
+  // 【最優先ガード】おひさまプランは専用パネルに完全委譲し、即 return
+  //   ↓この return 以降の従量電灯・時間帯別ロジックには一切到達しない
+  // ══════════════════════════════════════════════════════════════════
+  if (kp === 'kyushu_ohisama' || kp.includes('ohisama')) {
+    juuryoPanel.style.display  = 'none';
+    ohisamaPanel.style.display = 'block';
+    _renderOhisamaBreakdown();
+    return; // ← ここで確実に終了。以降のコードは実行されない
+  }
+
+  // ── おひさま以外：専用パネルを隠す ──────────────────────────────
+  ohisamaPanel.style.display = 'none';
 
   const isJuuryoB = kp === 'kyushu_juuryo_b';
   const isJuuryoC = kp === 'kyushu_juuryo_c';
   const isDenka   = kp === 'kyushu_denka_night';
   const isKiji    = kp === 'kyushu_kiji';
-  const isOhisama = kp === 'kyushu_ohisama';
-
-  // ── おひさま昼トクプランは完全専用パネルで処理し、juuryo-panelとは共有しない ──
-  if (isOhisama) {
-    juuryoPanel.style.display  = 'none';   // 従量電灯パネルを確実に隠す
-    ohisamaPanel.style.display = 'block';
-    _renderOhisamaBreakdown();
-    return;
-  }
-
-  // おひさま以外では専用パネルを隠す
-  ohisamaPanel.style.display = 'none';
 
   if (!isJuuryoB && !isJuuryoC && !isDenka && !isKiji) {
     juuryoPanel.style.display = 'none';
@@ -1512,9 +1514,7 @@ function updateJuuryoPanel() {
   }
   juuryoPanel.style.display = 'block';
 
-  const body = document.getElementById('juuryo-breakdown');
-
-  // Panel title
+  const body    = document.getElementById('juuryo-breakdown');
   const titleEl = document.getElementById('juuryo-panel-title');
   if      (isJuuryoB) titleEl.textContent = '📋 従量電灯B 料金内訳（3段階）';
   else if (isJuuryoC) titleEl.textContent = '📋 従量電灯C 料金内訳（3段階）';
@@ -1526,7 +1526,6 @@ function updateJuuryoPanel() {
 
   const f2 = n => n.toLocaleString('ja-JP', {maximumFractionDigits:2});
   const fr = n => Math.round(n).toLocaleString();
-
   const fxRow = (label, detail, amtStr, badgeHtml) =>
     `<div style="display:flex;align-items:center;gap:4px;padding:3px 6px;font-size:11px;background:#fafafa;border-bottom:1px solid var(--border)">` +
       `<span style="flex:0 0 250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}${badgeHtml||''}</span>` +
@@ -1538,7 +1537,7 @@ function updateJuuryoPanel() {
       `<span>${label}</span><b>${amtStr}円</b>` +
     `</div>`;
 
-  // ── 従量電灯B/C ──
+  // ── 従量電灯B/C（※おひさまプランではここに絶対到達しない） ──────
   if (isJuuryoB || isJuuryoC) {
     const mkwh = parseFloat(document.getElementById('mkwh').value) || 0;
     if (mkwh <= 0) {
@@ -1567,7 +1566,7 @@ function updateJuuryoPanel() {
     return;
   }
 
-  // ── 電化でナイト / 季時別 ──
+  // ── 電化でナイト / 季時別（※おひさまプランではここに絶対到達しない） ──
   const mkwh = parseFloat(document.getElementById('mkwh').value) || 0;
   const mb   = parseFloat(document.getElementById('mb').value)   || 0;
   if (mkwh <= 0 || mb <= 0) {
