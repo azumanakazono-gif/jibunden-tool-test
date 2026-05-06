@@ -1485,28 +1485,22 @@ function resetBcManual() {
 }
 
 function updateJuuryoPanel() {
-  const _planSel = document.getElementById('kyuden-plan');
-  const kp       = _planSel.value;
-  const planName = (_planSel.options[_planSel.selectedIndex] || {}).text || '';
+  const kp = document.getElementById('kyuden-plan').value;
 
-  // ══════════════════════════════════════════════════════════════════
-  // 1. おひさまプランの判定（最優先）
-  //    planName テキスト判定 + value 判定の二重チェック
-  //    どちらか一方でも true なら即 return → 従量電灯コードは1行も実行しない
-  // ══════════════════════════════════════════════════════════════════
-  if (planName.includes('おひさま') || kp === 'kyushu_ohisama') {
-    document.getElementById('juuryo-breakdown').innerHTML = ''; // 旧残骸を物理クリア
-    document.getElementById('juuryo-panel').style.display  = 'none';
+  // ── おひさまプランは専用パネルに完全分離 ──
+  // value のみで判定。planName に依存しないため確実に動作する。
+  // この if に入ったら必ず return → 従量電灯コードに1行も到達しない。
+  if (kp === 'kyushu_ohisama') {
+    document.getElementById('juuryo-breakdown').innerHTML = '';
+    document.getElementById('juuryo-panel').style.display = 'none';
     const _ep = document.getElementById('estimated-price-disp');
     if (_ep) { _ep.style.display = 'none'; _ep.textContent = ''; }
     document.getElementById('ohisama-panel').style.display = 'block';
-    _renderOhisamaBreakdown(); // おひさまタイム／シフトタイム／だんらんタイム の3区分を描画
-    return; // ★ここで終了。以降の従量電灯ロジックは絶対に実行されない
+    _renderOhisamaBreakdown();
+    return;
   }
 
-  // ══════════════════════════════════════════════════════════════════
-  // 2. 従量電灯・時間帯別の判定（おひさま以外の時のみ実行）
-  // ══════════════════════════════════════════════════════════════════
+  // ── 以下は従量電灯・時間帯別プランのみ（おひさまは絶対に到達しない） ──
   document.getElementById('ohisama-panel').style.display = 'none';
 
   const isJuuryoB = kp === 'kyushu_juuryo_b';
