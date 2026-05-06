@@ -1487,16 +1487,17 @@ function resetBcManual() {
 function updateJuuryoPanel() {
   const kp = document.getElementById('kyuden-plan').value;
 
-  // 1. おひさまプラン専用判定（最優先）
-  if (kp === 'kyushu_ohisama') {
-    document.getElementById('juuryo-panel').style.display    = 'none';
-    document.getElementById('ohisama-panel').style.display   = 'block';
-    _renderOhisamaBreakdown();
-    return; // ★重要：ここで終了。従量電灯判定には絶対に到達しない
+  // 1. おひさまプラン専用判定（最優先・強制ガード）
+  if (kp === 'kyushu_ohisama' || kp.includes('ohisama')) {
+    document.getElementById('juuryo-panel').style.display  = 'none';  // 従量電灯を隠す
+    document.getElementById('ohisama-panel').style.display = 'block'; // おひさま用を出す
+    _renderOhisamaBreakdown(); // 3項目のみ描画
+    return; // ★重要：ここで処理を強制終了し、下の従量電灯判定を絶対に実行させない
   }
 
-  // 2. それ以外のプランの場合（おひさまはここに到達しない）
+  // 2. それ以外のプランの場合（おひさま時はここは絶対に実行されない）
   document.getElementById('ohisama-panel').style.display = 'none';
+  document.getElementById('juuryo-panel').style.display  = 'block';
 
   const isJuuryoB = kp === 'kyushu_juuryo_b';
   const isJuuryoC = kp === 'kyushu_juuryo_c';
