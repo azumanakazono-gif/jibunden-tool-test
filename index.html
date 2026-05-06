@@ -1485,21 +1485,19 @@ function resetBcManual() {
 }
 
 function updateJuuryoPanel() {
-    const planName = document.getElementById('kyuden-plan').options[document.getElementById('kyuden-plan').selectedIndex].text;
+    const kp = document.getElementById('kyuden-plan').value;
 
-    // 1. Ohisama Plan Guard (Minimal Token)
-    if (planName.includes('おひさま')) {
+    // Guard: ohisama plan (must be first)
+    if (kp.includes('ohisama')) {
         document.getElementById('juuryo-panel').style.display = 'none';
         document.getElementById('ohisama-panel').style.display = 'block';
         _renderOhisamaBreakdown();
-        return; // Prevents step-rate logic below
+        return;
     }
 
-    // 2. Regular Plan Logic
     document.getElementById('ohisama-panel').style.display = 'none';
     document.getElementById('juuryo-panel').style.display = 'block';
 
-  const kp = document.getElementById('kyuden-plan').value;
   const isJuuryoB = kp === 'kyushu_juuryo_b';
   const isJuuryoC = kp === 'kyushu_juuryo_c';
   const isDenka   = kp === 'kyushu_denka_night';
