@@ -1485,19 +1485,21 @@ function resetBcManual() {
 }
 
 function updateJuuryoPanel() {
-  const kp          = document.getElementById('kyuden-plan').value;
+  const kp       = document.getElementById('kyuden-plan').value;
+  const _planSel = document.getElementById('kyuden-plan');
+  const planName = _planSel.options[_planSel.selectedIndex] ? _planSel.options[_planSel.selectedIndex].text : '';
+  const isOhisama = planName.includes('おひさま');
+
   const juuryoPanel  = document.getElementById('juuryo-panel');
   const ohisamaPanel = document.getElementById('ohisama-panel');
 
-  // ══════════════════════════════════════════════════════════════════
   // 【最優先ガード】おひさまプランは専用パネルに完全委譲し、即 return
-  //   ↓この return 以降の従量電灯・時間帯別ロジックには一切到達しない
-  // ══════════════════════════════════════════════════════════════════
-  if (kp === 'kyushu_ohisama' || kp.includes('ohisama')) {
+  // isOhisama = planName.includes('おひさま') → 以降の従量電灯ロジックには絶対到達しない
+  if (isOhisama) {
     juuryoPanel.style.display  = 'none';
     ohisamaPanel.style.display = 'block';
     _renderOhisamaBreakdown();
-    return; // ← ここで確実に終了。以降のコードは実行されない
+    return;
   }
 
   // ── おひさま以外：専用パネルを隠す ──────────────────────────────
