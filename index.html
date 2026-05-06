@@ -1485,22 +1485,28 @@ function resetBcManual() {
 }
 
 function updateJuuryoPanel() {
-  const _planSel  = document.getElementById('kyuden-plan');
-  const kp        = _planSel.value;
-  const planName  = _planSel.options[_planSel.selectedIndex].text;
-  const isOhisama = planName.includes('おひさま');
+  const _planSel = document.getElementById('kyuden-plan');
+  const kp       = _planSel.value;
+  // selectedIndex が -1 の場合の TypeError を防ぐ null ガード付き
+  const planName = (_planSel.options[_planSel.selectedIndex] || {}).text || '';
 
   const juuryoPanel  = document.getElementById('juuryo-panel');
   const ohisamaPanel = document.getElementById('ohisama-panel');
 
-  if (isOhisama) {
-    juuryoPanel.style.display  = 'none';   // 従量電灯パネルを強制非表示
-    ohisamaPanel.style.display = 'block';  // おひさまパネルを強制表示
-    _renderOhisamaBreakdown();             // 3区分（おひさま/シフト/だんらん）を描画
-    return;                                // ここで処理を終了し、下の従量電灯ロジックには絶対に行かせない
+  // ══════════════════════════════════════════════════════════════════
+  // 【二重ガード】planName テキスト判定 + value 判定の両方で確認
+  //   どちらか一方でも true なら以降の従量電灯コードは1行も実行しない
+  // ══════════════════════════════════════════════════════════════════
+  if (planName.includes('おひさま') || kp === 'kyushu_ohisama') {
+    // 旧コンテンツを物理クリアしてから非表示（残骸が残らないように）
+    document.getElementById('juuryo-breakdown').innerHTML = '';
+    juuryoPanel.style.display  = 'none';
+    ohisamaPanel.style.display = 'block';
+    _renderOhisamaBreakdown();  // おひさまタイム／シフトタイム／だんらんタイム の3区分を描画
+    return; // ← ここで確実に終了。従量電灯ロジックには絶対に到達しない
   }
 
-  // ── おひさま以外：専用パネルを隠す ──────────────────────────────
+  // ── おひさま以外：専用パネルを必ず隠す ──────────────────────────
   ohisamaPanel.style.display = 'none';
 
   const isJuuryoB = kp === 'kyushu_juuryo_b';
