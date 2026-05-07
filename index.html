@@ -2406,32 +2406,36 @@ function onPostKyudenPlanChange() {
   isCustomRatio   = false;
   customRatios    = null;
   updateRatioPanel();
+  renderPostPlanBreakdown();
   calc();
 }
 
-function _updatePostPlanBreakdown(postKp, post_up, remainKwh) {
-  const panel = document.getElementById('post-plan-breakdown');
-  if (!panel) return;
+// Standalone entry called from onPostKyudenPlanChange for instant feedback before calc() runs
+function renderPostPlanBreakdown() {
+  const postKp = (document.getElementById('post-kyuden-plan') || {}).value || '';
+  const mkwh   = parseFloat(document.getElementById('mkwh').value) || 667;
+  const dc     = parseFloat(document.getElementById('dc').value)   || 0;
+  const bc     = parseFloat(document.getElementById('bc').value)   || 0;
+  const annualKwh = mkwh * 12;
+  const selfKwh   = dc + bc;
+  const remainKwh = Math.max(0, annualKwh - selfKwh);
+  const post_up = postKp === 'kyushu_ohisama' || postKp === 'kyushu_denka_night' || postKp === 'kyushu_kiji'
+    ? (calcEffectiveUnitPrice(postKp) || 25)
+    : (parseFloat(postKp) > 0 ? parseFloat(postKp) : 30);
+  _updatePostPlanBreakdown(postKp, post_up, remainKwh);
+}
 
+function _updatePostPlanBreakdown(postKp, post_up, remainKwh) {
   const body = document.getElementById('post-plan-breakdown-body');
+  if (!body) return;
+
   if (!postKp) {
-    if (body) body.innerHTML = '<div style="font-size:11px;color:#6b7280;padding:4px 6px">← 上の「導入後プラン」を選択してください</div>';
+    body.innerHTML = '<div style="font-size:11px;color:#6b7280;padding:4px 6px">← 上の「導入後プラン」を選択してください</div>';
     return;
   }
 
-  const nameEl = document.getElementById('post-plan-name');
   const f2 = n => n.toLocaleString('ja-JP', {maximumFractionDigits:2});
   const fr = n => Math.round(n).toLocaleString();
-
-  // プラン表示名
-  const sel = document.getElementById('post-kyuden-plan');
-  const planLabel = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : postKp;
-  if (nameEl) nameEl.textContent = `（${planLabel}）`;
-
-  if (remainKwh <= 0 && postKp !== 'kyushu_ohisama') {
-    body.innerHTML = '<div style="font-size:11px;color:#6b7280;padding:4px 6px">太陽光発電量・消費量データを入力すると残り電気代の内訳が表示されます</div>';
-    return;
-  }
 
   const monthlyRemain = Math.round(remainKwh / 12);
 
@@ -2532,7 +2536,6 @@ function _updatePostPlanBreakdown(postKp, post_up, remainKwh) {
       fxRow('残り電気代', `${fr(monthlyRemain)}kWh × ${post_up}円/kWh`, f2(monthlyAmt)) +
       fxTotal(monthlyAmt);
   }
-  panel.style.display = '';
 }
 
 function showAvgRateSection(show) {
@@ -4820,6 +4823,7 @@ window.addEventListener('DOMContentLoaded', () => {
     _applyWipLock();
     updateJuuryoPanel();          // 従量電灯B 段階料金パネルを初期表示
     updateRatioPanel();           // 電化でナイト（導入後）スライダーを初期表示
+    renderPostPlanBreakdown();    // 導入後内訳を即時表示（calc() 前に確実に初期化）
     autoEstimateKwhFromBill(true); // mb→mkwh 初期整合性 → 内部で calc() を呼び出し
     const _stb = document.getElementById('scroll-top-btn');
     if (_stb) {
