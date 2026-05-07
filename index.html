@@ -1485,13 +1485,15 @@ function resetBcManual() {
 }
 
 function updateJuuryoPanel() {
-    if (document.getElementById('kyuden-plan').value === 'kyushu_ohisama') {
+    const kp = document.getElementById('kyuden-plan').value;
+    const planName = document.getElementById('kyuden-plan').options[document.getElementById('kyuden-plan').selectedIndex]?.text || '';
+    // ohisama は時間帯別グループ：step-rate ロジック完全除外
+    if (kp === 'kyushu_ohisama' || planName.includes('おひさま')) {
         document.getElementById('juuryo-panel').style.display = 'none';
         document.getElementById('ohisama-panel').style.display = 'block';
         _renderOhisamaBreakdown();
         return;
     }
-    const kp = document.getElementById('kyuden-plan').value;
     document.getElementById('ohisama-panel').style.display = 'none';
 
   const isJuuryoB = kp === 'kyushu_juuryo_b';
@@ -2131,15 +2133,21 @@ function onKyudenPlanChange() {
     const _lsEl = document.getElementById('ls');
     if (_lsEl) _lsEl.value = '昼間の安さを最大限に活かすため、エコキュートの沸き上げ等を昼間に移す「おひさまシフト」を想定した、家計に優しい配分設定です。';
   }
-  if (!data.hasBill) {
+  if (_kpNew === 'kyushu_ohisama') {
+    // 時間帯別グループ：ohisama は step-rate ロジックを一切通さない
+    document.getElementById('juuryo-panel').style.display = 'none';
+    document.getElementById('ohisama-panel').style.display = 'block';
+    updateRatioPanel();
+    _renderOhisamaBreakdown();
+    updatePriceStatus(data);
+    calc();
+  } else if (!data.hasBill) {
     onHearingChange(data); // 内部でupdateRatioPanel + calc
   } else {
     updateRatioPanel();
     updateJuuryoPanel();
     updatePriceStatus(data);
     calc();
-  }
-  if (_kpNew !== 'kyushu_ohisama') {
     autoEstimateJyuryoKwh();
   }
 }
@@ -3180,7 +3188,14 @@ function calc() {
   } else {
     up = mkwh > 0 ? Math.round(mb / mkwh * 10) / 10 : 0;
   }
-  updateJuuryoPanel(); // 全プランで料金内訳パネルを更新（内部でshow/hide判定）
+  // ohisama は時間帯別グループ — step-rate ロジックに渡さず専用レンダラーに直送
+  if (document.getElementById('kyuden-plan').value === 'kyushu_ohisama') {
+    document.getElementById('juuryo-panel').style.display = 'none';
+    document.getElementById('ohisama-panel').style.display = 'block';
+    _renderOhisamaBreakdown();
+  } else {
+    updateJuuryoPanel();
+  }
   const annualConsumptionKWh = mkwh * 12;
   updateDaytimeRatePanel();
   // 最優先表示：mb/mkwhがあれば何があっても必ず更新
