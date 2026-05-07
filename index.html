@@ -409,10 +409,10 @@ canvas#mini-chart { height: 150px !important; }
               </optgroup>
               <optgroup label="▼ 九州電力 時間帯別・太陽光向け（概算）">
                 <option value="kyushu_kiji">季時別電灯（公式単価ベース）</option>
-                <option value="kyushu_ohisama" selected>おひさま昼トクプラン</option>
+                <option value="kyushu_ohisama">おひさま昼トクプラン</option>
               </optgroup>
               <optgroup label="▼ 九州電力 オール電化（生活スタイル別概算）">
-                <option value="kyushu_denka_night">電化でナイト・セレクト（生活スタイル別概算単価）</option>
+                <option value="kyushu_denka_night" selected>電化でナイト・セレクト（生活スタイル別概算単価）</option>
               </optgroup>
               <optgroup label="▼ 請求書から平均単価算出（複雑な料金体系）">
                 <option value="avg:smart_gas">時間帯別・季節別プラン（請求書から平均算出）</option>
@@ -1821,7 +1821,7 @@ const HYPOTHESIS_DEFAULTS = {
   lsPreset:'custom', ls:'モデルケース（日中の使用量が比較的多いご家庭）',
   mb:20000, mkwh:667, ag:7700, sk:7, bk:7, ck:280,
   dc:5000, bc:2500, sub:0, wy:20, er:0,
-  la2:280, lr:4.1, lc:180, le:false, kyudenPlan:'kyushu_juuryo_b',
+  la2:280, lr:4.1, lc:180, le:false, kyudenPlan:'kyushu_juuryo_b', postKyudenPlan:'kyushu_denka_night',
   lp:0, ly:15, loanMethod:'zansai', loanInputMode:'auto', lpManual:0,
   ...HEARING_DEFAULTS,
 };
@@ -1830,7 +1830,7 @@ const CUSTOMER_DEFAULTS = {
   lsPreset:'away', ls:'日中は共働きで外出多め・夜間使用が中心',
   mb:20000, mkwh:667, ag:7700, sk:7, bk:7, ck:280,
   dc:2310, bc:2520, sub:0, wy:20, er:0,
-  la2:280, lr:4.1, lc:180, le:false, kyudenPlan:'kyushu_juuryo_b',
+  la2:280, lr:4.1, lc:180, le:false, kyudenPlan:'kyushu_juuryo_b', postKyudenPlan:'kyushu_denka_night',
   lp:0, ly:15, loanMethod:'zansai', loanInputMode:'auto', lpManual:0,
   ...HEARING_DEFAULTS,
 };
@@ -2026,7 +2026,7 @@ function loadDataToForm(data) {
   TAB_FIELDS.forEach(id => { const el=document.getElementById(id); if(el && data[id]!==undefined) el.value=data[id]; });
   document.getElementById('le').checked = data.le || false;
   document.getElementById('kyuden-plan').value = data.kyudenPlan || '';
-  document.getElementById('post-kyuden-plan').value = data.postKyudenPlan || 'kyushu_ohisama';
+  document.getElementById('post-kyuden-plan').value = data.postKyudenPlan || 'kyushu_denka_night';
   document.getElementById('utility-company').value = data.utilityCompany || '';
   const kp = data.kyudenPlan || '';
   showAvgRateSection(kp.startsWith('avg:'));
@@ -4575,10 +4575,12 @@ function scrollToTopHandler(e) {
 // ページが完全に読み込まれてから実行するようにします
 window.addEventListener('DOMContentLoaded', () => {
     setLoanMethod('zansai');
-    loadDataToForm(custData); // 初期表示時にkyudenPlan='kyushu_juuryo_b'で従量電灯Bを初期表示
+    loadDataToForm(custData); // 初期表示：kyudenPlan='kyushu_juuryo_b' / postKyudenPlan='kyushu_denka_night'
     _styleKyudenSelect('kyushu_juuryo_b');
     _applyWipLock();
-    autoEstimateKwhFromBill(true); // mb→mkwh 初期整合性
+    updateJuuryoPanel();          // 従量電灯B 段階料金パネルを初期表示
+    updateRatioPanel();           // 電化でナイト（導入後）スライダーを初期表示
+    autoEstimateKwhFromBill(true); // mb→mkwh 初期整合性 → 内部で calc() を呼び出し
     const _stb = document.getElementById('scroll-top-btn');
     if (_stb) {
         _stb.addEventListener('touchstart', scrollToTopHandler, { passive: false });
