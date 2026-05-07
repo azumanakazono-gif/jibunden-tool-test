@@ -360,114 +360,121 @@ canvas#mini-chart { height: 150px !important; }
 
     <div class="section-card">
       <div class="section-title">⚡ 電気使用状況</div>
-      <div class="field" style="margin-bottom:10px">
-        <label>電力会社・料金プラン</label>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">
-          <input type="text" id="utility-company" placeholder="電力会社名（任意）例：○○電力" style="flex:1;min-width:140px;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:14px;background:#fff;font-family:inherit">
-        </div>
-
-
-        <div style="margin-bottom:4px">
-          <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:3px">導入前プラン <span style="font-weight:400">（現在の契約）</span></div>
-          <select id="kyuden-plan" onchange="onKyudenPlanChange()" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;background:#fff;font-family:inherit">
-            <option value="">── プランを選択 ──</option>
-            <optgroup label="▼ 標準家庭プラン（目安単価）">
-              <option value="30">スタンダードプラン（目安 30円/kWh）</option>
-              <option value="32">プレミアム・エコプラン / 新電力標準（目安 32円/kWh）</option>
-              <option value="29">ガス・電気セット割引プラン（目安 29円/kWh）</option>
-            </optgroup>
-            <optgroup label="▼ 九州電力 従量電灯">
-              <option value="kyushu_juuryo_b" selected>従量電灯B（公式段階料金）</option>
-              <option value="kyushu_juuryo_c">従量電灯C（公式段階料金）</option>
-            </optgroup>
-            <optgroup label="▼ 九州電力 時間帯別・太陽光向け（概算）">
-              <option value="kyushu_kiji">季時別電灯（公式単価ベース）</option>
-              <option value="kyushu_ohisama">おひさま昼トクプラン</option>
-            </optgroup>
-            <optgroup label="▼ 九州電力 オール電化（生活スタイル別概算）">
-              <option value="kyushu_denka_night">電化でナイト・セレクト（生活スタイル別概算単価）</option>
-            </optgroup>
-            <optgroup label="▼ 請求書から平均単価算出（複雑な料金体系）">
-              <option value="avg:smart_gas">時間帯別・季節別プラン（請求書から平均算出）</option>
-              <option value="avg:denka">オール電化・エコキュート（請求書から平均算出）</option>
-              <option value="avg:other">その他複雑プラン（請求書から平均算出）</option>
-            </optgroup>
-          </select>
-        </div>
-
-        <div id="estimated-price-disp" style="display:none;margin-top:5px;padding:5px 10px;border-radius:6px;background:var(--pg);border:1px solid var(--border);font-size:12px;color:var(--mg);font-weight:600"></div>
-      </div>
-      <!-- 従量電灯B/C 段階料金内訳パネル（導入前プランのみ） -->
-      <div id="juuryo-panel" style="display:none;margin-bottom:10px;padding:12px 14px;background:var(--pg);border-radius:8px;border:1px solid var(--border)">
-        <div id="juuryo-panel-title" style="font-size:12px;font-weight:700;color:var(--mg);margin-bottom:8px">📋 従量電灯B 段階料金内訳</div>
-        <div id="juuryo-contract-b" style="margin-bottom:6px;display:flex;align-items:center;gap:6px">
-          <span style="font-size:11px;color:var(--muted)">契約アンペア：</span>
-          <select id="juuryo-amp" onchange="updateJuuryoPanel();autoEstimateJyuryoKwh()" style="font-size:12px;padding:2px 6px;border:1px solid var(--border);border-radius:4px">
-            <option value="10">10A</option><option value="15">15A</option><option value="20">20A</option>
-            <option value="30">30A</option><option value="40">40A</option>
-            <option value="50">50A</option><option value="60" selected>60A</option>
-          </select>
-        </div>
-        <div id="juuryo-contract-c" style="margin-bottom:6px;align-items:center;gap:6px;display:none">
-          <span style="font-size:11px;color:var(--muted)">契約容量：</span>
-          <input type="number" id="juuryo-kva" value="10" min="6" step="0.5" placeholder="例：10"
-            oninput="updateJuuryoPanel();autoEstimateJyuryoKwh()"
-            style="width:60px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px">
-          <span style="font-size:11px;color:var(--muted)">kVA</span>
-        </div>
-        <div id="juuryo-breakdown" style="font-size:11px;line-height:1.9"></div>
+      <!-- 電力会社名（全幅） -->
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">電力会社名</label>
+        <input type="text" id="utility-company" placeholder="電力会社名（任意）例：○○電力" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:14px;background:#fff;font-family:inherit;box-sizing:border-box">
       </div>
 
-      <!-- 導入後の残り電気代内訳パネル（常時表示・導入後プラン選択と時間帯スライダーを内包） -->
-      <div id="post-plan-breakdown" style="display:block;margin-bottom:10px;padding:12px 14px;background:#f0fdf4;border-radius:8px;border:1px solid #86efac">
-        <div style="font-size:12px;font-weight:700;color:#166534;margin-bottom:10px">☀️ 【導入後】月々の残り支払いイメージ</div>
-        <!-- 導入後プラン選択（最初の要素） -->
-        <div style="margin-bottom:8px">
-          <div style="font-size:11px;font-weight:700;color:#166534;margin-bottom:3px">導入後プラン <span style="font-weight:400">（太陽光切り替え後）</span></div>
-          <select id="post-kyuden-plan" onchange="onPostKyudenPlanChange()" style="width:100%;border:1.5px solid #86efac;border-radius:8px;padding:7px 10px;font-size:13px;background:#fff;font-family:inherit">
-            <option value="">── プランを選択 ──</option>
-            <optgroup label="▼ 標準家庭プラン（目安単価）">
-              <option value="30">スタンダードプラン（目安 30円/kWh）</option>
-              <option value="32">プレミアム・エコプラン / 新電力標準（目安 32円/kWh）</option>
-              <option value="29">ガス・電気セット割引プラン（目安 29円/kWh）</option>
-            </optgroup>
-            <optgroup label="▼ 九州電力 従量電灯">
-              <option value="kyushu_juuryo_b">従量電灯B（公式段階料金）</option>
-              <option value="kyushu_juuryo_c">従量電灯C（公式段階料金）</option>
-            </optgroup>
-            <optgroup label="▼ 九州電力 時間帯別・太陽光向け（概算）">
-              <option value="kyushu_kiji">季時別電灯（公式単価ベース）</option>
-              <option value="kyushu_ohisama">おひさま昼トクプラン</option>
-            </optgroup>
-            <optgroup label="▼ 九州電力 オール電化（生活スタイル別概算）">
-              <option value="kyushu_denka_night" selected>電化でナイト・セレクト（生活スタイル別概算単価）</option>
-            </optgroup>
-            <optgroup label="▼ 請求書から平均単価算出（複雑な料金体系）">
-              <option value="avg:smart_gas">時間帯別・季節別プラン（請求書から平均算出）</option>
-              <option value="avg:denka">オール電化・エコキュート（請求書から平均算出）</option>
-              <option value="avg:other">その他複雑プラン（請求書から平均算出）</option>
-            </optgroup>
-          </select>
-        </div>
-        <!-- 時間帯別使用比率パネル（導入後TOUプラン選択時のみ表示） -->
-        <div id="ratio-panel" style="display:none;margin-bottom:8px;padding:10px 12px;background:rgba(255,255,255,0.7);border-radius:6px;border:1px solid #86efac">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <span style="font-size:12px;font-weight:700;color:#166534">⏱ 時間帯別使用比率（合計100%）</span>
-            <div style="display:flex;gap:4px">
-              <button id="btn-auto-night" onclick="autoAdjustNight()" style="font-size:11px;padding:3px 8px;border:1px solid #86efac;border-radius:6px;background:#fff;color:#166534;cursor:pointer">夜間で自動調整</button>
-              <button id="btn-reset-ratio" onclick="resetToPresetRatio()" style="display:none;font-size:11px;padding:3px 8px;border:1px solid #86efac;border-radius:6px;background:#fff;color:var(--muted);cursor:pointer">標準比率に戻す</button>
-            </div>
+      <!-- ビフォー / アフター 横並び比較コンテナ -->
+      <div style="display:flex;flex-wrap:wrap;gap:15px;margin-bottom:10px;align-items:flex-start">
+
+        <!-- 【導入前】プラン選択 + 内訳カード -->
+        <div id="before-plan-card" style="flex:1;min-width:280px;padding:12px 14px;background:var(--pg);border-radius:8px;border:1px solid var(--border)">
+          <div style="font-size:12px;font-weight:700;color:var(--mg);margin-bottom:10px">⚡ 【導入前】現在の料金プラン</div>
+          <div style="margin-bottom:8px">
+            <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:3px">導入前プラン <span style="font-weight:400">（現在の契約）</span></div>
+            <select id="kyuden-plan" onchange="onKyudenPlanChange()" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;background:#fff;font-family:inherit">
+              <option value="">── プランを選択 ──</option>
+              <optgroup label="▼ 標準家庭プラン（目安単価）">
+                <option value="30">スタンダードプラン（目安 30円/kWh）</option>
+                <option value="32">プレミアム・エコプラン / 新電力標準（目安 32円/kWh）</option>
+                <option value="29">ガス・電気セット割引プラン（目安 29円/kWh）</option>
+              </optgroup>
+              <optgroup label="▼ 九州電力 従量電灯">
+                <option value="kyushu_juuryo_b" selected>従量電灯B（公式段階料金）</option>
+                <option value="kyushu_juuryo_c">従量電灯C（公式段階料金）</option>
+              </optgroup>
+              <optgroup label="▼ 九州電力 時間帯別・太陽光向け（概算）">
+                <option value="kyushu_kiji">季時別電灯（公式単価ベース）</option>
+                <option value="kyushu_ohisama">おひさま昼トクプラン</option>
+              </optgroup>
+              <optgroup label="▼ 九州電力 オール電化（生活スタイル別概算）">
+                <option value="kyushu_denka_night">電化でナイト・セレクト（生活スタイル別概算単価）</option>
+              </optgroup>
+              <optgroup label="▼ 請求書から平均単価算出（複雑な料金体系）">
+                <option value="avg:smart_gas">時間帯別・季節別プラン（請求書から平均算出）</option>
+                <option value="avg:denka">オール電化・エコキュート（請求書から平均算出）</option>
+                <option value="avg:other">その他複雑プラン（請求書から平均算出）</option>
+              </optgroup>
+            </select>
           </div>
-          <div id="ratio-zones" style="display:flex;flex-direction:column;gap:6px"></div>
-          <div id="ratio-sum-warn" style="display:none;margin-top:4px;font-size:11px;color:#dc2626;font-weight:700">⚠ 合計が100%になるよう設定してください（現在 <span id="ratio-sum-val">0</span>%）</div>
-          <div id="ratio-style-status" style="display:none;margin-top:6px;font-size:11px;padding:4px 8px;background:#fff;border-radius:4px;border:1px solid #86efac"></div>
-          <details id="price-breakdown" style="margin-top:10px" ontoggle="(function(d){const s=d.querySelector('summary');s.textContent=d.open?'📊 単価内訳・計算根拠を閉じる ▲':'📊 単価内訳・計算根拠を見る ▼';})(this)">
-            <summary style="cursor:pointer;font-size:12px;font-weight:700;padding:7px 12px;background:#dcfce7;border:1px solid #86efac;border-radius:8px;color:#166534;list-style:none;user-select:none">📊 単価内訳・計算根拠を見る ▼</summary>
-            <div id="price-breakdown-body" style="margin-top:6px;padding:8px;background:#fff;border-radius:6px;border:1px solid #86efac;font-size:11px;line-height:1.8"></div>
-          </details>
+          <div id="estimated-price-disp" style="display:none;margin-bottom:8px;padding:5px 10px;border-radius:6px;background:#fff;border:1px solid var(--border);font-size:12px;color:var(--mg);font-weight:600"></div>
+          <!-- 段階料金・時間帯別内訳（選択プランに応じて表示） -->
+          <div id="juuryo-panel" style="display:none">
+            <div style="height:1px;background:var(--border);margin-bottom:8px"></div>
+            <div id="juuryo-panel-title" style="font-size:12px;font-weight:700;color:var(--mg);margin-bottom:8px">📋 従量電灯B 段階料金内訳</div>
+            <div id="juuryo-contract-b" style="margin-bottom:6px;display:flex;align-items:center;gap:6px">
+              <span style="font-size:11px;color:var(--muted)">契約アンペア：</span>
+              <select id="juuryo-amp" onchange="updateJuuryoPanel();autoEstimateJyuryoKwh()" style="font-size:12px;padding:2px 6px;border:1px solid var(--border);border-radius:4px">
+                <option value="10">10A</option><option value="15">15A</option><option value="20">20A</option>
+                <option value="30">30A</option><option value="40">40A</option>
+                <option value="50">50A</option><option value="60" selected>60A</option>
+              </select>
+            </div>
+            <div id="juuryo-contract-c" style="margin-bottom:6px;align-items:center;gap:6px;display:none">
+              <span style="font-size:11px;color:var(--muted)">契約容量：</span>
+              <input type="number" id="juuryo-kva" value="10" min="6" step="0.5" placeholder="例：10"
+                oninput="updateJuuryoPanel();autoEstimateJyuryoKwh()"
+                style="width:60px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px">
+              <span style="font-size:11px;color:var(--muted)">kVA</span>
+            </div>
+            <div id="juuryo-breakdown" style="font-size:11px;line-height:1.9"></div>
+          </div>
         </div>
-        <!-- 導入後内訳本文 -->
-        <div id="post-plan-breakdown-body" style="font-size:11px;line-height:1.9"></div>
+
+        <!-- 【導入後】プラン選択 + 内訳カード -->
+        <div id="post-plan-breakdown" style="flex:1;min-width:280px;display:block;padding:12px 14px;background:#f0fdf4;border-radius:8px;border:1px solid #86efac">
+          <div style="font-size:12px;font-weight:700;color:#166534;margin-bottom:10px">☀️ 【導入後】月々の残り支払いイメージ</div>
+          <!-- 導入後プラン選択（最初の要素） -->
+          <div style="margin-bottom:8px">
+            <div style="font-size:11px;font-weight:700;color:#166534;margin-bottom:3px">導入後プラン <span style="font-weight:400">（太陽光切り替え後）</span></div>
+            <select id="post-kyuden-plan" onchange="onPostKyudenPlanChange()" style="width:100%;border:1.5px solid #86efac;border-radius:8px;padding:7px 10px;font-size:13px;background:#fff;font-family:inherit">
+              <option value="">── プランを選択 ──</option>
+              <optgroup label="▼ 標準家庭プラン（目安単価）">
+                <option value="30">スタンダードプラン（目安 30円/kWh）</option>
+                <option value="32">プレミアム・エコプラン / 新電力標準（目安 32円/kWh）</option>
+                <option value="29">ガス・電気セット割引プラン（目安 29円/kWh）</option>
+              </optgroup>
+              <optgroup label="▼ 九州電力 従量電灯">
+                <option value="kyushu_juuryo_b">従量電灯B（公式段階料金）</option>
+                <option value="kyushu_juuryo_c">従量電灯C（公式段階料金）</option>
+              </optgroup>
+              <optgroup label="▼ 九州電力 時間帯別・太陽光向け（概算）">
+                <option value="kyushu_kiji">季時別電灯（公式単価ベース）</option>
+                <option value="kyushu_ohisama">おひさま昼トクプラン</option>
+              </optgroup>
+              <optgroup label="▼ 九州電力 オール電化（生活スタイル別概算）">
+                <option value="kyushu_denka_night" selected>電化でナイト・セレクト（生活スタイル別概算単価）</option>
+              </optgroup>
+              <optgroup label="▼ 請求書から平均単価算出（複雑な料金体系）">
+                <option value="avg:smart_gas">時間帯別・季節別プラン（請求書から平均算出）</option>
+                <option value="avg:denka">オール電化・エコキュート（請求書から平均算出）</option>
+                <option value="avg:other">その他複雑プラン（請求書から平均算出）</option>
+              </optgroup>
+            </select>
+          </div>
+          <!-- 時間帯別使用比率パネル（導入後TOUプラン選択時のみ表示） -->
+          <div id="ratio-panel" style="display:none;margin-bottom:8px;padding:10px 12px;background:rgba(255,255,255,0.7);border-radius:6px;border:1px solid #86efac">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <span style="font-size:12px;font-weight:700;color:#166534">⏱ 時間帯別使用比率（合計100%）</span>
+              <div style="display:flex;gap:4px">
+                <button id="btn-auto-night" onclick="autoAdjustNight()" style="font-size:11px;padding:3px 8px;border:1px solid #86efac;border-radius:6px;background:#fff;color:#166534;cursor:pointer">夜間で自動調整</button>
+                <button id="btn-reset-ratio" onclick="resetToPresetRatio()" style="display:none;font-size:11px;padding:3px 8px;border:1px solid #86efac;border-radius:6px;background:#fff;color:var(--muted);cursor:pointer">標準比率に戻す</button>
+              </div>
+            </div>
+            <div id="ratio-zones" style="display:flex;flex-direction:column;gap:6px"></div>
+            <div id="ratio-sum-warn" style="display:none;margin-top:4px;font-size:11px;color:#dc2626;font-weight:700">⚠ 合計が100%になるよう設定してください（現在 <span id="ratio-sum-val">0</span>%）</div>
+            <div id="ratio-style-status" style="display:none;margin-top:6px;font-size:11px;padding:4px 8px;background:#fff;border-radius:4px;border:1px solid #86efac"></div>
+            <details id="price-breakdown" style="margin-top:10px" ontoggle="(function(d){const s=d.querySelector('summary');s.textContent=d.open?'📊 単価内訳・計算根拠を閉じる ▲':'📊 単価内訳・計算根拠を見る ▼';})(this)">
+              <summary style="cursor:pointer;font-size:12px;font-weight:700;padding:7px 12px;background:#dcfce7;border:1px solid #86efac;border-radius:8px;color:#166534;list-style:none;user-select:none">📊 単価内訳・計算根拠を見る ▼</summary>
+              <div id="price-breakdown-body" style="margin-top:6px;padding:8px;background:#fff;border-radius:6px;border:1px solid #86efac;font-size:11px;line-height:1.8"></div>
+            </details>
+          </div>
+          <!-- 導入後内訳本文 -->
+          <div id="post-plan-breakdown-body" style="font-size:11px;line-height:1.9"></div>
+        </div>
+
       </div>
 
 
