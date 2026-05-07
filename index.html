@@ -2819,12 +2819,19 @@ function onHearingChange(data) {
       noteEl.textContent = '';
       const _epEl = document.getElementById('estimated-price-disp');
       _epEl.style.display = 'none';
-      _epEl.textContent   = ''; // 概算単価テキストを完全クリア
+      _epEl.textContent   = '';
       const eff = calcEffectiveUnitPrice(kp);
       document.getElementById('mkwh').value = Math.round(mb / eff);
       updateRatioPanel();
       updateRatioStyleStatus();
-      updateJuuryoPanel();
+      // ohisama は step-rate ロジックを通さず専用パネルへ直送
+      if (kp === 'kyushu_ohisama') {
+        document.getElementById('juuryo-panel').style.display = 'none';
+        document.getElementById('ohisama-panel').style.display = 'block';
+        _renderOhisamaBreakdown();
+      } else {
+        updateJuuryoPanel();
+      }
       updatePriceStatus(data);
       _applyRatioDc(kp);
       calc();
