@@ -1485,7 +1485,7 @@ function resetBcManual() {
 }
 
 function updateJuuryoPanel() {
-    if (this.value === 'kyushu_ohisama' || document.getElementById('kyuden-plan').value === 'kyushu_ohisama') {
+    if (document.getElementById('kyuden-plan').value === 'kyushu_ohisama') {
         document.getElementById('juuryo-panel').style.display = 'none';
         document.getElementById('ohisama-panel').style.display = 'block';
         _renderOhisamaBreakdown();
@@ -2134,7 +2134,9 @@ function onKyudenPlanChange() {
     updatePriceStatus(data);
     calc();
   }
-  autoEstimateJyuryoKwh();
+  if (_kpNew !== 'kyushu_ohisama') {
+    autoEstimateJyuryoKwh();
+  }
 }
 
 function showAvgRateSection(show) {
