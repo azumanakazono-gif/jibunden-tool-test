@@ -1493,12 +1493,17 @@ function updateJuuryoPanel() {
     }
     const kp = document.getElementById('kyuden-plan').value;
     document.getElementById('ohisama-panel').style.display = 'none';
-    document.getElementById('juuryo-panel').style.display = 'block';
 
   const isJuuryoB = kp === 'kyushu_juuryo_b';
   const isJuuryoC = kp === 'kyushu_juuryo_c';
   const isDenka   = kp === 'kyushu_denka_night';
   const isKiji    = kp === 'kyushu_kiji';
+
+  if (!isJuuryoB && !isJuuryoC && !isDenka && !isKiji) {
+    document.getElementById('juuryo-panel').style.display = 'none';
+    return;
+  }
+  document.getElementById('juuryo-panel').style.display = 'block';
 
   const body    = document.getElementById('juuryo-breakdown');
   const titleEl = document.getElementById('juuryo-panel-title');
