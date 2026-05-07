@@ -419,7 +419,7 @@ canvas#mini-chart { height: 150px !important; }
       </div>
 
       <!-- 導入後の残り電気代内訳パネル（常時表示・導入後プラン選択と時間帯スライダーを内包） -->
-      <div id="post-plan-breakdown" style="margin-bottom:10px;padding:12px 14px;background:#f0fdf4;border-radius:8px;border:1px solid #86efac">
+      <div id="post-plan-breakdown" style="display:block;margin-bottom:10px;padding:12px 14px;background:#f0fdf4;border-radius:8px;border:1px solid #86efac">
         <div style="font-size:12px;font-weight:700;color:#166534;margin-bottom:10px">☀️ 【導入後】月々の残り支払いイメージ</div>
         <!-- 導入後プラン選択（最初の要素） -->
         <div style="margin-bottom:8px">
@@ -2173,7 +2173,11 @@ function onKyudenPlanChange() {
 }
 
 function onPostKyudenPlanChange() {
+  _ratioPanelPlan = null;
+  isCustomRatio   = false;
+  customRatios    = null;
   updateRatioPanel();
+  renderPostPlanBreakdown();
   calc();
 }
 
@@ -3003,7 +3007,8 @@ function onHearingChange(data) {
       // ohisama は step-rate ロジックを通さず専用パネルへ直送
       if (kp === 'kyushu_ohisama') {
         document.getElementById('juuryo-panel').style.display = 'none';
-        document.getElementById('ohisama-panel').style.display = 'block';
+        const _ohisPanel2 = document.getElementById('ohisama-panel');
+        if (_ohisPanel2) _ohisPanel2.style.display = 'block';
         _renderOhisamaBreakdown();
       } else {
         updateJuuryoPanel();
@@ -3389,7 +3394,8 @@ function calc() {
   // ohisama は時間帯別グループ — step-rate ロジックに渡さず専用レンダラーに直送
   if (document.getElementById('kyuden-plan').value === 'kyushu_ohisama') {
     document.getElementById('juuryo-panel').style.display = 'none';
-    document.getElementById('ohisama-panel').style.display = 'block';
+    const _ohisPanel = document.getElementById('ohisama-panel');
+    if (_ohisPanel) _ohisPanel.style.display = 'block';
     _renderOhisamaBreakdown();
 
   } else {
