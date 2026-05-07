@@ -2295,13 +2295,16 @@ function onKyudenPlanChange() {
 }
 
 function onPostKyudenPlanChange() {
+  updateRatioPanel();
   calc();
 }
 
 function _updatePostPlanBreakdown(postKp, post_up, remainKwh) {
   const panel = document.getElementById('post-plan-breakdown');
   if (!panel) return;
-  if (!postKp || remainKwh <= 0) { panel.style.display = 'none'; return; }
+  if (!postKp) { panel.style.display = 'none'; return; }
+  // For ohisama After plan, show panel even without solar data (amounts show as 0 until ag is entered)
+  if (remainKwh <= 0 && postKp !== 'kyushu_ohisama') { panel.style.display = 'none'; return; }
 
   const nameEl = document.getElementById('post-plan-name');
   const body   = document.getElementById('post-plan-breakdown-body');
@@ -2627,24 +2630,29 @@ function calcEffectiveUnitPrice(plan) {
 
 function updateRatioPanel() {
   const kp        = document.getElementById('kyuden-plan').value;
+  const postKp    = (document.getElementById('post-kyuden-plan')||{}).value || '';
   const panel     = document.getElementById('ratio-panel');
   const isDenka   = kp === 'kyushu_denka_night';
   const isKiji    = kp === 'kyushu_kiji';
   const isOhisama = kp === 'kyushu_ohisama';
+  // When Before plan is not TOU but After plan is ohisama, show ohisama sliders
+  const isPostOhisama = postKp === 'kyushu_ohisama' && !isDenka && !isKiji && !isOhisama;
+  const effKp     = isPostOhisama ? 'kyushu_ohisama' : kp;
+  const effOhisama = isOhisama || isPostOhisama;
   const data    = activeTab === 'hypothesis' ? hypData : custData;
   const hasBill = !!data.hasBill;
-  panel.style.display = (!hasBill && (isDenka || isKiji || isOhisama)) ? '' : 'none';
-  if (!(!hasBill && (isDenka || isKiji || isOhisama))) return;
+  panel.style.display = (!hasBill && (isDenka || isKiji || effOhisama)) ? '' : 'none';
+  if (!(!hasBill && (isDenka || isKiji || effOhisama))) return;
   const _autoBtn = document.getElementById('btn-auto-night');
-  if (_autoBtn) _autoBtn.textContent = isKiji ? 'ナイトで自動調整' : isOhisama ? 'だんらんで自動調整' : '夜間で自動調整';
+  if (_autoBtn) _autoBtn.textContent = isKiji ? 'ナイトで自動調整' : effOhisama ? 'だんらんで自動調整' : '夜間で自動調整';
 
-  const prefix  = isDenka ? 'dn' : isOhisama ? 'oh' : 'kj';
-  const ratios  = getEffectiveRatios(kp);
+  const prefix  = isDenka ? 'dn' : effOhisama ? 'oh' : 'kj';
+  const ratios  = getEffectiveRatios(effKp);
   const mkwh    = parseFloat(document.getElementById('mkwh').value) || 667;
   const annualKwh = mkwh * 12;
 
-  if (_ratioPanelPlan !== kp) {
-    _ratioPanelPlan = kp;
+  if (_ratioPanelPlan !== effKp) {
+    _ratioPanelPlan = effKp;
     const zones = isDenka
       ? [
           { key:'day',     label:'平日デイタイム (10-17時)',   pct: Math.round(ratios.day*100)              },
@@ -2652,7 +2660,7 @@ function updateRatioPanel() {
           { key:'living',  label:'平日朝夕 (8-10/17-22時)',   pct: Math.round((ratios.living||0)*100)      },
           { key:'ngt',     label:'夜間（22〜翌8時）',          pct: Math.round(ratios.ngt*100)              },
         ]
-      : isOhisama
+      : effOhisama
       ? [
           { key:'ohisama', label:'おひさまタイム (10-16時)',            pct: Math.round((ratios.ohisama||0)*100) },
           { key:'peak',    label:'シフトタイム (朝夕：8-10/16-22時)', pct: Math.round((ratios.peak||0)*100)    },
@@ -2694,7 +2702,7 @@ function updateRatioPanel() {
         _sv('r-dn-hol',hv);    _sv('r-dn-hol-sl',hv);
         _sv('r-dn-living',lv); _sv('r-dn-living-sl',lv);
         _sv('r-dn-ngt',nv);    _sv('r-dn-ngt-sl',nv);
-      } else if (isOhisama) {
+      } else if (effOhisama) {
         const ov=Math.round((ratios.ohisama||0)*100), pv=Math.round((ratios.peak||0)*100), nv=Math.round((ratios.ngt||0)*100);
         _sv('r-oh-ohisama',ov); _sv('r-oh-ohisama-sl',ov);
         _sv('r-oh-peak',pv);    _sv('r-oh-peak-sl',pv);
@@ -2706,10 +2714,10 @@ function updateRatioPanel() {
         _sv('r-kj-ngt',nv);    _sv('r-kj-ngt-sl',nv);
       }
     }
-    _updateRatioKwhDisplay(kp, prefix, annualKwh);
+    _updateRatioKwhDisplay(effKp, prefix, annualKwh);
   }
   document.getElementById('btn-reset-ratio').style.display = isCustomRatio ? '' : 'none';
-  _updatePriceBreakdown(kp);
+  _updatePriceBreakdown(effKp);
 }
 
 function _updateRatioKwhDisplay(kp, prefix, annualKwh) {
