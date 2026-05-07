@@ -1485,15 +1485,13 @@ function resetBcManual() {
 }
 
 function updateJuuryoPanel() {
-    const kp = document.getElementById('kyuden-plan').value;
-
-    // Guard: ohisama plan (must be first)
-    if (kp.includes('ohisama')) {
+    if (this.value === 'kyushu_ohisama' || document.getElementById('kyuden-plan').value === 'kyushu_ohisama') {
         document.getElementById('juuryo-panel').style.display = 'none';
         document.getElementById('ohisama-panel').style.display = 'block';
         _renderOhisamaBreakdown();
         return;
-    } else {
+    }
+    const kp = document.getElementById('kyuden-plan').value;
     document.getElementById('ohisama-panel').style.display = 'none';
     document.getElementById('juuryo-panel').style.display = 'block';
 
@@ -1614,7 +1612,6 @@ function updateJuuryoPanel() {
     `<div style="display:flex;justify-content:space-between;margin-top:4px;padding-top:4px;border-top:1px solid var(--border);font-weight:700;color:var(--mg)">` +
       `<span>概算月額合計</span><span style="font-size:12px">約${fr(grand)}円</span>` +
     `</div>`;
-  } // else non-ohisama
 }
 
 // おひさま昼トクプラン専用内訳レンダラー（juuryo-panelとは完全分離）
