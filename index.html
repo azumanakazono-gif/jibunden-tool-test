@@ -2867,7 +2867,10 @@ function updateRatioStyleStatus() {
 
 function autoAdjustNight() {
   const kp     = document.getElementById('kyuden-plan').value;
-  const prefix = kp === 'kyushu_denka_night' ? 'dn' : kp === 'kyushu_ohisama' ? 'oh' : 'kj';
+  const postKp = (document.getElementById('post-kyuden-plan') || {}).value || '';
+  const isBefTOU = kp === 'kyushu_denka_night' || kp === 'kyushu_ohisama' || kp === 'kyushu_kiji';
+  const effKp  = isBefTOU ? kp : postKp;
+  const prefix = effKp === 'kyushu_denka_night' ? 'dn' : effKp === 'kyushu_ohisama' ? 'oh' : 'kj';
   const keys   = prefix === 'dn' ? ['day','hol','living'] : prefix === 'oh' ? ['ohisama','peak'] : ['day','living'];
   let sum = 0;
   keys.forEach(k => { sum += parseFloat(document.getElementById(`r-${prefix}-${k}`).value) || 0; });
@@ -2887,7 +2890,10 @@ function onSliderChange(prefix, key) {
 }
 
 function onRatioChange(prefix) {
-  const kp = document.getElementById('kyuden-plan').value;
+  const kp     = document.getElementById('kyuden-plan').value;
+  const postKp = (document.getElementById('post-kyuden-plan') || {}).value || '';
+  const isBefTOU = kp === 'kyushu_denka_night' || kp === 'kyushu_ohisama' || kp === 'kyushu_kiji';
+  const effKp  = isBefTOU ? kp : postKp;
   const _sv = (id, v) => { const e=document.getElementById(id); if(e) e.value=v; };
   if (prefix === 'dn') {
     const day    = (parseFloat(document.getElementById('r-dn-day').value)    || 0) / 100;
@@ -2913,6 +2919,14 @@ function onRatioChange(prefix) {
   }
   isCustomRatio = true;
 
+  // Reverse-sync: push new daytime total back to global daytime ratio slider
+  const _dtTotal = Object.entries(customRatios)
+    .filter(([k]) => k !== 'label' && k !== 'ngt')
+    .reduce((s, [,v]) => s + v, 0);
+  const _dtPct = Math.min(80, Math.max(5, Math.round(_dtTotal * 100)));
+  _sv('daytime-rate-num', _dtPct);
+  _sv('daytime-rate-sl',  _dtPct);
+
   const nums  = Object.entries(customRatios).filter(([k]) => k !== 'label').map(([,v]) => v);
   const total = nums.reduce((a,b) => a+b, 0);
   const sumPct = Math.round(total * 100);
@@ -2923,16 +2937,17 @@ function onRatioChange(prefix) {
   document.getElementById('btn-reset-ratio').style.display = '';
 
   const mkwh = parseFloat(document.getElementById('mkwh').value) || 667;
-  _updateRatioKwhDisplay(kp, prefix, mkwh * 12);
-  _updatePriceBreakdown(kp);
+  _updateRatioKwhDisplay(effKp, prefix, mkwh * 12);
+  _updatePriceBreakdown(effKp);
 
   const data = activeTab === 'hypothesis' ? hypData : custData;
   if (!data.hasBill) {
     onHearingChange(data); // updates mkwh → _applyRatioDc → updateRatioStyleStatus → calc
   } else {
-    _applyRatioDc(kp);
+    _applyRatioDc(effKp);
     updateRatioStyleStatus();
     updatePriceStatus(data);
+    renderPostPlanBreakdown();
     calc();
   }
 }
