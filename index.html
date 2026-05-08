@@ -2605,15 +2605,6 @@ function calcEffectiveUnitPrice(plan) {
 
 function updateRatioPanel() {
 
-  const postKp    = (document.getElementById('post-kyuden-plan')||{}).value || '';
-  const panel     = document.getElementById('ratio-panel');
-  const effOhisama = postKp === 'kyushu_ohisama';
-  const effKiji    = postKp === 'kyushu_kiji';
-  const effDenka   = postKp === 'kyushu_denka_night';
-  const effKp      = postKp;
-  panel.style.display = (effDenka || effKiji || effOhisama) ? '' : 'none';
-  if (!(effDenka || effKiji || effOhisama)) return;
-
   const kp        = document.getElementById('kyuden-plan').value;
   const postKp    = (document.getElementById('post-kyuden-plan')||{}).value || '';
   const panel     = document.getElementById('ratio-panel');
