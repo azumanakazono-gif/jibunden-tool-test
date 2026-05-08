@@ -2453,20 +2453,23 @@ function _applyCustomDaytimeRate(rate) {
   calc();
 }
 function _syncDaytimeToPostRatios(daytimeRatio) {
+  const kp     = document.getElementById('kyuden-plan').value;
   const postKp = (document.getElementById('post-kyuden-plan') || {}).value || '';
-  if (!['kyushu_ohisama', 'kyushu_denka_night', 'kyushu_kiji'].includes(postKp)) return;
+  const isTOU  = v => v === 'kyushu_ohisama' || v === 'kyushu_denka_night' || v === 'kyushu_kiji';
+  const effKp  = isTOU(kp) ? kp : postKp;
+  if (!isTOU(effKp)) return;
   const D   = Math.round(daytimeRatio * 1000) / 1000;
   const ngt = Math.round((1 - D) * 1000) / 1000;
-  if (postKp === 'kyushu_denka_night') {
+  if (effKp === 'kyushu_denka_night') {
     const day    = Math.round(D * 0.60 * 1000) / 1000;
     const hol    = Math.round(D * 0.20 * 1000) / 1000;
     const living = Math.round((D - day - hol) * 1000) / 1000;
     customRatios = { day, hol, living, ngt, label:'昼間比率連動' };
-  } else if (postKp === 'kyushu_ohisama') {
+  } else if (effKp === 'kyushu_ohisama') {
     const ohisama = Math.round(D * 0.60 * 1000) / 1000;
     const peak    = Math.round((D - ohisama) * 1000) / 1000;
     customRatios = { ohisama, peak, ngt, label:'昼間比率連動' };
-  } else if (postKp === 'kyushu_kiji') {
+  } else if (effKp === 'kyushu_kiji') {
     const day    = Math.round(D * 0.60 * 1000) / 1000;
     const living = Math.round((D - day) * 1000) / 1000;
     customRatios = { day, living, ngt, label:'昼間比率連動' };
@@ -2474,6 +2477,7 @@ function _syncDaytimeToPostRatios(daytimeRatio) {
   isCustomRatio   = true;
   _ratioPanelPlan = null;
   updateRatioPanel();
+  updateJuuryoPanel();
   renderPostPlanBreakdown();
 }
 function onDaytimeRateSlider() {
