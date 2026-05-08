@@ -2640,6 +2640,13 @@ function calcEffectiveUnitPrice(plan) {
   return Math.round((base + ADJUSTMENT_UNIT_PRICE) * 100) / 100;
 }
 
+function updateRatioPanelVisibility() {
+  const kp     = document.getElementById('kyuden-plan').value;
+  const postKp = (document.getElementById('post-kyuden-plan') || {}).value || '';
+  const isTOU  = v => v === 'kyushu_denka_night' || v === 'kyushu_kiji' || v === 'kyushu_ohisama';
+  document.getElementById('ratio-panel').style.display = (isTOU(kp) || isTOU(postKp)) ? '' : 'none';
+}
+
 function updateRatioPanel() {
 
   const kp        = document.getElementById('kyuden-plan').value;
@@ -4669,6 +4676,7 @@ window.addEventListener('DOMContentLoaded', () => {
     _applyWipLock();
     updateJuuryoPanel();          // 従量電灯B 段階料金パネルを初期表示
     updateRatioPanel();           // 電化でナイト（導入後）スライダーを初期表示
+    document.getElementById('kyuden-plan').addEventListener('change', updateRatioPanelVisibility);
     renderPostPlanBreakdown();    // 導入後内訳を即時表示
     autoEstimateKwhFromBill(true); // mb→mkwh 初期整合性 → 内部で calc() を呼び出し
     setTimeout(renderPostPlanBreakdown, 0); // 全同期処理完了後に確実に再描画（最終書き込みで勝利保証）
