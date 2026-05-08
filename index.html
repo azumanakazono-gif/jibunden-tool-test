@@ -2641,9 +2641,11 @@ function calcEffectiveUnitPrice(plan) {
 }
 
 function updateRatioPanelVisibility() {
-  const kp     = document.getElementById('kyuden-plan').value;
-  const postKp = (document.getElementById('post-kyuden-plan') || {}).value || '';
-  const isTOU  = v => v === 'kyushu_denka_night' || v === 'kyushu_kiji' || v === 'kyushu_ohisama';
+  const kpSel    = document.getElementById('kyuden-plan');
+  const postKpSel = document.getElementById('post-kyuden-plan');
+  const kp     = kpSel     ? (kpSel.options[kpSel.selectedIndex]         || {}).text || '' : '';
+  const postKp = postKpSel ? (postKpSel.options[postKpSel.selectedIndex] || {}).text || '' : '';
+  const isTOU  = v => ['電化', 'ナイト', '季時別', 'おひさま'].some(kw => v.includes(kw));
   document.getElementById('ratio-panel').style.display = (isTOU(kp) || isTOU(postKp)) ? '' : 'none';
 }
 
@@ -4680,6 +4682,7 @@ window.addEventListener('DOMContentLoaded', () => {
     renderPostPlanBreakdown();    // 導入後内訳を即時表示
     autoEstimateKwhFromBill(true); // mb→mkwh 初期整合性 → 内部で calc() を呼び出し
     setTimeout(renderPostPlanBreakdown, 0); // 全同期処理完了後に確実に再描画（最終書き込みで勝利保証）
+    updateRatioPanelVisibility();
     const _stb = document.getElementById('scroll-top-btn');
     if (_stb) {
         _stb.addEventListener('touchstart', scrollToTopHandler, { passive: false });
