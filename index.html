@@ -385,6 +385,24 @@ canvas#mini-chart { height: 150px !important; }
         <div id="daytime-rate-status" style="margin-top:4px;font-size:11px"></div>
       </div>
 
+      <!-- 自家消費率 / 余剰率 グローバルサマリー -->
+      <div class="grid2" style="gap:10px;margin-bottom:12px">
+        <div id="self-rate-card" style="border-radius:12px;padding:16px 12px;border:2px solid var(--dg);background:var(--mg);box-shadow:0 2px 8px rgba(0,0,0,.10)">
+          <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:4px">自家消費率</div>
+          <div style="font-size:42px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em"><span id="self-rate-val">-</span><span style="font-size:22px;font-weight:700">%</span></div>
+          <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:6px">発電のうちご家庭で使う割合</div>
+          <div id="self-rate-warning" style="display:none;margin-top:8px;font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.25);border-radius:6px;padding:6px 8px;line-height:1.5">
+            ⚠ 自家消費率が100%を超えています<br>
+            <span style="font-weight:400;opacity:.9">発電量・自家消費量・蓄電池放電量の前提を見直してください</span>
+          </div>
+        </div>
+        <div id="surplus-rate-card" style="border-radius:12px;padding:16px 12px;border:2px solid #0d9488;background:#0f766e;box-shadow:0 2px 8px rgba(0,0,0,.10)">
+          <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:4px">余剰率</div>
+          <div style="font-size:42px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em"><span id="surplus-rate-val">-</span><span style="font-size:22px;font-weight:700">%</span></div>
+          <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:6px">発電のうち売電に回る割合</div>
+        </div>
+      </div>
+
       <!-- ビフォー / アフター 横並び比較コンテナ -->
       <div style="display:flex;flex-wrap:wrap;gap:15px;margin-bottom:10px;align-items:flex-start">
 
@@ -417,23 +435,6 @@ canvas#mini-chart { height: 150px !important; }
                 <option value="avg:other">その他複雑プラン（請求書から平均算出）</option>
               </optgroup>
             </select>
-          </div>
-          <!-- 自家消費率 / 余剰率カード -->
-          <div class="grid2" style="gap:10px;margin-bottom:10px">
-            <div id="self-rate-card" style="border-radius:12px;padding:16px 12px;border:2px solid var(--dg);background:var(--mg);box-shadow:0 2px 8px rgba(0,0,0,.10)">
-              <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:4px">自家消費率</div>
-              <div style="font-size:42px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em"><span id="self-rate-val">-</span><span style="font-size:22px;font-weight:700">%</span></div>
-              <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:6px">発電のうちご家庭で使う割合</div>
-              <div id="self-rate-warning" style="display:none;margin-top:8px;font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.25);border-radius:6px;padding:6px 8px;line-height:1.5">
-                ⚠ 自家消費率が100%を超えています<br>
-                <span style="font-weight:400;opacity:.9">発電量・自家消費量・蓄電池放電量の前提を見直してください</span>
-              </div>
-            </div>
-            <div id="surplus-rate-card" style="border-radius:12px;padding:16px 12px;border:2px solid #0d9488;background:#0f766e;box-shadow:0 2px 8px rgba(0,0,0,.10)">
-              <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:4px">余剰率</div>
-              <div style="font-size:42px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em"><span id="surplus-rate-val">-</span><span style="font-size:22px;font-weight:700">%</span></div>
-              <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:6px">発電のうち売電に回る割合</div>
-            </div>
           </div>
           <div id="estimated-price-disp" style="display:none;margin-bottom:8px;padding:5px 10px;border-radius:6px;background:#fff;border:1px solid var(--border);font-size:12px;color:var(--mg);font-weight:600"></div>
           <!-- 段階料金・時間帯別内訳（選択プランに応じて表示） -->
@@ -2445,7 +2446,32 @@ function _applyCustomDaytimeRate(rate) {
   const warnEl = document.getElementById('bc-warn');
   if (warnEl) warnEl.style.display = 'none';
   updateDaytimeRatePanel();
+  _syncDaytimeToPostRatios(rate);
   calc();
+}
+function _syncDaytimeToPostRatios(daytimeRatio) {
+  const postKp = (document.getElementById('post-kyuden-plan') || {}).value || '';
+  if (!['kyushu_ohisama', 'kyushu_denka_night', 'kyushu_kiji'].includes(postKp)) return;
+  const D   = Math.round(daytimeRatio * 1000) / 1000;
+  const ngt = Math.round((1 - D) * 1000) / 1000;
+  if (postKp === 'kyushu_denka_night') {
+    const day    = Math.round(D * 0.60 * 1000) / 1000;
+    const hol    = Math.round(D * 0.20 * 1000) / 1000;
+    const living = Math.round((D - day - hol) * 1000) / 1000;
+    customRatios = { day, hol, living, ngt, label:'昼間比率連動' };
+  } else if (postKp === 'kyushu_ohisama') {
+    const ohisama = Math.round(D * 0.60 * 1000) / 1000;
+    const peak    = Math.round((D - ohisama) * 1000) / 1000;
+    customRatios = { ohisama, peak, ngt, label:'昼間比率連動' };
+  } else if (postKp === 'kyushu_kiji') {
+    const day    = Math.round(D * 0.60 * 1000) / 1000;
+    const living = Math.round((D - day) * 1000) / 1000;
+    customRatios = { day, living, ngt, label:'昼間比率連動' };
+  }
+  isCustomRatio   = true;
+  _ratioPanelPlan = null;
+  updateRatioPanel();
+  renderPostPlanBreakdown();
 }
 function onDaytimeRateSlider() {
   const val = parseInt(document.getElementById('daytime-rate-sl').value) || 30;
