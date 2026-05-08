@@ -2173,6 +2173,8 @@ function onKyudenPlanChange() {
   const _kpNew = document.getElementById('kyuden-plan').value;
   if (_kpNew === 'kyushu_juuryo_b') document.getElementById('juuryo-amp').value = '60';
   if (_kpNew === 'kyushu_juuryo_c') { const _kvaEl = document.getElementById('juuryo-kva'); if (!parseFloat(_kvaEl.value)) _kvaEl.value = '10'; }
+  updateRatioPanel();
+  updateDaytimeRatePanel();
   if (!data.hasBill) {
     onHearingChange(data);
   } else {
@@ -2180,7 +2182,6 @@ function onKyudenPlanChange() {
     updatePriceStatus(data);
     calc();
     autoEstimateJyuryoKwh();
-
   }
 }
 
@@ -2394,9 +2395,11 @@ const LIFESTYLE_LABEL = {
 };
 
 function updateDaytimeRatePanel() {
-  const kp = document.getElementById('kyuden-plan').value;
-  const panel = document.getElementById('daytime-rate-panel');
-  if (kp === 'kyushu_denka_night' || kp === 'kyushu_kiji' || kp === 'kyushu_ohisama') { panel.style.display = 'none'; return; }
+  const kp     = document.getElementById('kyuden-plan').value;
+  const postKp = (document.getElementById('post-kyuden-plan') || {}).value || '';
+  const isTOU  = v => v === 'kyushu_denka_night' || v === 'kyushu_kiji' || v === 'kyushu_ohisama';
+  const panel  = document.getElementById('daytime-rate-panel');
+  if (!isTOU(kp) && !isTOU(postKp)) { panel.style.display = 'none'; return; }
   panel.style.display = '';
   const presetRate = getDaytimeRate() || 0.30;
   const rate = customDaytimeRate !== null ? customDaytimeRate : presetRate;
