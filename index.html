@@ -2176,6 +2176,7 @@ function onKyudenPlanChange() {
   _ratioPanelPlan = null;
   isCustomRatio   = false;
   customRatios    = null;
+  if (customDaytimeRate !== null) _syncDaytimeToPostRatios(customDaytimeRate);
   updateRatioPanel();
   updateDaytimeRatePanel();
   if (!data.hasBill) {
@@ -2459,7 +2460,7 @@ function _syncDaytimeToPostRatios(daytimeRatio) {
   const kp     = document.getElementById('kyuden-plan').value;
   const postKp = (document.getElementById('post-kyuden-plan') || {}).value || '';
   const isTOU  = v => v === 'kyushu_ohisama' || v === 'kyushu_denka_night' || v === 'kyushu_kiji';
-  const effKp  = isTOU(kp) ? kp : postKp;
+  const effKp  = isTOU(postKp) ? postKp : kp;
   if (!isTOU(effKp)) return;
   const D   = Math.round(daytimeRatio * 1000) / 1000;
   const ngt = Math.round((1 - D) * 1000) / 1000;
@@ -2647,9 +2648,7 @@ function updateRatioPanel() {
   const isDenka   = kp === 'kyushu_denka_night';
   const isKiji    = kp === 'kyushu_kiji';
   const isOhisama = kp === 'kyushu_ohisama';
-  // When Before plan is not TOU but After plan IS TOU, show appropriate time-zone sliders
-  const beforeIsTOU = isDenka || isKiji || isOhisama;
-  const isPostTOU   = !beforeIsTOU && (postKp === 'kyushu_ohisama' || postKp === 'kyushu_kiji' || postKp === 'kyushu_denka_night');
+  const isPostTOU  = postKp === 'kyushu_ohisama' || postKp === 'kyushu_kiji' || postKp === 'kyushu_denka_night';
   const effKp      = isPostTOU ? postKp : kp;
   const effOhisama = effKp === 'kyushu_ohisama';
   const effKiji    = effKp === 'kyushu_kiji';
@@ -2878,8 +2877,8 @@ function updateRatioStyleStatus() {
 function autoAdjustNight() {
   const kp     = document.getElementById('kyuden-plan').value;
   const postKp = (document.getElementById('post-kyuden-plan') || {}).value || '';
-  const isBefTOU = kp === 'kyushu_denka_night' || kp === 'kyushu_ohisama' || kp === 'kyushu_kiji';
-  const effKp  = isBefTOU ? kp : postKp;
+  const isPostTOU_aa = postKp === 'kyushu_denka_night' || postKp === 'kyushu_ohisama' || postKp === 'kyushu_kiji';
+  const effKp  = isPostTOU_aa ? postKp : kp;
   const prefix = effKp === 'kyushu_denka_night' ? 'dn' : effKp === 'kyushu_ohisama' ? 'oh' : 'kj';
   const keys   = prefix === 'dn' ? ['day','hol','living'] : prefix === 'oh' ? ['ohisama','peak'] : ['day','living'];
   let sum = 0;
@@ -2902,8 +2901,8 @@ function onSliderChange(prefix, key) {
 function onRatioChange(prefix) {
   const kp     = document.getElementById('kyuden-plan').value;
   const postKp = (document.getElementById('post-kyuden-plan') || {}).value || '';
-  const isBefTOU = kp === 'kyushu_denka_night' || kp === 'kyushu_ohisama' || kp === 'kyushu_kiji';
-  const effKp  = isBefTOU ? kp : postKp;
+  const isPostTOU_rc = postKp === 'kyushu_denka_night' || postKp === 'kyushu_ohisama' || postKp === 'kyushu_kiji';
+  const effKp  = isPostTOU_rc ? postKp : kp;
   const _sv = (id, v) => { const e=document.getElementById(id); if(e) e.value=v; };
   if (prefix === 'dn') {
     const day    = (parseFloat(document.getElementById('r-dn-day').value)    || 0) / 100;
@@ -3638,12 +3637,15 @@ function calc() {
     const _genUP_cash = (ag > 0 && wy > 0) ? parseFloat((m.totalCostMan * 10000 / (ag * wy)).toFixed(1)) : null;
     _updateUnitPriceCompare(up, _genUP_cash, wy, { isLoan: false });
   }
-  // 時間帯別比率パネルのkWh表示と単価内訳をリアルタイム同期
-  const _kpRP = document.getElementById('kyuden-plan').value;
-  if (_kpRP === 'kyushu_denka_night' || _kpRP === 'kyushu_kiji' || _kpRP === 'kyushu_ohisama') {
-    const _prefixRP = _kpRP === 'kyushu_denka_night' ? 'dn' : _kpRP === 'kyushu_ohisama' ? 'oh' : 'kj';
-    _updateRatioKwhDisplay(_kpRP, _prefixRP, (parseFloat(document.getElementById('mkwh').value)||0) * 12);
-    _updatePriceBreakdown(_kpRP);
+  // 時間帯別比率パネルのkWh表示と単価内訳をリアルタイム同期（After優先）
+  const _kpRP     = document.getElementById('kyuden-plan').value;
+  const _postKpRP = (document.getElementById('post-kyuden-plan') || {}).value || '';
+  const _isTOURP  = v => v === 'kyushu_denka_night' || v === 'kyushu_kiji' || v === 'kyushu_ohisama';
+  const _effKpRP  = _isTOURP(_postKpRP) ? _postKpRP : _isTOURP(_kpRP) ? _kpRP : null;
+  if (_effKpRP) {
+    const _prefixRP = _effKpRP === 'kyushu_denka_night' ? 'dn' : _effKpRP === 'kyushu_ohisama' ? 'oh' : 'kj';
+    _updateRatioKwhDisplay(_effKpRP, _prefixRP, (parseFloat(document.getElementById('mkwh').value)||0) * 12);
+    _updatePriceBreakdown(_effKpRP);
   }
   if (proposalMode === 'pv_only') updatePkgSummaryPv();
 }
