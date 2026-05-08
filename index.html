@@ -365,6 +365,25 @@ canvas#mini-chart { height: 150px !important; }
         <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">電力会社名</label>
         <input type="text" id="utility-company" placeholder="電力会社名（任意）例：○○電力" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:14px;background:#fff;font-family:inherit;box-sizing:border-box">
       </div>
+      <div id="daytime-auto-note" style="display:none;margin-bottom:8px;padding:8px 12px;background:var(--pg);border-radius:8px;border:1px solid var(--border);font-size:12px;color:var(--mg)">
+        <span id="daytime-auto-text"></span>
+        <span style="color:var(--muted);margin-left:8px;font-size:11px">↓ 下の値を手動で上書きできます</span>
+      </div>
+      <!-- 昼間比率手動調整パネル（時間帯別プラン以外で表示） -->
+      <div id="daytime-rate-panel" style="display:none;margin-bottom:10px;padding:12px 14px;background:var(--pg);border-radius:8px;border:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:12px;font-weight:700;color:var(--mg)">☀ 昼間使用比率</span>
+          <button id="btn-reset-daytime" onclick="resetDaytimeRate()" style="display:none;font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--muted);cursor:pointer">生活スタイル既定値に戻す</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <input type="range" id="daytime-rate-sl" min="5" max="80" step="1" oninput="onDaytimeRateSlider()" style="flex:1">
+          <input type="number" id="daytime-rate-num" min="5" max="80" step="1" oninput="onDaytimeRateNum()" style="width:50px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px">
+          <span style="font-size:11px;color:var(--muted)">%</span>
+        </div>
+        <div id="daytime-rate-hint" style="font-size:11px;color:var(--muted);margin-bottom:6px"></div>
+        <div id="daytime-rate-breakdown" style="font-size:11px;line-height:1.9;color:var(--mg)"></div>
+        <div id="daytime-rate-status" style="margin-top:4px;font-size:11px"></div>
+      </div>
 
       <!-- ビフォー / アフター 横並び比較コンテナ -->
       <div style="display:flex;flex-wrap:wrap;gap:15px;margin-bottom:10px;align-items:flex-start">
@@ -398,6 +417,23 @@ canvas#mini-chart { height: 150px !important; }
                 <option value="avg:other">その他複雑プラン（請求書から平均算出）</option>
               </optgroup>
             </select>
+          </div>
+          <!-- 自家消費率 / 余剰率カード -->
+          <div class="grid2" style="gap:10px;margin-bottom:10px">
+            <div id="self-rate-card" style="border-radius:12px;padding:16px 12px;border:2px solid var(--dg);background:var(--mg);box-shadow:0 2px 8px rgba(0,0,0,.10)">
+              <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:4px">自家消費率</div>
+              <div style="font-size:42px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em"><span id="self-rate-val">-</span><span style="font-size:22px;font-weight:700">%</span></div>
+              <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:6px">発電のうちご家庭で使う割合</div>
+              <div id="self-rate-warning" style="display:none;margin-top:8px;font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.25);border-radius:6px;padding:6px 8px;line-height:1.5">
+                ⚠ 自家消費率が100%を超えています<br>
+                <span style="font-weight:400;opacity:.9">発電量・自家消費量・蓄電池放電量の前提を見直してください</span>
+              </div>
+            </div>
+            <div id="surplus-rate-card" style="border-radius:12px;padding:16px 12px;border:2px solid #0d9488;background:#0f766e;box-shadow:0 2px 8px rgba(0,0,0,.10)">
+              <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:4px">余剰率</div>
+              <div style="font-size:42px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em"><span id="surplus-rate-val">-</span><span style="font-size:22px;font-weight:700">%</span></div>
+              <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:6px">発電のうち売電に回る割合</div>
+            </div>
           </div>
           <div id="estimated-price-disp" style="display:none;margin-bottom:8px;padding:5px 10px;border-radius:6px;background:#fff;border:1px solid var(--border);font-size:12px;color:var(--mg);font-weight:600"></div>
           <!-- 段階料金・時間帯別内訳（選択プランに応じて表示） -->
@@ -530,25 +566,6 @@ canvas#mini-chart { height: 150px !important; }
         <div id="er-note" style="display:none;font-size:11px;color:var(--or);margin-top:4px">
           ⚠️ 電気代の上昇予測はあくまで試算です。実際の上昇率は料金改定により異なります。
         </div>
-      </div>
-      <div id="daytime-auto-note" style="display:none;margin-bottom:8px;padding:8px 12px;background:var(--pg);border-radius:8px;border:1px solid var(--border);font-size:12px;color:var(--mg)">
-        <span id="daytime-auto-text"></span>
-        <span style="color:var(--muted);margin-left:8px;font-size:11px">↓ 下の値を手動で上書きできます</span>
-      </div>
-      <!-- 昼間比率手動調整パネル（時間帯別プラン以外で表示） -->
-      <div id="daytime-rate-panel" style="display:none;margin-bottom:10px;padding:12px 14px;background:var(--pg);border-radius:8px;border:1px solid var(--border)">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <span style="font-size:12px;font-weight:700;color:var(--mg)">☀ 昼間使用比率</span>
-          <button id="btn-reset-daytime" onclick="resetDaytimeRate()" style="display:none;font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--muted);cursor:pointer">生活スタイル既定値に戻す</button>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-          <input type="range" id="daytime-rate-sl" min="5" max="80" step="1" oninput="onDaytimeRateSlider()" style="flex:1">
-          <input type="number" id="daytime-rate-num" min="5" max="80" step="1" oninput="onDaytimeRateNum()" style="width:50px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px">
-          <span style="font-size:11px;color:var(--muted)">%</span>
-        </div>
-        <div id="daytime-rate-hint" style="font-size:11px;color:var(--muted);margin-bottom:6px"></div>
-        <div id="daytime-rate-breakdown" style="font-size:11px;line-height:1.9;color:var(--mg)"></div>
-        <div id="daytime-rate-status" style="margin-top:4px;font-size:11px"></div>
       </div>
       <div class="grid2" style="margin-top:4px">
         <div class="field" id="field-dc-wrap">
@@ -728,24 +745,7 @@ canvas#mini-chart { height: 150px !important; }
       </div>
       <!-- 発電効果サマリー -->
       <div id="kpi-area" style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
-        <!-- 1段目：率カード（自家消費率 / 余剰率） -->
-        <div class="grid2" style="gap:10px">
-          <div id="self-rate-card" style="border-radius:12px;padding:16px 12px;border:2px solid var(--dg);background:var(--mg);box-shadow:0 2px 8px rgba(0,0,0,.10)">
-            <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:4px">自家消費率</div>
-            <div style="font-size:42px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em"><span id="self-rate-val">-</span><span style="font-size:22px;font-weight:700">%</span></div>
-            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:6px">発電のうちご家庭で使う割合</div>
-            <div id="self-rate-warning" style="display:none;margin-top:8px;font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.25);border-radius:6px;padding:6px 8px;line-height:1.5">
-              ⚠ 自家消費率が100%を超えています<br>
-              <span style="font-weight:400;opacity:.9">発電量・自家消費量・蓄電池放電量の前提を見直してください</span>
-            </div>
-          </div>
-          <div id="surplus-rate-card" style="border-radius:12px;padding:16px 12px;border:2px solid #0d9488;background:#0f766e;box-shadow:0 2px 8px rgba(0,0,0,.10)">
-            <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:4px">余剰率</div>
-            <div style="font-size:42px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em"><span id="surplus-rate-val">-</span><span style="font-size:22px;font-weight:700">%</span></div>
-            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:6px">発電のうち売電に回る割合</div>
-          </div>
-        </div>
-        <!-- 2段目：金額カード（年間自家消費メリット / 年間余剰売電収入） -->
+        <!-- 金額カード（年間自家消費メリット / 年間余剰売電収入） -->
         <div class="grid2" style="gap:10px">
           <div style="border-radius:12px;padding:16px 12px;border:2px solid #bbf7d0;background:#f0fdf4;box-shadow:0 1px 4px rgba(0,0,0,.06)">
             <div style="font-size:12px;font-weight:700;color:#15803d;margin-bottom:2px">年間自家消費メリット</div>
