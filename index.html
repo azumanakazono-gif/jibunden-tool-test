@@ -370,8 +370,8 @@ canvas#mini-chart { height: 150px !important; }
       <div style="display:flex;flex-wrap:wrap;gap:15px;margin-bottom:10px;align-items:flex-start">
 
         <!-- 【導入前】プラン選択 + 内訳カード -->
-        <div id="before-plan-card" style="flex:1;min-width:280px;padding:12px 14px;background:var(--pg);border-radius:8px;border:1px solid var(--border)">
-          <div style="font-size:12px;font-weight:700;color:var(--mg);margin-bottom:10px">⚡ 【導入前】現在の料金プラン</div>
+        <div id="before-plan-card" style="flex:1;min-width:280px;padding:12px 14px;background:#f8fafc;border-radius:8px;border:1px solid #cbd5e1">
+          <div style="font-size:12px;font-weight:700;color:#475569;margin-bottom:10px">⚡ 【導入前】現在の電気料金プラン</div>
           <div style="margin-bottom:8px">
             <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:3px">導入前プラン <span style="font-weight:400">（現在の契約）</span></div>
             <select id="kyuden-plan" onchange="onKyudenPlanChange()" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;background:#fff;font-family:inherit">
@@ -424,12 +424,12 @@ canvas#mini-chart { height: 150px !important; }
         </div>
 
         <!-- 【導入後】プラン選択 + 内訳カード -->
-        <div id="post-plan-breakdown" style="flex:1;min-width:280px;display:block;padding:12px 14px;background:#f0fdf4;border-radius:8px;border:1px solid #86efac">
-          <div style="font-size:12px;font-weight:700;color:#166534;margin-bottom:10px">☀️ 【導入後】月々の残り支払いイメージ</div>
+        <div id="post-plan-breakdown" style="flex:1;min-width:280px;display:block;padding:12px 14px;background:#eff6ff;border-radius:8px;border:1px solid #93c5fd">
+          <div style="font-size:12px;font-weight:700;color:#1e40af;margin-bottom:10px">☀️ 【導入後】導入後の電気料金プラン</div>
           <!-- 導入後プラン選択（最初の要素） -->
           <div style="margin-bottom:8px">
-            <div style="font-size:11px;font-weight:700;color:#166534;margin-bottom:3px">導入後プラン <span style="font-weight:400">（太陽光切り替え後）</span></div>
-            <select id="post-kyuden-plan" onchange="onPostKyudenPlanChange()" style="width:100%;border:1.5px solid #86efac;border-radius:8px;padding:7px 10px;font-size:13px;background:#fff;font-family:inherit">
+            <div style="font-size:11px;font-weight:700;color:#1e40af;margin-bottom:3px">導入後プラン <span style="font-weight:400">（太陽光切り替え後）</span></div>
+            <select id="post-kyuden-plan" onchange="onPostKyudenPlanChange()" style="width:100%;border:1.5px solid #93c5fd;border-radius:8px;padding:7px 10px;font-size:13px;background:#fff;font-family:inherit">
               <option value="">── プランを選択 ──</option>
               <optgroup label="▼ 標準家庭プラン（目安単価）">
                 <option value="30">スタンダードプラン（目安 30円/kWh）</option>
@@ -455,20 +455,20 @@ canvas#mini-chart { height: 150px !important; }
             </select>
           </div>
           <!-- 時間帯別使用比率パネル（導入後TOUプラン選択時のみ表示） -->
-          <div id="ratio-panel" style="display:none;margin-bottom:8px;padding:10px 12px;background:rgba(255,255,255,0.7);border-radius:6px;border:1px solid #86efac">
+          <div id="ratio-panel" style="display:none;margin-bottom:8px;padding:10px 12px;background:rgba(255,255,255,0.7);border-radius:6px;border:1px solid #93c5fd">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-              <span style="font-size:12px;font-weight:700;color:#166534">⏱ 時間帯別使用比率（合計100%）</span>
+              <span style="font-size:12px;font-weight:700;color:#1e40af">⏱ 時間帯別使用比率（合計100%）</span>
               <div style="display:flex;gap:4px">
-                <button id="btn-auto-night" onclick="autoAdjustNight()" style="font-size:11px;padding:3px 8px;border:1px solid #86efac;border-radius:6px;background:#fff;color:#166534;cursor:pointer">夜間で自動調整</button>
-                <button id="btn-reset-ratio" onclick="resetToPresetRatio()" style="display:none;font-size:11px;padding:3px 8px;border:1px solid #86efac;border-radius:6px;background:#fff;color:var(--muted);cursor:pointer">標準比率に戻す</button>
+                <button id="btn-auto-night" onclick="autoAdjustNight()" style="font-size:11px;padding:3px 8px;border:1px solid #93c5fd;border-radius:6px;background:#fff;color:#1e40af;cursor:pointer">夜間で自動調整</button>
+                <button id="btn-reset-ratio" onclick="resetToPresetRatio()" style="display:none;font-size:11px;padding:3px 8px;border:1px solid #93c5fd;border-radius:6px;background:#fff;color:var(--muted);cursor:pointer">標準比率に戻す</button>
               </div>
             </div>
             <div id="ratio-zones" style="display:flex;flex-direction:column;gap:6px"></div>
             <div id="ratio-sum-warn" style="display:none;margin-top:4px;font-size:11px;color:#dc2626;font-weight:700">⚠ 合計が100%になるよう設定してください（現在 <span id="ratio-sum-val">0</span>%）</div>
-            <div id="ratio-style-status" style="display:none;margin-top:6px;font-size:11px;padding:4px 8px;background:#fff;border-radius:4px;border:1px solid #86efac"></div>
+            <div id="ratio-style-status" style="display:none;margin-top:6px;font-size:11px;padding:4px 8px;background:#fff;border-radius:4px;border:1px solid #93c5fd"></div>
             <details id="price-breakdown" style="margin-top:10px" ontoggle="(function(d){const s=d.querySelector('summary');s.textContent=d.open?'📊 単価内訳・計算根拠を閉じる ▲':'📊 単価内訳・計算根拠を見る ▼';})(this)">
-              <summary style="cursor:pointer;font-size:12px;font-weight:700;padding:7px 12px;background:#dcfce7;border:1px solid #86efac;border-radius:8px;color:#166534;list-style:none;user-select:none">📊 単価内訳・計算根拠を見る ▼</summary>
-              <div id="price-breakdown-body" style="margin-top:6px;padding:8px;background:#fff;border-radius:6px;border:1px solid #86efac;font-size:11px;line-height:1.8"></div>
+              <summary style="cursor:pointer;font-size:12px;font-weight:700;padding:7px 12px;background:#dbeafe;border:1px solid #93c5fd;border-radius:8px;color:#1e40af;list-style:none;user-select:none">📊 単価内訳・計算根拠を見る ▼</summary>
+              <div id="price-breakdown-body" style="margin-top:6px;padding:8px;background:#fff;border-radius:6px;border:1px solid #93c5fd;font-size:11px;line-height:1.8"></div>
             </details>
           </div>
           <!-- 導入後内訳本文 -->
@@ -2217,8 +2217,8 @@ function _updatePostPlanBreakdown(postKp, post_up, remainKwh) {
 
   const monthlyRemain = Math.round(remainKwh / 12);
 
-  const GRN = '#bbf7d0'; // 導入後パネル用グリーン罫線色
-  const GRN_TXT = '#166534';
+  const GRN = '#bfdbfe'; // 導入後パネル用ブルー罫線色
+  const GRN_TXT = '#1e40af';
   const fxRow = (label, detail, amtStr) =>
     `<div style="display:flex;align-items:center;gap:4px;padding:3px 6px;font-size:11px;background:#fff;border-bottom:1px solid ${GRN}">` +
       `<span style="flex:0 0 250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</span>` +
