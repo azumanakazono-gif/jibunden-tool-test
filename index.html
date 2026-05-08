@@ -2173,6 +2173,9 @@ function onKyudenPlanChange() {
   const _kpNew = document.getElementById('kyuden-plan').value;
   if (_kpNew === 'kyushu_juuryo_b') document.getElementById('juuryo-amp').value = '60';
   if (_kpNew === 'kyushu_juuryo_c') { const _kvaEl = document.getElementById('juuryo-kva'); if (!parseFloat(_kvaEl.value)) _kvaEl.value = '10'; }
+  _ratioPanelPlan = null;
+  isCustomRatio   = false;
+  customRatios    = null;
   updateRatioPanel();
   updateDaytimeRatePanel();
   if (!data.hasBill) {
