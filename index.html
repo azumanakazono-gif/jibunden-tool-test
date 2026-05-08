@@ -2649,8 +2649,8 @@ function updateRatioPanel() {
   const effDenka   = effKp === 'kyushu_denka_night';
   const data    = activeTab === 'hypothesis' ? hypData : custData;
   const hasBill = !!data.hasBill;
-  panel.style.display = (!hasBill && (effDenka || effKiji || effOhisama)) ? '' : 'none';
-  if (!(!hasBill && (effDenka || effKiji || effOhisama))) return;
+  panel.style.display = (effDenka || effKiji || effOhisama) ? '' : 'none';
+  if (!(effDenka || effKiji || effOhisama)) return;
 
   const _autoBtn = document.getElementById('btn-auto-night');
   if (_autoBtn) _autoBtn.textContent = effKiji ? 'ナイトで自動調整' : effOhisama ? 'だんらんで自動調整' : '夜間で自動調整';
