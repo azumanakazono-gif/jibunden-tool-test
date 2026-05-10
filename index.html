@@ -2625,10 +2625,7 @@ function updateRatioPanel() {
       const zoneMonthly = Math.round(monthlyTotal * z.pct / 100);
       return `<div style="margin-bottom:8px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
-          <span style="flex:0 0 140px;font-size:12px;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis" title="${z.label}">${z.label}</span>
-          <input type="range" id="r-${prefix}-${z.key}-sl" value="${z.pct}" min="0" max="100" step="1"
-            style="flex:1;min-width:60px;max-width:180px;height:4px;accent-color:var(--mg);cursor:pointer"
-            oninput="onSliderChange('${prefix}','${z.key}')">
+          <span style="flex:1;font-size:12px;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis" title="${z.label}">${z.label}</span>
           <div style="display:flex;align-items:center;gap:3px;flex:0 0 auto">
             <input type="number" id="r-${prefix}-${z.key}" value="${z.pct}" min="0" max="100" step="1"
               style="width:52px;padding:3px 5px;border:1.5px solid var(--border);border-radius:6px;font-size:14px;font-weight:700;text-align:center"
@@ -2636,6 +2633,9 @@ function updateRatioPanel() {
             <span style="font-size:13px;color:var(--muted)">%</span>
           </div>
         </div>
+        <input type="range" id="r-${prefix}-${z.key}-sl" value="${z.pct}" min="0" max="100" step="1"
+          style="width:100%;height:4px;accent-color:var(--mg);cursor:pointer;display:block;margin-bottom:2px"
+          oninput="onSliderChange('${prefix}','${z.key}')">
         <div id="r-${prefix}-${z.key}-kwh" style="font-size:11px;color:var(--dg);margin-top:1px">月平均：約${zoneMonthly.toLocaleString()} kWh / 年間：約${zoneAnnual.toLocaleString()} kWh</div>
       </div>`;
     }).join('') +
@@ -2927,10 +2927,7 @@ function updateBeforeRatioPanel() {
       const zoneMonthly = Math.round(monthlyTotal * z.pct / 100);
       return `<div style="margin-bottom:8px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
-          <span style="flex:0 0 140px;font-size:12px;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis" title="${z.label}">${z.label}</span>
-          <input type="range" id="r-${prefix}-${z.key}-sl" value="${z.pct}" min="0" max="100" step="1"
-            style="flex:1;min-width:60px;max-width:180px;height:4px;accent-color:#475569;cursor:pointer"
-            oninput="onBeforeSliderChange('${prefix}','${z.key}')">
+          <span style="flex:1;font-size:12px;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis" title="${z.label}">${z.label}</span>
           <div style="display:flex;align-items:center;gap:3px;flex:0 0 auto">
             <input type="number" id="r-${prefix}-${z.key}" value="${z.pct}" min="0" max="100" step="1"
               style="width:52px;padding:3px 5px;border:1.5px solid var(--border);border-radius:6px;font-size:14px;font-weight:700;text-align:center"
@@ -2938,6 +2935,9 @@ function updateBeforeRatioPanel() {
             <span style="font-size:13px;color:var(--muted)">%</span>
           </div>
         </div>
+        <input type="range" id="r-${prefix}-${z.key}-sl" value="${z.pct}" min="0" max="100" step="1"
+          style="width:100%;height:4px;accent-color:#475569;cursor:pointer;display:block;margin-bottom:2px"
+          oninput="onBeforeSliderChange('${prefix}','${z.key}')">
         <div id="r-${prefix}-${z.key}-kwh" style="font-size:11px;color:#475569;margin-top:1px">月平均：約${zoneMonthly.toLocaleString()} kWh / 年間：約${zoneAnnual.toLocaleString()} kWh</div>
       </div>`;
     }).join('') +
