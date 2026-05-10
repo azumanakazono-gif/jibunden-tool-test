@@ -578,6 +578,10 @@ canvas#mini-chart { height: 150px !important; }
               <div id="price-breakdown-body" style="margin-top:6px;padding:8px;background:#fff;border-radius:6px;border:1px solid #93c5fd;font-size:11px;line-height:1.8"></div>
             </details>
           </div>
+          <!-- 月額残り電気代 概算合計（全プラン共通表示） -->
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:#475569;padding:8px 10px;margin-top:10px;border-top:2px solid #93c5fd;background:#dbeafe;border-radius:6px">
+            <span>月額残り電気代（概算）</span><span id="after-plan-total-val" style="font-size:20px;font-weight:700;color:#1e293b">-</span>
+          </div>
         </div>
 
       </div>
@@ -2293,8 +2297,13 @@ function _updatePostPlanBreakdown(postKp, post_up, remainKwh) {
   const body = document.getElementById('post-plan-breakdown-body');
   if (!body) return;
 
+  const setTotal = amt => {
+    const el = document.getElementById('after-plan-total-val');
+    if (el) el.textContent = amt != null ? '約 ' + fr(amt) + ' 円/月' : '-';
+  };
   if (!postKp) {
     body.innerHTML = '<div style="font-size:11px;color:#6b7280;padding:4px 6px">← 上の「導入後プラン」を選択してください</div>';
+    setTotal(null);
     return;
   }
 
@@ -2310,10 +2319,6 @@ function _updatePostPlanBreakdown(postKp, post_up, remainKwh) {
       `<span style="flex:0 0 250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</span>` +
       `<span style="flex:1;color:var(--muted);font-size:10px;white-space:nowrap">${detail}</span>` +
       `<b style="flex:0 0 72px;text-align:right;white-space:nowrap">${amtStr}円</b>` +
-    `</div>`;
-  const fxTotal = (monthlyAmt) =>
-    `<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:${GRN_TXT};padding:6px 4px;margin-top:4px;border-top:2px solid ${GRN}">` +
-      `<span>月額残り電気代（概算）</span><span style="font-size:20px;font-weight:700">約&nbsp;${fr(monthlyAmt)}&nbsp;円/月</span>` +
     `</div>`;
   // surcharge rows appended inside the zone table; returns zone-only monthly subtotal
   const fxZoneGrid = (zones, annualKwh) => {
@@ -2345,8 +2350,8 @@ function _updatePostPlanBreakdown(postKp, post_up, remainKwh) {
       `<div style="border:1px solid ${GRN};border-radius:4px;overflow:hidden;margin-bottom:6px">${rows}` +
       (FUEL_ADJUST > 0 ? fxRow('燃料費調整額', `${fr(remainKwh)}kWh/年 × ${FUEL_ADJUST}円`, f2(fuelMonthly_o) + '/月') : '') +
       fxRow('再エネ賦課金', `${fr(remainKwh)}kWh/年 × ${SAIENE_LEVY}円`, f2(saieneMonthly_o) + '/月') +
-      `</div>` +
-      fxTotal(grand_o);
+      `</div>`;
+    setTotal(grand_o);
 
   } else if (postKp === 'kyushu_denka_night') {
     // 電化でナイト：4ゾーン（平日デイ / 平日朝夕 / 休日 / 夜間）
@@ -2369,8 +2374,8 @@ function _updatePostPlanBreakdown(postKp, post_up, remainKwh) {
       `<div style="border:1px solid ${GRN};border-radius:4px;overflow:hidden;margin-bottom:6px">${rows}` +
       (FUEL_ADJUST > 0 ? fxRow('燃料費調整額', `${fr(remainKwh)}kWh/年 × ${FUEL_ADJUST}円`, f2(fuelMonthly_d) + '/月') : '') +
       fxRow('再エネ賦課金', `${fr(remainKwh)}kWh/年 × ${SAIENE_LEVY}円`, f2(saieneMonthly_d) + '/月') +
-      `</div>` +
-      fxTotal(grand_d);
+      `</div>`;
+    setTotal(grand_d);
 
   } else if (postKp === 'kyushu_kiji') {
     // 季時別電灯：3ゾーン（デイ / リビング / ナイト）
@@ -2391,8 +2396,8 @@ function _updatePostPlanBreakdown(postKp, post_up, remainKwh) {
       `<div style="border:1px solid ${GRN};border-radius:4px;overflow:hidden;margin-bottom:6px">${rows}` +
       (FUEL_ADJUST > 0 ? fxRow('燃料費調整額', `${fr(remainKwh)}kWh/年 × ${FUEL_ADJUST}円`, f2(fuelMonthly_k) + '/月') : '') +
       fxRow('再エネ賦課金', `${fr(remainKwh)}kWh/年 × ${SAIENE_LEVY}円`, f2(saieneMonthly_k) + '/月') +
-      `</div>` +
-      fxTotal(grand_k);
+      `</div>`;
+    setTotal(grand_k);
 
   } else if (postKp === 'kyushu_juuryo_b' || postKp === 'kyushu_juuryo_c') {
     // 従量電灯B/C：段階料金
@@ -2407,16 +2412,16 @@ function _updatePostPlanBreakdown(postKp, post_up, remainKwh) {
       (s2>0 ? fxRow('第2段階 121〜300kWh', `${s2}kWh × 23.97円`, f2(s2*23.97)) : '') +
       (s3>0 ? fxRow('第3段階 301kWh〜',    `${s3}kWh × 26.97円`, f2(s3*26.97)) : '') +
       `</div>` +
-      fxRow('＋ 燃料費調整額・再エネ賦課金', `${fr(monthlyRemain)}kWh × ${ADJUSTMENT_UNIT_PRICE}円`, f2(adjAmt)) +
-      fxTotal(totalAmt);
+      fxRow('＋ 燃料費調整額・再エネ賦課金', `${fr(monthlyRemain)}kWh × ${ADJUSTMENT_UNIT_PRICE}円`, f2(adjAmt));
+    setTotal(totalAmt);
 
   } else {
     // その他プラン：実効単価×残量
     const monthlyAmt = Math.round(monthlyRemain * post_up);
     body.innerHTML =
       `<div style="font-size:11px;color:var(--muted);margin-bottom:4px">残り購入電力量 ${fr(remainKwh)} kWh/年（月平均 ${fr(monthlyRemain)} kWh）</div>` +
-      fxRow('残り電気代', `${fr(monthlyRemain)}kWh × ${post_up}円/kWh`, f2(monthlyAmt)) +
-      fxTotal(monthlyAmt);
+      fxRow('残り電気代', `${fr(monthlyRemain)}kWh × ${post_up}円/kWh`, f2(monthlyAmt));
+    setTotal(monthlyAmt);
   }
 }
 
