@@ -158,7 +158,7 @@ canvas#mini-chart { height: 150px !important; }
 @media (max-width: 900px) {
   .app { grid-template-columns: 1fr; }
   .sidebar { position: relative; height: auto; }
-  .main { overflow-x: visible; }
+  .main { overflow-x: clip; }
   .grid3 { grid-template-columns: 1fr 1fr; }
   .preview-grid { grid-template-columns: 1fr 1fr; }
 }
@@ -193,6 +193,9 @@ canvas#mini-chart { height: 150px !important; }
 }
 @media (max-width: 768px) {
   #solar-util-card {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: 0;
     padding: 12px 14px;
   }
   #solar-util-card .section-title {
@@ -567,6 +570,30 @@ canvas#mini-chart { height: 150px !important; }
 
 
 
+      <!-- 💡 メリットの内訳 -->
+      <div id="merit-breakdown-area" style="display:none;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;padding:12px 14px;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;color:#15803d;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #bbf7d0">💡 自家消費メリットの内訳</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#fff;border-radius:8px;border:1px solid #d1fae5">
+            <span style="font-size:13px;font-weight:600;color:#166534">☀️ 太陽光の直接使用による削減</span>
+            <div style="text-align:right;white-space:nowrap">
+              <span id="merit-dc-kwh" style="font-size:12px;color:#15803d;font-weight:700">-</span>
+              <span style="font-size:11px;color:var(--muted);margin:0 4px">/月　</span>
+              <span id="merit-dc-yen" style="font-size:13px;color:#15803d;font-weight:800">-</span>
+              <span style="font-size:11px;color:#15803d">円/月</span>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#fff;border-radius:8px;border:1px solid #d1fae5">
+            <span style="font-size:13px;font-weight:600;color:#166534">🔋 蓄電池の放電による削減</span>
+            <div style="text-align:right;white-space:nowrap">
+              <span id="merit-bc-kwh" style="font-size:12px;color:#15803d;font-weight:700">-</span>
+              <span style="font-size:11px;color:var(--muted);margin:0 4px">/月　</span>
+              <span id="merit-bc-yen" style="font-size:13px;color:#15803d;font-weight:800">-</span>
+              <span style="font-size:11px;color:#15803d">円/月</span>
+            </div>
+          </div>
+        </div>
+      </div>
       <div id="price-status-disp" style="display:none;margin-bottom:8px;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700"></div>
       <!-- 実効平均単価 入力エリア（実効平均単価プラン選択時のみ表示） -->
       <div id="avg-rate-section" style="display:none;margin-bottom:10px;padding:12px 14px;background:var(--pg);border-radius:8px;border:1px solid var(--border)">
@@ -1008,30 +1035,6 @@ canvas#mini-chart { height: 150px !important; }
           <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:8px">
             <div id="rk-self-label" style="font-size:11px;font-weight:500;color:var(--muted)">自家消費単価（発電したうち自家消費する分の単価）</div>
             <div id="rk-self" style="font-size:20px;font-weight:800;color:var(--mg)">-</div>
-          </div>
-        </div>
-      </div>
-      <!-- 💡 メリットの内訳 -->
-      <div id="merit-breakdown-area" style="display:none;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;padding:12px 14px;margin-bottom:16px">
-        <div style="font-size:13px;font-weight:700;color:#15803d;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #bbf7d0">💡 メリットの内訳</div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#fff;border-radius:8px;border:1px solid #d1fae5">
-            <span style="font-size:13px;font-weight:600;color:#166534">☀️ 太陽光の直接使用による削減</span>
-            <div style="text-align:right;white-space:nowrap">
-              <span id="merit-dc-kwh" style="font-size:12px;color:#15803d;font-weight:700">-</span>
-              <span style="font-size:11px;color:var(--muted);margin:0 4px">/月　</span>
-              <span id="merit-dc-yen" style="font-size:13px;color:#15803d;font-weight:800">-</span>
-              <span style="font-size:11px;color:#15803d">円/月</span>
-            </div>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#fff;border-radius:8px;border:1px solid #d1fae5">
-            <span style="font-size:13px;font-weight:600;color:#166534">🔋 蓄電池の放電による削減</span>
-            <div style="text-align:right;white-space:nowrap">
-              <span id="merit-bc-kwh" style="font-size:12px;color:#15803d;font-weight:700">-</span>
-              <span style="font-size:11px;color:var(--muted);margin:0 4px">/月　</span>
-              <span id="merit-bc-yen" style="font-size:13px;color:#15803d;font-weight:800">-</span>
-              <span style="font-size:11px;color:#15803d">円/月</span>
-            </div>
           </div>
         </div>
       </div>
@@ -1650,7 +1653,7 @@ function updateJuuryoPanel() {
       fxSubRow(`＋ 再エネ賦課金 (${SAIENE_LEVY}円/kWh × ${mkwh.toLocaleString()}kWh)`, f2(saieneAmt)) +
       fxSubRow('＋ 基本料金', f2(basicCharge)) +
       `<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:var(--mg);padding:6px 4px;margin-top:4px;border-top:2px solid var(--border)">` +
-        `<span>概算月額合計</span><span style="font-size:14px">約${total.toLocaleString()}円</span>` +
+        `<span>概算月額合計</span><span style="font-size:20px;font-weight:700">約${total.toLocaleString()}円</span>` +
       `</div>`;
     updatePriceStatus(activeTab === 'hypothesis' ? hypData : custData);
     return;
@@ -1715,7 +1718,7 @@ function updateJuuryoPanel() {
     fxSubRow(`＋ 再エネ賦課金 (${SAIENE_UNIT}円/kWh × ${mkwh.toLocaleString()}kWh)`, f2(saiene_amt)) +
     (basic > 0 ? fxSubRow('＋ 基本料金（プラン規定）', `${fr(basic)}`) : '') +
     `<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:var(--mg);padding:6px 4px;margin-top:4px;border-top:2px solid var(--border)">` +
-      `<span>概算月額合計</span><span style="font-size:14px">約${fr(grand)}円</span>` +
+      `<span>概算月額合計</span><span style="font-size:20px;font-weight:700">約${fr(grand)}円</span>` +
     `</div>`;
 }
 
@@ -1785,7 +1788,7 @@ function _renderOhisamaBreakdown() {
 
     (basic > 0 ? fxSubRow('＋ 基本料金（プラン規定）', `${fr(basic)}`) : '') +
     `<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:var(--mg);padding:6px 4px;margin-top:4px;border-top:2px solid var(--border)">` +
-      `<span>概算月額合計</span><span style="font-size:14px">約${fr(grand)}円</span>` +
+      `<span>概算月額合計</span><span style="font-size:20px;font-weight:700">約${fr(grand)}円</span>` +
     `</div>`;
 }
 
@@ -2289,7 +2292,7 @@ function _updatePostPlanBreakdown(postKp, post_up, remainKwh) {
     `</div>`;
   const fxTotal = (monthlyAmt) =>
     `<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:${GRN_TXT};padding:6px 4px;margin-top:4px;border-top:2px solid ${GRN}">` +
-      `<span>月額残り電気代（概算）</span><span style="font-size:14px">約&nbsp;${fr(monthlyAmt)}&nbsp;円/月</span>` +
+      `<span>月額残り電気代（概算）</span><span style="font-size:20px;font-weight:700">約&nbsp;${fr(monthlyAmt)}&nbsp;円/月</span>` +
     `</div>`;
   // surcharge rows appended inside the zone table; returns zone-only monthly subtotal
   const fxZoneGrid = (zones, annualKwh) => {
