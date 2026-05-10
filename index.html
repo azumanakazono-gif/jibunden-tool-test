@@ -511,8 +511,9 @@ canvas#mini-chart { height: 150px !important; }
             </div>
             <div id="before-ratio-zones" style="display:flex;flex-direction:column;gap:6px"></div>
             <div id="before-ratio-sum-warn" style="display:none;margin-top:4px;font-size:11px;color:#dc2626;font-weight:700">⚠ 合計が100%になるよう設定してください（現在 <span id="before-ratio-sum-val">0</span>%）</div>
-            <details id="before-price-breakdown" style="margin-top:10px" ontoggle="(function(d){const s=d.querySelector('summary');s.textContent=d.open?'📊 単価内訳・計算根拠を閉じる ▲':'📊 単価内訳・計算根拠を表示 ▼';})(this)">
-              <summary style="cursor:pointer;font-size:12px;font-weight:700;padding:7px 12px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:8px;color:#475569;list-style:none;user-select:none">📊 単価内訳・計算根拠を表示 ▼</summary>
+            <details id="before-price-breakdown" style="margin-top:10px" ontoggle="(function(d){const s=d.querySelector('summary');s.textContent=d.open?'📊 料金内訳・計算根拠を表示 ▲':'📊 料金内訳・計算根拠を表示 ▼';})(this)">
+              <summary style="cursor:pointer;font-size:12px;font-weight:700;padding:7px 12px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:8px;color:#475569;list-style:none;user-select:none">📊 料金内訳・計算根拠を表示 ▼</summary>
+              <div id="before-plan-breakdown-body" style="margin-top:6px;padding:8px;background:#fff;border-radius:6px;border:1px solid #cbd5e1;font-size:11px;line-height:1.8"></div>
               <div id="before-price-breakdown-body" style="margin-top:6px;padding:8px;background:#fff;border-radius:6px;border:1px solid #cbd5e1;font-size:11px;line-height:1.8"></div>
             </details>
           </div>
@@ -565,13 +566,12 @@ canvas#mini-chart { height: 150px !important; }
             <div id="ratio-zones" style="display:flex;flex-direction:column;gap:6px"></div>
             <div id="ratio-sum-warn" style="display:none;margin-top:4px;font-size:11px;color:#dc2626;font-weight:700">⚠ 合計が100%になるよう設定してください（現在 <span id="ratio-sum-val">0</span>%）</div>
             <div id="ratio-style-status" style="display:none;margin-top:6px;font-size:11px;padding:4px 8px;background:#fff;border-radius:4px;border:1px solid #93c5fd"></div>
-            <details id="price-breakdown" style="margin-top:10px" ontoggle="(function(d){const s=d.querySelector('summary');s.textContent=d.open?'📊 単価内訳・計算根拠を閉じる ▲':'📊 単価内訳・計算根拠を見る ▼';})(this)">
-              <summary style="cursor:pointer;font-size:12px;font-weight:700;padding:7px 12px;background:#dbeafe;border:1px solid #93c5fd;border-radius:8px;color:#1e40af;list-style:none;user-select:none">📊 単価内訳・計算根拠を見る ▼</summary>
+            <details id="price-breakdown" style="margin-top:10px" ontoggle="(function(d){const s=d.querySelector('summary');s.textContent=d.open?'📊 料金内訳・計算根拠を表示 ▲':'📊 料金内訳・計算根拠を表示 ▼';})(this)">
+              <summary style="cursor:pointer;font-size:12px;font-weight:700;padding:7px 12px;background:#dbeafe;border:1px solid #93c5fd;border-radius:8px;color:#1e40af;list-style:none;user-select:none">📊 料金内訳・計算根拠を表示 ▼</summary>
+              <div id="post-plan-breakdown-body" style="margin-top:6px;font-size:11px;line-height:1.9"></div>
               <div id="price-breakdown-body" style="margin-top:6px;padding:8px;background:#fff;border-radius:6px;border:1px solid #93c5fd;font-size:11px;line-height:1.8"></div>
             </details>
           </div>
-          <!-- 導入後内訳本文 -->
-          <div id="post-plan-breakdown-body" style="font-size:11px;line-height:1.9"></div>
         </div>
 
       </div>
@@ -2891,6 +2891,95 @@ function _updateBeforePriceBreakdown(kp) {
   }
 }
 
+function _updateBeforePlanBreakdown(kp) {
+  const bodyEl = document.getElementById('before-plan-breakdown-body');
+  if (!bodyEl) return;
+  const ratios = getBeforeEffectiveRatios(kp);
+  const mkwh = parseFloat(document.getElementById('mkwh').value) || 0;
+  if (!mkwh) { bodyEl.innerHTML = ''; return; }
+  const annualKwh = mkwh * 12;
+  const GRY = '#cbd5e1';
+  const GRY_TXT = '#475569';
+  const f2 = n => n.toLocaleString('ja-JP', {maximumFractionDigits:2});
+  const fr = n => Math.round(n).toLocaleString();
+  const fxRow = (label, detail, amtStr) =>
+    `<div style="display:flex;align-items:center;gap:4px;padding:3px 6px;font-size:11px;background:#fff;border-bottom:1px solid ${GRY}">` +
+      `<span style="flex:0 0 250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</span>` +
+      `<span style="flex:1;color:var(--muted);font-size:10px;white-space:nowrap">${detail}</span>` +
+      `<b style="flex:0 0 72px;text-align:right;white-space:nowrap">${amtStr}円</b>` +
+    `</div>`;
+  const fxTotal = (monthlyAmt) =>
+    `<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:${GRY_TXT};padding:6px 4px;margin-top:4px;border-top:2px solid ${GRY}">` +
+      `<span>月額電気代（概算）</span><span style="font-size:20px;font-weight:700">約&nbsp;${fr(monthlyAmt)}&nbsp;円/月</span>` +
+    `</div>`;
+  const fxZoneGrid = (zones) => {
+    let total = 0, rows = '';
+    zones.forEach(z => {
+      const kwh = Math.round(annualKwh * z.ratio);
+      const amt = Math.round(kwh * z.rate * 100) / 100;
+      total += amt;
+      rows += fxRow(z.label, `${kwh.toLocaleString()}kWh/年 × ${z.rate.toFixed(2)}円`, f2(amt / 12) + '/月');
+    });
+    return { rows, monthlyTotal: Math.round(total / 12) };
+  };
+  if (kp === 'kyushu_denka_night') {
+    const t = KYUSHU_DENKA_NIGHT.tariff;
+    const wDay = Math.round((t.weekdaySummerWinter*(4/12) + t.weekdaySpringFall*(8/12)) * 100) / 100;
+    const wHol = Math.round((t.weekendSummerWinter*(4/12) + t.weekendSpringFall*(8/12)) * 100) / 100;
+    const zones = [
+      { label:'平日デイタイム (10-17時)',  rate:wDay,    ratio:ratios.day       },
+      { label:'平日朝夕 (8-10/17-22時)',   rate:wDay,    ratio:ratios.living||0 },
+      { label:'休日 (8-22時)',             rate:wHol,    ratio:ratios.hol       },
+      { label:'夜間 (22-翌8時)',           rate:t.night, ratio:ratios.ngt       },
+    ];
+    const { rows, monthlyTotal } = fxZoneGrid(zones);
+    const saieneMonthly = Math.round(annualKwh * SAIENE_LEVY / 12 * 100) / 100;
+    const fuelMonthly   = Math.round(annualKwh * FUEL_ADJUST  / 12 * 100) / 100;
+    const grand = monthlyTotal + Math.round(saieneMonthly) + Math.round(fuelMonthly);
+    bodyEl.innerHTML =
+      `<div style="color:var(--muted);font-size:10px;margin-bottom:2px">月間使用量 ${fr(mkwh)} kWh の時間帯別内訳（概算）</div>` +
+      `<div style="border:1px solid ${GRY};border-radius:4px;overflow:hidden;margin-bottom:6px">${rows}` +
+      (FUEL_ADJUST > 0 ? fxRow('燃料費調整額', `${fr(annualKwh)}kWh/年 × ${FUEL_ADJUST}円`, f2(fuelMonthly) + '/月') : '') +
+      fxRow('再エネ賦課金', `${fr(annualKwh)}kWh/年 × ${SAIENE_LEVY}円`, f2(saieneMonthly) + '/月') +
+      `</div>` + fxTotal(grand);
+  } else if (kp === 'kyushu_ohisama') {
+    const t = KYUSHU_OHISAMA.tariff;
+    const zones = [
+      { label:'おひさまタイム (10-16時)',           rate:t.ohisama, ratio:ratios.ohisama||0 },
+      { label:'シフトタイム (朝夕：8-10/16-22時)', rate:t.peak,    ratio:ratios.peak||0    },
+      { label:'だんらんタイム (夜間：22-8時)',      rate:t.ngt,     ratio:ratios.ngt||0     },
+    ];
+    const { rows, monthlyTotal } = fxZoneGrid(zones);
+    const saieneMonthly = Math.round(annualKwh * SAIENE_LEVY / 12 * 100) / 100;
+    const fuelMonthly   = Math.round(annualKwh * FUEL_ADJUST  / 12 * 100) / 100;
+    const grand = monthlyTotal + Math.round(saieneMonthly) + Math.round(fuelMonthly);
+    bodyEl.innerHTML =
+      `<div style="color:var(--muted);font-size:10px;margin-bottom:2px">月間使用量 ${fr(mkwh)} kWh の時間帯別内訳（概算）</div>` +
+      `<div style="border:1px solid ${GRY};border-radius:4px;overflow:hidden;margin-bottom:6px">${rows}` +
+      (FUEL_ADJUST > 0 ? fxRow('燃料費調整額', `${fr(annualKwh)}kWh/年 × ${FUEL_ADJUST}円`, f2(fuelMonthly) + '/月') : '') +
+      fxRow('再エネ賦課金', `${fr(annualKwh)}kWh/年 × ${SAIENE_LEVY}円`, f2(saieneMonthly) + '/月') +
+      `</div>` + fxTotal(grand);
+  } else {
+    const t = KYUSHU_KIJI.tariff;
+    const wDay = Math.round((t.daytimeSummer*(3/12) + t.daytimeOther*(9/12)) * 100) / 100;
+    const zones = [
+      { label:'デイタイム (昼間・季節加重平均)', rate:wDay,     ratio:ratios.day     },
+      { label:'リビング (生活時間帯)',           rate:t.living, ratio:ratios.living   },
+      { label:'ナイト (夜間)',                   rate:t.night,  ratio:ratios.ngt      },
+    ];
+    const { rows, monthlyTotal } = fxZoneGrid(zones);
+    const saieneMonthly = Math.round(annualKwh * SAIENE_LEVY / 12 * 100) / 100;
+    const fuelMonthly   = Math.round(annualKwh * FUEL_ADJUST  / 12 * 100) / 100;
+    const grand = monthlyTotal + Math.round(saieneMonthly) + Math.round(fuelMonthly);
+    bodyEl.innerHTML =
+      `<div style="color:var(--muted);font-size:10px;margin-bottom:2px">月間使用量 ${fr(mkwh)} kWh の時間帯別内訳（概算）</div>` +
+      `<div style="border:1px solid ${GRY};border-radius:4px;overflow:hidden;margin-bottom:6px">${rows}` +
+      (FUEL_ADJUST > 0 ? fxRow('燃料費調整額', `${fr(annualKwh)}kWh/年 × ${FUEL_ADJUST}円`, f2(fuelMonthly) + '/月') : '') +
+      fxRow('再エネ賦課金', `${fr(annualKwh)}kWh/年 × ${SAIENE_LEVY}円`, f2(saieneMonthly) + '/月') +
+      `</div>` + fxTotal(grand);
+  }
+}
+
 function _applyRatioDc(kp) {
   const ratios = getEffectiveRatios(kp);
   if (!ratios) return;
@@ -3107,6 +3196,7 @@ function updateBeforeRatioPanel() {
   }
   document.getElementById('before-btn-reset-ratio').style.display = isBeforeCustomRatio ? '' : 'none';
   _updateBeforePriceBreakdown(kp);
+  _updateBeforePlanBreakdown(kp);
 }
 
 function _updateBeforeRatioKwhDisplay(kp, prefix, annualKwh) {
@@ -3180,6 +3270,7 @@ function onBeforeRatioChange(prefix) {
   const mkwh = parseFloat(document.getElementById('mkwh').value) || 667;
   _updateBeforeRatioKwhDisplay(kp, prefix, mkwh * 12);
   _updateBeforePriceBreakdown(kp);
+  _updateBeforePlanBreakdown(kp);
   calc();
 }
 
@@ -3892,6 +3983,7 @@ function calc() {
     const _beforePrefixRP = _beforeKpRP === 'kyushu_denka_night' ? 'bdn' : _beforeKpRP === 'kyushu_ohisama' ? 'boh' : 'bkj';
     _updateBeforeRatioKwhDisplay(_beforeKpRP, _beforePrefixRP, (parseFloat(document.getElementById('mkwh').value)||0) * 12);
     _updateBeforePriceBreakdown(_beforeKpRP);
+    _updateBeforePlanBreakdown(_beforeKpRP);
   }
   // 導入前 概算月額合計（全プラン共通）
   const _beforeTotalEl = document.getElementById('before-plan-total-val');
