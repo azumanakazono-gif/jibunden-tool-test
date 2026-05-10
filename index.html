@@ -495,6 +495,7 @@ canvas#mini-chart { height: 150px !important; }
             </div>
             <div id="before-ratio-zones" style="display:flex;flex-direction:column;gap:6px"></div>
             <div id="before-ratio-sum-warn" style="display:none;margin-top:4px;font-size:11px;color:#dc2626;font-weight:700">⚠ 合計が100%になるよう設定してください（現在 <span id="before-ratio-sum-val">0</span>%）</div>
+            <div id="before-ratio-style-status" style="display:none;margin-top:6px;font-size:11px;color:#475569;padding:4px 8px;background:#fff;border-radius:4px;border:1px solid #cbd5e1"></div>
           </div>
           <details id="before-price-breakdown" style="display:none;margin-top:10px" ontoggle="(function(d){const s=d.querySelector('summary');s.textContent=d.open?'📊 料金内訳・計算根拠を表示 ▲':'📊 料金内訳・計算根拠を表示 ▼';})(this)">
             <summary style="cursor:pointer;font-size:12px;font-weight:700;padding:7px 12px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:8px;color:#475569;list-style:none;user-select:none">📊 料金内訳・計算根拠を表示 ▼</summary>
@@ -3037,6 +3038,26 @@ function updateRatioStyleStatus() {
   }
 }
 
+function updateBeforeRatioStyleStatus() {
+  const el = document.getElementById('before-ratio-style-status');
+  if (!el) return;
+  const kp = document.getElementById('kyuden-plan').value;
+  if (kp !== 'kyushu_denka_night' && kp !== 'kyushu_kiji' && kp !== 'kyushu_ohisama') {
+    el.style.display = 'none'; return;
+  }
+  el.style.display = '';
+  const ls           = document.getElementById('ls-preset').value;
+  const presetRatios = getPresetRatios(kp, ls);
+  const presetLabel  = presetRatios ? presetRatios.label : '';
+  if (!isBeforeCustomRatio) {
+    el.innerHTML   = `現在の使用割合：<b>${presetLabel}</b>の既定比率を使用中`;
+    el.style.color = '#475569';
+  } else {
+    el.innerHTML   = `現在の使用割合：<b>${presetLabel}</b>をベースに調整中`;
+    el.style.color = '#92400e';
+  }
+}
+
 function autoAdjustNight() {
   const postKp = (document.getElementById('post-kyuden-plan') || {}).value || '';
   const effKp  = postKp; // 導入後プランのみ対象
@@ -3211,6 +3232,7 @@ function updateBeforeRatioPanel() {
   _updateBeforePriceBreakdown(kp);
   _updateBeforePlanBreakdown(kp);
   _updateBeforeBreakdownToggleVisibility();
+  updateBeforeRatioStyleStatus();
 }
 
 function _updateBeforeRatioKwhDisplay(kp, prefix, annualKwh) {
