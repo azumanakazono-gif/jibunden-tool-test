@@ -17,12 +17,12 @@
   --text: #1a1a1a; --muted: #6B7280; --danger: #991B1B;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; }
+body { font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; font-size: 15px; }
 
 /* ── レイアウト ── */
-.app { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+.app { display: grid; grid-template-columns: 260px 1fr; height: 100vh; }
 .sidebar { background: var(--dg); color: #fff; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
-.main { overflow-y: auto; }
+.main { overflow-y: auto; height: 100vh; }
 
 /* ── サイドバー ── */
 .sidebar-logo { padding: 24px 20px 16px; border-bottom: 1px solid rgba(255,255,255,.12); }
@@ -389,7 +389,7 @@ canvas#mini-chart { height: 150px !important; }
       </div>
     </div>
 
-    <div class="section-card" id="solar-util-card" style="align-self: flex-start; top: 10px; position: sticky; z-index: 100;">
+    <div class="section-card" id="solar-util-card">
       <div class="section-title">☀️ 太陽光の活用割合</div>
       <!-- 自家消費率 / 余剰率 グローバルサマリー -->
       <div class="grid2" style="gap:10px">
