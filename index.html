@@ -359,14 +359,9 @@ canvas#mini-chart { height: 150px !important; }
     </div>
 
     <div class="section-card">
-      <div class="section-title">⚡ 電気使用状況</div>
-      <!-- 電力会社名（全幅） -->
-      <div style="margin-bottom:12px">
-        <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">電力会社名</label>
-        <input type="text" id="utility-company" placeholder="電力会社名（任意）例：○○電力" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:14px;background:#fff;font-family:inherit;box-sizing:border-box">
-      </div>
+      <div class="section-title">☀️ 太陽光の活用割合</div>
       <!-- 自家消費率 / 余剰率 グローバルサマリー -->
-      <div class="grid2" style="gap:10px;margin-bottom:12px">
+      <div class="grid2" style="gap:10px">
         <div id="self-rate-card" style="border-radius:12px;padding:16px 12px;border:2px solid var(--dg);background:var(--mg);box-shadow:0 2px 8px rgba(0,0,0,.10)">
           <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:4px">自家消費率</div>
           <div style="font-size:42px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em"><span id="self-rate-val">-</span><span style="font-size:22px;font-weight:700">%</span></div>
@@ -381,6 +376,15 @@ canvas#mini-chart { height: 150px !important; }
           <div style="font-size:42px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em"><span id="surplus-rate-val">-</span><span style="font-size:22px;font-weight:700">%</span></div>
           <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:6px">発電のうち売電に回る割合</div>
         </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">⚡ 電気使用状況</div>
+      <!-- 電力会社名（全幅） -->
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">電力会社名</label>
+        <input type="text" id="utility-company" placeholder="電力会社名（任意）例：○○電力" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:14px;background:#fff;font-family:inherit;box-sizing:border-box">
       </div>
 
       <!-- ビフォー / アフター 横並び比較コンテナ -->
