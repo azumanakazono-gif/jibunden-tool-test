@@ -1675,10 +1675,7 @@ function updateJuuryoPanel() {
       `<div style="font-size:10px;color:var(--muted);margin-bottom:4px">電力量のみ平均：${base}円/kWh　／　調整済み：${eff}円/kWh</div>` +
       (fuelAmt > 0 ? fxSubRow(`＋ 燃料費調整額 (${FUEL_ADJUST}円/kWh × ${mkwh.toLocaleString()}kWh)`, f2(fuelAmt)) : '') +
       fxSubRow(`＋ 再エネ賦課金 (${SAIENE_LEVY}円/kWh × ${mkwh.toLocaleString()}kWh)`, f2(saieneAmt)) +
-      fxSubRow('＋ 基本料金', f2(basicCharge)) +
-      `<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:var(--mg);padding:6px 4px;margin-top:4px;border-top:2px solid var(--border)">` +
-        `<span>概算月額合計</span><span style="font-size:20px;font-weight:700">約${total.toLocaleString()}円</span>` +
-      `</div>`;
+      fxSubRow('＋ 基本料金', f2(basicCharge));
     updatePriceStatus(activeTab === 'hypothesis' ? hypData : custData);
     return;
   }
@@ -1740,10 +1737,7 @@ function updateJuuryoPanel() {
     `<div style="border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:6px">${zoneHtml}</div>` +
     (fuel_amt > 0 ? fxSubRow(`＋ 燃料費調整額 (${FUEL_UNIT}円/kWh × ${mkwh.toLocaleString()}kWh)`, f2(fuel_amt)) : '') +
     fxSubRow(`＋ 再エネ賦課金 (${SAIENE_UNIT}円/kWh × ${mkwh.toLocaleString()}kWh)`, f2(saiene_amt)) +
-    (basic > 0 ? fxSubRow('＋ 基本料金（プラン規定）', `${fr(basic)}`) : '') +
-    `<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:var(--mg);padding:6px 4px;margin-top:4px;border-top:2px solid var(--border)">` +
-      `<span>概算月額合計</span><span style="font-size:20px;font-weight:700">約${fr(grand)}円</span>` +
-    `</div>`;
+    (basic > 0 ? fxSubRow('＋ 基本料金（プラン規定）', `${fr(basic)}`) : '');
 }
 
 // おひさま昼トクプラン専用内訳レンダラー（juuryo-panelとは完全分離）
@@ -1810,10 +1804,7 @@ function _renderOhisamaBreakdown() {
     (fuel_amt > 0 ? fxSubRow(`＋ 燃料費調整額 (${FUEL_UNIT}円/kWh × ${mkwh.toLocaleString()}kWh)`, f2(fuel_amt)) : '') +
     fxSubRow(`＋ 再エネ賦課金 (${SAIENE_UNIT}円/kWh × ${mkwh.toLocaleString()}kWh)`, f2(saiene_amt)) +
 
-    (basic > 0 ? fxSubRow('＋ 基本料金（プラン規定）', `${fr(basic)}`) : '') +
-    `<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:var(--mg);padding:6px 4px;margin-top:4px;border-top:2px solid var(--border)">` +
-      `<span>概算月額合計</span><span style="font-size:20px;font-weight:700">約${fr(grand)}円</span>` +
-    `</div>`;
+    (basic > 0 ? fxSubRow('＋ 基本料金（プラン規定）', `${fr(basic)}`) : '');
 }
 
 // ── 九州電力 季時別電灯 概算単価マスタ（季節別・時間帯別）──
