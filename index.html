@@ -511,6 +511,10 @@ canvas#mini-chart { height: 150px !important; }
             </div>
             <div id="before-ratio-zones" style="display:flex;flex-direction:column;gap:6px"></div>
             <div id="before-ratio-sum-warn" style="display:none;margin-top:4px;font-size:11px;color:#dc2626;font-weight:700">⚠ 合計が100%になるよう設定してください（現在 <span id="before-ratio-sum-val">0</span>%）</div>
+            <details id="before-price-breakdown" style="margin-top:10px" ontoggle="(function(d){const s=d.querySelector('summary');s.textContent=d.open?'📊 単価内訳・計算根拠を閉じる ▲':'📊 単価内訳・計算根拠を表示 ▼';})(this)">
+              <summary style="cursor:pointer;font-size:12px;font-weight:700;padding:7px 12px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:8px;color:#475569;list-style:none;user-select:none">📊 単価内訳・計算根拠を表示 ▼</summary>
+              <div id="before-price-breakdown-body" style="margin-top:6px;padding:8px;background:#fff;border-radius:6px;border:1px solid #cbd5e1;font-size:11px;line-height:1.8"></div>
+            </details>
           </div>
           <!-- 概算月額合計（全プラン共通表示） -->
           <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:#475569;padding:8px 10px;margin-top:10px;border-top:2px solid #cbd5e1;background:#f1f5f9;border-radius:6px">
@@ -2837,6 +2841,65 @@ function _updatePriceBreakdown(kp) {
   }
 }
 
+function _updateBeforePriceBreakdown(kp) {
+  const bodyEl = document.getElementById('before-price-breakdown-body');
+  if (!bodyEl) return;
+  const ratios  = getBeforeEffectiveRatios(kp);
+  const isDenka = kp === 'kyushu_denka_night';
+  const mkwh = parseFloat(document.getElementById('mkwh').value) || 0;
+  const _monthly = (eff) => mkwh > 0
+    ? `<div style="margin-top:4px;border-top:1px solid var(--border);padding-top:4px">` +
+      `<span style="color:var(--muted)">概算月額（電力量料金相当）：</span>` +
+      `<b>${mkwh.toLocaleString()} kWh × ${eff}円/kWh = 約${Math.round(mkwh * eff).toLocaleString()}円/月</b>` +
+      `<br><span style="font-size:10px;color:var(--muted)">※基本料金・割引等は含まない概算です。</span></div>`
+    : '';
+  if (isDenka) {
+    const t    = KYUSHU_DENKA_NIGHT.tariff;
+    const wDay = t.weekdaySummerWinter * 4/12 + t.weekdaySpringFall * 8/12;
+    const wHol = t.weekendSummerWinter * 4/12 + t.weekendSpringFall * 8/12;
+    const base = Math.round(calcDenkiNightBaseRate(ratios) * 100) / 100;
+    const eff  = Math.round((base + ADJUSTMENT_UNIT_PRICE) * 100) / 100;
+    const lv = ratios.living || 0;
+    bodyEl.innerHTML =
+      `<div style="color:var(--muted)">🏷 公式単価（夏冬4ヶ月・春秋8ヶ月 加重平均）</div>` +
+      `<div style="padding-left:8px">平日デイタイム(10-17時) ${wDay.toFixed(2)}円 × ${Math.round(ratios.day*100)}% = ${(ratios.day*wDay).toFixed(2)}円</div>` +
+      `<div style="padding-left:8px">平日朝夕(8-10/17-22時) ${wDay.toFixed(2)}円 × ${Math.round(lv*100)}% = ${(lv*wDay).toFixed(2)}円 <span style="font-size:10px;color:var(--muted)">（平日昼間単価）</span></div>` +
+      `<div style="padding-left:8px">休日(8-22時) ${wHol.toFixed(2)}円 × ${Math.round(ratios.hol*100)}% = ${(ratios.hol*wHol).toFixed(2)}円</div>` +
+      `<div style="padding-left:8px">夜間 ${t.night}円 × ${Math.round(ratios.ngt*100)}% = ${(ratios.ngt*t.night).toFixed(2)}円</div>` +
+      `<div style="margin-top:2px">▶ 生活スタイル加重平均：<b>${base}円/kWh</b></div>` +
+      `<div>＋ 燃料費調整・再エネ賦課金等：+${ADJUSTMENT_UNIT_PRICE}円/kWh</div>` +
+      `<div style="color:var(--dg);font-weight:700">＝ 概算実質単価：<b>${eff}円/kWh</b></div>` +
+      _monthly(eff);
+  } else if (kp === 'kyushu_ohisama') {
+    const t    = KYUSHU_OHISAMA.tariff;
+    const base = Math.round(calcOhisamaBaseRate(ratios) * 100) / 100;
+    const eff  = Math.round((base + ADJUSTMENT_UNIT_PRICE) * 100) / 100;
+    bodyEl.innerHTML =
+      `<div style="color:var(--muted)">🏷 おひさま昼トクプラン 公式単価</div>` +
+      `<div style="padding-left:8px">おひさまタイム(10-16時) ${t.ohisama}円 × ${Math.round((ratios.ohisama||0)*100)}% = ${((ratios.ohisama||0)*t.ohisama).toFixed(2)}円 <span style="font-size:10px;color:#16a34a;font-weight:700">★最安</span></div>` +
+      `<div style="padding-left:8px">シフトタイム(朝夕：8-10/16-22時) ${t.peak}円 × ${Math.round((ratios.peak||0)*100)}% = ${((ratios.peak||0)*t.peak).toFixed(2)}円 <span style="font-size:10px;color:#dc2626;font-weight:700">★最高値・シフト推奨</span></div>` +
+      `<div style="padding-left:8px">だんらんタイム(夜間：22-8時) ${t.ngt}円 × ${Math.round((ratios.ngt||0)*100)}% = ${((ratios.ngt||0)*t.ngt).toFixed(2)}円</div>` +
+      `<div style="margin-top:2px">▶ 生活スタイル加重平均：<b>${base}円/kWh</b></div>` +
+      `<div>＋ 燃料費調整・再エネ賦課金等：+${ADJUSTMENT_UNIT_PRICE}円/kWh</div>` +
+      `<div style="color:var(--dg);font-weight:700">＝ 実質単価：<b>${eff}円/kWh</b></div>` +
+      _monthly(eff);
+  } else {
+    const t    = KYUSHU_KIJI.tariff;
+    const wDay = t.daytimeSummer * 3/12 + t.daytimeOther * 9/12;
+    const base = Math.round(calcKijibetsuBaseRate(ratios) * 100) / 100;
+    const eff  = Math.round((base + ADJUSTMENT_UNIT_PRICE) * 100) / 100;
+    bodyEl.innerHTML =
+      `<div style="color:var(--muted)">🏷 公式単価（夏季3ヶ月・その他季9ヶ月 加重平均）</div>` +
+      `<div style="padding-left:8px">デイ ${wDay.toFixed(2)}円 × ${Math.round(ratios.day*100)}% = ${(ratios.day*wDay).toFixed(2)}円</div>` +
+      `<div style="padding-left:8px">リビング ${t.living}円 × ${Math.round(ratios.living*100)}% = ${(ratios.living*t.living).toFixed(2)}円</div>` +
+      `<div style="padding-left:8px">ナイト ${t.night}円 × ${Math.round(ratios.ngt*100)}% = ${(ratios.ngt*t.night).toFixed(2)}円</div>` +
+      `<div style="margin-top:2px">▶ 生活スタイル加重平均：<b>${base}円/kWh</b></div>` +
+      `<div>＋ 燃料費調整・再エネ賦課金等：+${ADJUSTMENT_UNIT_PRICE}円/kWh</div>` +
+      `<div style="color:var(--dg);font-weight:700">＝ 概算実質単価：<b>${eff}円/kWh</b></div>` +
+      _monthly(eff);
+  }
+}
+
 function _applyRatioDc(kp) {
   const ratios = getEffectiveRatios(kp);
   if (!ratios) return;
@@ -3052,6 +3115,7 @@ function updateBeforeRatioPanel() {
     _updateBeforeRatioKwhDisplay(kp, prefix, annualKwh);
   }
   document.getElementById('before-btn-reset-ratio').style.display = isBeforeCustomRatio ? '' : 'none';
+  _updateBeforePriceBreakdown(kp);
 }
 
 function _updateBeforeRatioKwhDisplay(kp, prefix, annualKwh) {
@@ -3124,6 +3188,7 @@ function onBeforeRatioChange(prefix) {
 
   const mkwh = parseFloat(document.getElementById('mkwh').value) || 667;
   _updateBeforeRatioKwhDisplay(kp, prefix, mkwh * 12);
+  _updateBeforePriceBreakdown(kp);
   calc();
 }
 
@@ -3830,6 +3895,12 @@ function calc() {
     const _prefixRP = _effKpRP === 'kyushu_denka_night' ? 'dn' : _effKpRP === 'kyushu_ohisama' ? 'oh' : 'kj';
     _updateRatioKwhDisplay(_effKpRP, _prefixRP, (parseFloat(document.getElementById('mkwh').value)||0) * 12);
     _updatePriceBreakdown(_effKpRP);
+  }
+  const _beforeKpRP = _kpRP;
+  if (_isTOURP(_beforeKpRP)) {
+    const _beforePrefixRP = _beforeKpRP === 'kyushu_denka_night' ? 'bdn' : _beforeKpRP === 'kyushu_ohisama' ? 'boh' : 'bkj';
+    _updateBeforeRatioKwhDisplay(_beforeKpRP, _beforePrefixRP, (parseFloat(document.getElementById('mkwh').value)||0) * 12);
+    _updateBeforePriceBreakdown(_beforeKpRP);
   }
   // 導入前 概算月額合計（全プラン共通）
   const _beforeTotalEl = document.getElementById('before-plan-total-val');
