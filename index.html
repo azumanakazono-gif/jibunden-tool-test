@@ -176,6 +176,37 @@ canvas#mini-chart { height: 150px !important; }
   .prev-card .p-label { font-size: 13px; }
   .prev-card .p-val { font-size: 32px; }
 }
+/* ── 太陽光の活用割合 sticky card ── */
+#solar-util-card {
+  position: sticky;
+  top: 0;
+  z-index: 500;
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 60%, #ea580c 100%);
+  border: none;
+  box-shadow: 0 6px 24px rgba(234,88,12,.35), 0 2px 8px rgba(0,0,0,.15);
+}
+#solar-util-card .section-title {
+  color: #fff;
+  border-bottom-color: rgba(255,255,255,.35);
+}
+@media (max-width: 768px) {
+  #solar-util-card {
+    padding: 12px 14px;
+  }
+  #solar-util-card .section-title {
+    font-size: 12px;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+  }
+  #solar-util-card #self-rate-card,
+  #solar-util-card #surplus-rate-card {
+    padding: 10px 8px !important;
+  }
+  #self-rate-val,
+  #surplus-rate-val {
+    font-size: 30px !important;
+  }
+}
 #test-env-ribbon {
   position: fixed;
   top: 28px;
@@ -358,7 +389,7 @@ canvas#mini-chart { height: 150px !important; }
       </div>
     </div>
 
-    <div class="section-card">
+    <div class="section-card" id="solar-util-card">
       <div class="section-title">☀️ 太陽光の活用割合</div>
       <!-- 自家消費率 / 余剰率 グローバルサマリー -->
       <div class="grid2" style="gap:10px">
