@@ -423,34 +423,39 @@ canvas#mini-chart { height: 150px !important; }
         <input type="text" id="utility-company" placeholder="電力会社名（任意）例：○○電力" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:14px;background:#fff;font-family:inherit;box-sizing:border-box">
       </div>
 
+      <!-- ⚡ 現在の電気使用状況（全幅・独立カード） -->
+      <div style="padding:12px 14px;background:#f8fafc;border-radius:8px;border:1px solid #cbd5e1;margin-bottom:12px">
+        <div style="font-size:12px;font-weight:700;color:#475569;margin-bottom:10px">⚡ 現在の電気使用状況</div>
+        <!-- 💴 現在の電気料金 -->
+        <div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:8px">💴 現在の電気料金</div>
+        <div class="grid2" style="margin-bottom:4px">
+          <div class="field"><label>月間電気代（円）</label><input type="number" id="mb" value="20000" min="1000" max="200000" step="1000" oninput="onMbInput()"></div>
+          <div class="field">
+            <label>月間使用量（kWh）<span id="mkwh-label-note" style="font-size:10px;margin-left:4px;color:var(--muted)"></span></label>
+            <input type="number" id="mkwh" value="667" min="1" max="5000" step="10" oninput="onMkwhInput()">
+            <span id="mkwh-est-note" style="font-size:11px;color:#0369a1;display:none">📊 電気代から自動推定
+              <button onclick="reEstimateJyuryoKwh()" style="margin-left:4px;font-size:10px;padding:1px 6px;border:1px solid #93c5fd;border-radius:4px;background:#eff6ff;color:#1e40af;cursor:pointer;font-family:inherit">再推定</button>
+            </span>
+          </div>
+        </div>
+        <div id="billing-guide" style="display:none;margin-bottom:8px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);font-size:12px"></div>
+        <div style="margin-bottom:12px;padding:6px 12px;background:#f8fffe;border-radius:8px;border:1px solid var(--border);font-size:12px;color:var(--muted)">
+          現在の平均単価（自動計算・税込）：<b id="up-auto" style="color:var(--dg)">-</b>
+          <span style="font-size:10px;margin-left:6px;color:var(--muted)">※再エネ賦課金・燃料費調整額含む実質単価</span>
+        </div>
+        <!-- 年間電気代・年間消費電力量の自動表示 -->
+        <div style="display:flex;gap:16px;flex-wrap:wrap;padding:8px 12px;background:#f8fffe;border-radius:8px;border:1px solid var(--border);font-size:13px">
+          <span style="color:var(--muted)">年間電気代：<b id="annual-bill-disp" style="color:var(--dg)">-</b></span>
+          <span style="color:var(--muted)">年間消費電力量：<b id="annual-kwh-disp" style="color:var(--dg)">-</b></span>
+        </div>
+      </div>
+
       <!-- ビフォー / アフター 横並び比較コンテナ -->
       <div style="display:flex;flex-wrap:wrap;gap:15px;margin-bottom:10px;align-items:flex-start">
 
         <!-- 【導入前】プラン選択 + 内訳カード -->
         <div id="before-plan-card" style="flex:1;min-width:280px;padding:12px 14px;background:#f8fafc;border-radius:8px;border:1px solid #cbd5e1">
           <div style="font-size:12px;font-weight:700;color:#475569;margin-bottom:10px">⚡ 【導入前】現在の電気料金プラン</div>
-          <!-- 💴 現在の電気料金 -->
-          <div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:8px">💴 現在の電気料金</div>
-          <div class="grid2" style="margin-bottom:4px">
-            <div class="field"><label>月間電気代（円）</label><input type="number" id="mb" value="20000" min="1000" max="200000" step="1000" oninput="onMbInput()"></div>
-            <div class="field">
-              <label>月間使用量（kWh）<span id="mkwh-label-note" style="font-size:10px;margin-left:4px;color:var(--muted)"></span></label>
-              <input type="number" id="mkwh" value="667" min="1" max="5000" step="10" oninput="onMkwhInput()">
-              <span id="mkwh-est-note" style="font-size:11px;color:#0369a1;display:none">📊 電気代から自動推定
-                <button onclick="reEstimateJyuryoKwh()" style="margin-left:4px;font-size:10px;padding:1px 6px;border:1px solid #93c5fd;border-radius:4px;background:#eff6ff;color:#1e40af;cursor:pointer;font-family:inherit">再推定</button>
-              </span>
-            </div>
-          </div>
-          <div id="billing-guide" style="display:none;margin-bottom:8px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);font-size:12px"></div>
-          <div style="margin-bottom:12px;padding:6px 12px;background:#f8fffe;border-radius:8px;border:1px solid var(--border);font-size:12px;color:var(--muted)">
-            現在の平均単価（自動計算・税込）：<b id="up-auto" style="color:var(--dg)">-</b>
-            <span style="font-size:10px;margin-left:6px;color:var(--muted)">※再エネ賦課金・燃料費調整額含む実質単価</span>
-          </div>
-          <!-- 年間電気代・年間消費電力量の自動表示 -->
-          <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;padding:8px 12px;background:#f8fffe;border-radius:8px;border:1px solid var(--border);font-size:13px">
-            <span style="color:var(--muted)">年間電気代：<b id="annual-bill-disp" style="color:var(--dg)">-</b></span>
-            <span style="color:var(--muted)">年間消費電力量：<b id="annual-kwh-disp" style="color:var(--dg)">-</b></span>
-          </div>
           <div style="margin-bottom:8px">
             <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:3px">導入前プラン <span style="font-weight:400">（現在の契約）</span></div>
             <select id="kyuden-plan" onchange="onKyudenPlanChange()" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;background:#fff;font-family:inherit">
