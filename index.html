@@ -67,7 +67,9 @@ body { font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; backgroun
 .field input:focus { outline: none; border-color: var(--lg); box-shadow: 0 0 0 3px rgba(82,183,136,.15); }
 .field select { border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 15px; background: #fff; color: var(--text); font-family: inherit; transition: border-color .15s; }
 .field select:focus { outline: none; border-color: var(--lg); box-shadow: 0 0 0 3px rgba(82,183,136,.15); }
-#price-breakdown summary:hover { background:#dbeafe; border-color:#60a5fa; }
+#price-breakdown summary,#before-price-breakdown summary { display:block; }
+#price-breakdown summary:hover { background:#c7d9f7; }
+#before-price-breakdown summary:hover { background:#e2e8f0; }
 .slider-row { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
 .slider-row label { font-size: 14px; color: var(--muted); min-width: 100px; font-weight: 500; }
 .slider-row input[type=range] { flex: 1; accent-color: var(--mg); }
@@ -515,11 +517,11 @@ canvas#mini-chart { height: 150px !important; }
             <div id="before-ratio-sum-warn" style="display:none;margin-top:4px;font-size:11px;color:#dc2626;font-weight:700">⚠ 合計が100%になるよう設定してください（現在 <span id="before-ratio-sum-val">0</span>%）</div>
             <div id="before-ratio-style-status" style="display:none;margin-top:6px;font-size:11px;color:#475569;padding:4px 8px;background:#fff;border-radius:4px;border:1px solid #cbd5e1"></div>
           </div>
-          <details id="before-price-breakdown" style="display:none;margin-top:10px" ontoggle="(function(d){const s=d.querySelector('summary');s.textContent=d.open?'📊 料金内訳・計算根拠を表示 ▲':'📊 料金内訳・計算根拠を表示 ▼';})(this)">
-            <summary style="cursor:pointer;font-size:12px;font-weight:700;padding:7px 12px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:8px;color:#475569;list-style:none;user-select:none">📊 料金内訳・計算根拠を表示 ▼</summary>
+          <details id="before-price-breakdown" style="display:none;margin-top:10px;border:1px solid #cbd5e1;border-radius:8px;overflow:hidden" ontoggle="(function(d){const s=d.querySelector('summary');s.textContent=d.open?'📊 料金内訳・計算根拠を表示 ▲':'📊 料金内訳・計算根拠を表示 ▼';})(this)">
+            <summary style="cursor:pointer;font-size:12px;font-weight:700;padding:7px 12px;background:#f1f5f9;border-bottom:1px solid #cbd5e1;color:#475569;list-style:none;user-select:none">📊 料金内訳・計算根拠を表示 ▼</summary>
             <div id="juuryo-panel" style="display:none"></div>
-            <div id="before-plan-breakdown-body" style="margin-top:6px;padding:8px;background:#fff;border-radius:6px;border:1px solid #cbd5e1;font-size:11px;line-height:1.8"></div>
-            <div id="before-price-breakdown-body" style="margin-top:6px;padding:8px;background:#fff;border-radius:6px;border:1px solid #cbd5e1;font-size:11px;line-height:1.8"></div>
+            <div id="before-plan-breakdown-body" style="padding:8px;background:#fff;font-size:11px;line-height:1.8"></div>
+            <div id="before-price-breakdown-body" style="padding:8px;background:#fff;font-size:11px;line-height:1.8"></div>
           </details>
           <!-- 概算月額合計（全プラン共通表示） -->
           <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:#475569;padding:8px 10px;margin-top:10px;border-top:2px solid #cbd5e1;background:#f1f5f9;border-radius:6px">
@@ -571,10 +573,10 @@ canvas#mini-chart { height: 150px !important; }
             <div id="ratio-sum-warn" style="display:none;margin-top:4px;font-size:11px;color:#dc2626;font-weight:700">⚠ 合計が100%になるよう設定してください（現在 <span id="ratio-sum-val">0</span>%）</div>
             <div id="ratio-style-status" style="display:none;margin-top:6px;font-size:11px;padding:4px 8px;background:#fff;border-radius:4px;border:1px solid #93c5fd"></div>
           </div>
-          <details id="price-breakdown" style="display:none;margin-top:10px" ontoggle="(function(d){const s=d.querySelector('summary');s.textContent=d.open?'📊 料金内訳・計算根拠を表示 ▲':'📊 料金内訳・計算根拠を表示 ▼';})(this)">
-            <summary style="cursor:pointer;font-size:12px;font-weight:700;padding:7px 12px;background:#dbeafe;border:1px solid #93c5fd;border-radius:8px;color:#1e40af;list-style:none;user-select:none">📊 料金内訳・計算根拠を表示 ▼</summary>
-            <div id="post-plan-breakdown-body" style="margin-top:6px;font-size:11px;line-height:1.9"></div>
-            <div id="price-breakdown-body" style="margin-top:6px;padding:8px;background:#fff;border-radius:6px;border:1px solid #93c5fd;font-size:11px;line-height:1.8"></div>
+          <details id="price-breakdown" style="display:none;margin-top:10px;border:1px solid #93c5fd;border-radius:8px;overflow:hidden" ontoggle="(function(d){const s=d.querySelector('summary');s.textContent=d.open?'📊 料金内訳・計算根拠を表示 ▲':'📊 料金内訳・計算根拠を表示 ▼';})(this)">
+            <summary style="cursor:pointer;font-size:12px;font-weight:700;padding:7px 12px;background:#dbeafe;border-bottom:1px solid #93c5fd;color:#1e40af;list-style:none;user-select:none">📊 料金内訳・計算根拠を表示 ▼</summary>
+            <div id="post-plan-breakdown-body" style="padding:4px 8px;font-size:11px;line-height:1.9"></div>
+            <div id="price-breakdown-body" style="padding:8px;background:#fff;font-size:11px;line-height:1.8"></div>
           </details>
           <!-- 月額残り電気代 概算合計（全プラン共通表示） -->
           <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:#475569;padding:8px 10px;margin-top:10px;border-top:2px solid #93c5fd;background:#dbeafe;border-radius:6px">
@@ -2293,15 +2295,17 @@ function _updatePostPlanBreakdown(postKp, post_up, remainKwh) {
   } else if (postKp === 'kyushu_juuryo_b' || postKp === 'kyushu_juuryo_c') {
     // 従量電灯B/C：段階料金
     const { s1, s2, s3 } = calcJuuryoSteps(monthlyRemain);
-    const energyAmt = s1*18.37 + (s2>0 ? s2*23.97 : 0) + (s3>0 ? s3*26.97 : 0);
-    const adjAmt    = Math.round(monthlyRemain * ADJUSTMENT_UNIT_PRICE * 100) / 100;
-    const totalAmt  = Math.round(energyAmt + adjAmt);
+    const energyAmt   = s1*18.37 + (s2>0 ? s2*23.97 : 0) + (s3>0 ? s3*26.97 : 0);
+    const adjAmt      = Math.round(monthlyRemain * ADJUSTMENT_UNIT_PRICE * 100) / 100;
+    const basicCharge = _juuryoBasicCharge(postKp);
+    const totalAmt    = Math.round(energyAmt + adjAmt + basicCharge);
     body.innerHTML =
       `<div style="color:var(--muted);font-size:10px;margin-bottom:2px">残り購入電力量 ${fr(remainKwh)} kWh/年（月平均 ${fr(monthlyRemain)} kWh）の段階料金</div>` +
       `<div style="border:1px solid ${GRN};border-radius:4px;overflow:hidden;margin-bottom:6px">` +
       fxRow('第1段階 〜120kWh',      `${s1}kWh × 18.37円`, f2(s1*18.37)) +
       (s2>0 ? fxRow('第2段階 121〜300kWh', `${s2}kWh × 23.97円`, f2(s2*23.97)) : '') +
       (s3>0 ? fxRow('第3段階 301kWh〜',    `${s3}kWh × 26.97円`, f2(s3*26.97)) : '') +
+      fxRow('基本料金', '', f2(basicCharge)) +
       `</div>` +
       fxRow('＋ 燃料費調整額・再エネ賦課金', `${fr(monthlyRemain)}kWh × ${ADJUSTMENT_UNIT_PRICE}円`, f2(adjAmt));
     setTotal(totalAmt);
