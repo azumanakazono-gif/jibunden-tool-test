@@ -517,8 +517,8 @@ canvas#mini-chart { height: 150px !important; }
             <div id="before-ratio-sum-warn" style="display:none;margin-top:4px;font-size:11px;color:#dc2626;font-weight:700">⚠ 合計が100%になるよう設定してください（現在 <span id="before-ratio-sum-val">0</span>%）</div>
             <div id="before-ratio-style-status" style="display:none;margin-top:6px;font-size:11px;color:#475569;padding:4px 8px;background:#fff;border-radius:4px;border:1px solid #cbd5e1"></div>
           </div>
-          <details id="before-price-breakdown" style="display:none;margin-top:10px;border:1px solid #cbd5e1;border-radius:8px;overflow:hidden" ontoggle="(function(d){const s=d.querySelector('summary');s.textContent=d.open?'📊 料金内訳・計算根拠を表示 ▲':'📊 料金内訳・計算根拠を表示 ▼';})(this)">
-            <summary style="cursor:pointer;font-size:12px;font-weight:700;padding:7px 12px;background:#f1f5f9;border-bottom:1px solid #cbd5e1;color:#475569;list-style:none;user-select:none">📊 料金内訳・計算根拠を表示 ▼</summary>
+          <details id="before-price-breakdown" style="display:none;margin-top:10px;border:1px solid #cbd5e1;border-radius:8px;overflow:visible" ontoggle="(function(d){const s=d.querySelector('summary');s.textContent=d.open?'📊 料金内訳・計算根拠を表示 ▲':'📊 料金内訳・計算根拠を表示 ▼';})(this)">
+            <summary style="cursor:pointer;font-size:12px;font-weight:700;padding:8px 4px;background:#f1f5f9;border-bottom:1px solid #cbd5e1;color:#475569;list-style:none;user-select:none">📊 料金内訳・計算根拠を表示 ▼</summary>
             <div id="juuryo-panel" style="display:none"></div>
             <div id="before-plan-breakdown-body" style="padding:8px;background:#fff;font-size:11px;line-height:1.8"></div>
             <div id="before-price-breakdown-body" style="padding:8px;background:#fff;font-size:11px;line-height:1.8"></div>
@@ -573,8 +573,8 @@ canvas#mini-chart { height: 150px !important; }
             <div id="ratio-sum-warn" style="display:none;margin-top:4px;font-size:11px;color:#dc2626;font-weight:700">⚠ 合計が100%になるよう設定してください（現在 <span id="ratio-sum-val">0</span>%）</div>
             <div id="ratio-style-status" style="display:none;margin-top:6px;font-size:11px;padding:4px 8px;background:#fff;border-radius:4px;border:1px solid #93c5fd"></div>
           </div>
-          <details id="price-breakdown" style="display:none;margin-top:10px;border:1px solid #93c5fd;border-radius:8px;overflow:hidden" ontoggle="(function(d){const s=d.querySelector('summary');s.textContent=d.open?'📊 料金内訳・計算根拠を表示 ▲':'📊 料金内訳・計算根拠を表示 ▼';})(this)">
-            <summary style="cursor:pointer;font-size:12px;font-weight:700;padding:7px 12px;background:#dbeafe;border-bottom:1px solid #93c5fd;color:#1e40af;list-style:none;user-select:none">📊 料金内訳・計算根拠を表示 ▼</summary>
+          <details id="price-breakdown" style="display:none;margin-top:10px;border:1px solid #93c5fd;border-radius:8px;overflow:visible" ontoggle="(function(d){const s=d.querySelector('summary');s.textContent=d.open?'📊 料金内訳・計算根拠を表示 ▲':'📊 料金内訳・計算根拠を表示 ▼';})(this)">
+            <summary style="cursor:pointer;font-size:12px;font-weight:700;padding:8px 4px;background:#dbeafe;border-bottom:1px solid #93c5fd;color:#1e40af;list-style:none;user-select:none">📊 料金内訳・計算根拠を表示 ▼</summary>
             <div id="post-plan-breakdown-body" style="padding:4px 8px;font-size:11px;line-height:1.9"></div>
             <div id="price-breakdown-body" style="padding:8px;background:#fff;font-size:11px;line-height:1.8"></div>
           </details>
@@ -1664,9 +1664,9 @@ function _renderOhisamaBreakdown() {
 
   const fxRow = (label, detail, amtStr, badgeHtml) =>
     `<div style="display:flex;align-items:center;gap:4px;padding:3px 6px;font-size:11px;background:#fafafa;border-bottom:1px solid var(--border)">` +
-      `<span style="flex:0 0 250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}${badgeHtml||''}</span>` +
-      `<span style="flex:1;color:var(--muted);font-size:10px;white-space:nowrap">${detail}</span>` +
-      `<b style="flex:0 0 72px;text-align:right;white-space:nowrap">${amtStr}円</b>` +
+      `<span style="flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}${badgeHtml||''}</span>` +
+      `<span style="flex:0 0 auto;margin-right:8px;color:var(--muted);font-size:10px;white-space:nowrap">${detail}</span>` +
+      `<b style="flex:0 0 85px;text-align:right;white-space:nowrap">${amtStr}円</b>` +
     `</div>`;
   const zones = [
     { label:'おひさまタイム (10-16時)',           rate:t.ohisama, ratio:ratios.ohisama||0, badge:'★最安',              bc:'#16a34a' },
@@ -1698,7 +1698,7 @@ function _renderOhisamaBreakdown() {
 
   body.innerHTML =
     `<div style="color:var(--muted);font-size:10px;margin-bottom:2px">🏷 時間帯別電力量料金</div>` +
-    `<div style="border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:6px">${zoneHtml}` +
+    `<div style="border:1px solid var(--border);border-radius:4px;overflow:visible;margin-bottom:6px">${zoneHtml}` +
     (fuel_amt > 0 ? fxRow(`燃料費調整額`, `${mkwh.toLocaleString()}kWh × ${FUEL_UNIT}円/kWh`, f2(fuel_amt)) : '') +
     fxRow(`再エネ賦課金`, `${mkwh.toLocaleString()}kWh × ${SAIENE_UNIT}円/kWh`, f2(saiene_amt)) +
     (basic > 0 ? fxRow('基本料金（プラン規定）', '', `${fr(basic)}`) : '') +
@@ -2209,9 +2209,9 @@ function _updatePostPlanBreakdown(postKp, post_up, remainKwh) {
   const GRN_TXT = '#1e40af';
   const fxRow = (label, detail, amtStr) =>
     `<div style="display:flex;align-items:center;gap:4px;padding:3px 6px;font-size:11px;background:#fff;border-bottom:1px solid ${GRN}">` +
-      `<span style="flex:0 0 250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</span>` +
-      `<span style="flex:1;color:var(--muted);font-size:10px;white-space:nowrap">${detail}</span>` +
-      `<b style="flex:0 0 72px;text-align:right;white-space:nowrap">${amtStr}円</b>` +
+      `<span style="flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</span>` +
+      `<span style="flex:0 0 auto;margin-right:8px;color:var(--muted);font-size:10px;white-space:nowrap">${detail}</span>` +
+      `<b style="flex:0 0 85px;text-align:right;white-space:nowrap">${amtStr}円</b>` +
     `</div>`;
   // surcharge rows appended inside the zone table; returns zone-only monthly subtotal
   const fxZoneGrid = (zones, annualKwh) => {
@@ -2301,7 +2301,7 @@ function _updatePostPlanBreakdown(postKp, post_up, remainKwh) {
     const totalAmt    = Math.round(energyAmt + adjAmt + basicCharge);
     body.innerHTML =
       `<div style="color:var(--muted);font-size:10px;margin-bottom:2px">残り購入電力量 ${fr(remainKwh)} kWh/年（月平均 ${fr(monthlyRemain)} kWh）の段階料金</div>` +
-      `<div style="border:1px solid ${GRN};border-radius:4px;overflow:hidden;margin-bottom:6px">` +
+      `<div style="border:1px solid ${GRN};border-radius:4px;overflow:visible;margin-bottom:6px">` +
       fxRow('第1段階 〜120kWh',      `${s1}kWh × 18.37円`, f2(s1*18.37)) +
       (s2>0 ? fxRow('第2段階 121〜300kWh', `${s2}kWh × 23.97円`, f2(s2*23.97)) : '') +
       (s3>0 ? fxRow('第3段階 301kWh〜',    `${s3}kWh × 26.97円`, f2(s3*26.97)) : '') +
@@ -2803,9 +2803,9 @@ function _updateBeforePlanBreakdown(kp) {
   const fr = n => Math.round(n).toLocaleString();
   const fxRow = (label, detail, amtStr) =>
     `<div style="display:flex;align-items:center;gap:4px;padding:3px 6px;font-size:11px;background:#fff;border-bottom:1px solid ${GRY}">` +
-      `<span style="flex:0 0 250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</span>` +
-      `<span style="flex:1;color:var(--muted);font-size:10px;white-space:nowrap">${detail}</span>` +
-      `<b style="flex:0 0 72px;text-align:right;white-space:nowrap">${amtStr}円</b>` +
+      `<span style="flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</span>` +
+      `<span style="flex:0 0 auto;margin-right:8px;color:var(--muted);font-size:10px;white-space:nowrap">${detail}</span>` +
+      `<b style="flex:0 0 85px;text-align:right;white-space:nowrap">${amtStr}円</b>` +
     `</div>`;
   // 従量電灯B/C
   if (kp === 'kyushu_juuryo_b' || kp === 'kyushu_juuryo_c') {
@@ -2816,7 +2816,7 @@ function _updateBeforePlanBreakdown(kp) {
     const fuelAmt   = Math.round(mkwh * FUEL_ADJUST  * 100) / 100;
     bodyEl.innerHTML =
       `<div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px">📋 ${isB ? '従量電灯B' : '従量電灯C'} 料金内訳（3段階）</div>` +
-      `<div style="border:1px solid ${GRY};border-radius:4px;overflow:hidden;margin-bottom:6px">` +
+      `<div style="border:1px solid ${GRY};border-radius:4px;overflow:visible;margin-bottom:6px">` +
         fxRow('第1段階 〜120kWh',       `${s1}kWh × 18.37円`, f2(s1*18.37)) +
         (s2>0 ? fxRow('第2段階 121〜300kWh', `${s2}kWh × 23.97円`, f2(s2*23.97)) : '') +
         (s3>0 ? fxRow('第3段階 301kWh〜',    `${s3}kWh × 26.97円`, f2(s3*26.97)) : '') +
