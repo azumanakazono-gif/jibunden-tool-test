@@ -572,12 +572,12 @@ canvas#mini-chart { height: 150px !important; }
             <div id="ratio-zones" style="display:flex;flex-direction:column;gap:6px"></div>
             <div id="ratio-sum-warn" style="display:none;margin-top:4px;font-size:11px;color:#dc2626;font-weight:700">⚠ 合計が100%になるよう設定してください（現在 <span id="ratio-sum-val">0</span>%）</div>
             <div id="ratio-style-status" style="display:none;margin-top:6px;font-size:11px;padding:4px 8px;background:#fff;border-radius:4px;border:1px solid #93c5fd"></div>
-            <details id="price-breakdown" style="margin-top:10px" ontoggle="(function(d){const s=d.querySelector('summary');s.textContent=d.open?'📊 料金内訳・計算根拠を表示 ▲':'📊 料金内訳・計算根拠を表示 ▼';})(this)">
-              <summary style="cursor:pointer;font-size:12px;font-weight:700;padding:7px 12px;background:#dbeafe;border:1px solid #93c5fd;border-radius:8px;color:#1e40af;list-style:none;user-select:none">📊 料金内訳・計算根拠を表示 ▼</summary>
-              <div id="post-plan-breakdown-body" style="margin-top:6px;font-size:11px;line-height:1.9"></div>
-              <div id="price-breakdown-body" style="margin-top:6px;padding:8px;background:#fff;border-radius:6px;border:1px solid #93c5fd;font-size:11px;line-height:1.8"></div>
-            </details>
           </div>
+          <details id="price-breakdown" style="display:none;margin-top:10px" ontoggle="(function(d){const s=d.querySelector('summary');s.textContent=d.open?'📊 料金内訳・計算根拠を表示 ▲':'📊 料金内訳・計算根拠を表示 ▼';})(this)">
+            <summary style="cursor:pointer;font-size:12px;font-weight:700;padding:7px 12px;background:#dbeafe;border:1px solid #93c5fd;border-radius:8px;color:#1e40af;list-style:none;user-select:none">📊 料金内訳・計算根拠を表示 ▼</summary>
+            <div id="post-plan-breakdown-body" style="margin-top:6px;font-size:11px;line-height:1.9"></div>
+            <div id="price-breakdown-body" style="margin-top:6px;padding:8px;background:#fff;border-radius:6px;border:1px solid #93c5fd;font-size:11px;line-height:1.8"></div>
+          </details>
           <!-- 月額残り電気代 概算合計（全プラン共通表示） -->
           <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:#475569;padding:8px 10px;margin-top:10px;border-top:2px solid #93c5fd;background:#dbeafe;border-radius:6px">
             <span>月額残り電気代（概算）</span><span id="after-plan-total-val" style="font-size:20px;font-weight:700;color:#1e293b">-</span>
@@ -2232,9 +2232,14 @@ function _updatePostPlanBreakdown(postKp, post_up, remainKwh) {
     const el = document.getElementById('after-plan-total-val');
     if (el) el.textContent = amt != null ? '約 ' + fr(amt) + ' 円/月' : '-';
   };
+  const setPBToggle = (show) => {
+    const el = document.getElementById('price-breakdown');
+    if (el) el.style.display = show ? '' : 'none';
+  };
   if (!postKp) {
     body.innerHTML = '<div style="font-size:11px;color:#6b7280;padding:4px 6px">← 上の「導入後プラン」を選択してください</div>';
     setTotal(null);
+    setPBToggle(false);
     return;
   }
 
@@ -2354,6 +2359,7 @@ function _updatePostPlanBreakdown(postKp, post_up, remainKwh) {
       fxRow('残り電気代', `${fr(monthlyRemain)}kWh × ${post_up}円/kWh`, f2(monthlyAmt));
     setTotal(monthlyAmt);
   }
+  setPBToggle(true);
 }
 
 function showAvgRateSection(show) {
@@ -2741,7 +2747,6 @@ function _updatePriceBreakdown(kp) {
       `<div style="padding-left:8px">休日(8-22時) ${wHol.toFixed(2)}円 × ${Math.round(ratios.hol*100)}% = ${(ratios.hol*wHol).toFixed(2)}円</div>` +
       `<div style="padding-left:8px">夜間 ${t.night}円 × ${Math.round(ratios.ngt*100)}% = ${(ratios.ngt*t.night).toFixed(2)}円</div>` +
       `<div style="margin-top:2px">▶ 生活スタイル加重平均：<b>${base}円/kWh</b></div>` +
-      `<div>＋ 燃料費調整・再エネ賦課金等：+${ADJUSTMENT_UNIT_PRICE}円/kWh</div>` +
       `<div style="color:var(--dg);font-weight:700">＝ 概算実質単価：<b>${eff}円/kWh</b></div>` +
       _monthly(eff);
   } else if (kp === 'kyushu_ohisama') {
@@ -2754,7 +2759,6 @@ function _updatePriceBreakdown(kp) {
       `<div style="padding-left:8px">シフトタイム(朝夕：8-10/16-22時) ${t.peak}円 × ${Math.round((ratios.peak||0)*100)}% = ${((ratios.peak||0)*t.peak).toFixed(2)}円 <span style="font-size:10px;color:#dc2626;font-weight:700">★最高値・シフト推奨</span></div>` +
       `<div style="padding-left:8px">だんらんタイム(夜間：22-8時) ${t.ngt}円 × ${Math.round((ratios.ngt||0)*100)}% = ${((ratios.ngt||0)*t.ngt).toFixed(2)}円</div>` +
       `<div style="margin-top:2px">▶ 生活スタイル加重平均：<b>${base}円/kWh</b></div>` +
-      `<div>＋ 燃料費調整・再エネ賦課金等：+${ADJUSTMENT_UNIT_PRICE}円/kWh</div>` +
       `<div style="color:var(--dg);font-weight:700">＝ 実質単価：<b>${eff}円/kWh</b></div>` +
       _monthly(eff);
   } else {
@@ -2768,7 +2772,6 @@ function _updatePriceBreakdown(kp) {
       `<div style="padding-left:8px">リビング ${t.living}円 × ${Math.round(ratios.living*100)}% = ${(ratios.living*t.living).toFixed(2)}円</div>` +
       `<div style="padding-left:8px">ナイト ${t.night}円 × ${Math.round(ratios.ngt*100)}% = ${(ratios.ngt*t.night).toFixed(2)}円</div>` +
       `<div style="margin-top:2px">▶ 生活スタイル加重平均：<b>${base}円/kWh</b></div>` +
-      `<div>＋ 燃料費調整・再エネ賦課金等：+${ADJUSTMENT_UNIT_PRICE}円/kWh</div>` +
       `<div style="color:var(--dg);font-weight:700">＝ 概算実質単価：<b>${eff}円/kWh</b></div>` +
       _monthly(eff);
   }
@@ -2800,7 +2803,6 @@ function _updateBeforePriceBreakdown(kp) {
       `<div style="padding-left:8px">休日(8-22時) ${wHol.toFixed(2)}円 × ${Math.round(ratios.hol*100)}% = ${(ratios.hol*wHol).toFixed(2)}円</div>` +
       `<div style="padding-left:8px">夜間 ${t.night}円 × ${Math.round(ratios.ngt*100)}% = ${(ratios.ngt*t.night).toFixed(2)}円</div>` +
       `<div style="margin-top:2px">▶ 生活スタイル加重平均：<b>${base}円/kWh</b></div>` +
-      `<div>＋ 燃料費調整・再エネ賦課金等：+${ADJUSTMENT_UNIT_PRICE}円/kWh</div>` +
       `<div style="color:var(--dg);font-weight:700">＝ 概算実質単価：<b>${eff}円/kWh</b></div>` +
       _monthly(eff);
   } else if (kp === 'kyushu_ohisama') {
@@ -2813,7 +2815,6 @@ function _updateBeforePriceBreakdown(kp) {
       `<div style="padding-left:8px">シフトタイム(朝夕：8-10/16-22時) ${t.peak}円 × ${Math.round((ratios.peak||0)*100)}% = ${((ratios.peak||0)*t.peak).toFixed(2)}円 <span style="font-size:10px;color:#dc2626;font-weight:700">★最高値・シフト推奨</span></div>` +
       `<div style="padding-left:8px">だんらんタイム(夜間：22-8時) ${t.ngt}円 × ${Math.round((ratios.ngt||0)*100)}% = ${((ratios.ngt||0)*t.ngt).toFixed(2)}円</div>` +
       `<div style="margin-top:2px">▶ 生活スタイル加重平均：<b>${base}円/kWh</b></div>` +
-      `<div>＋ 燃料費調整・再エネ賦課金等：+${ADJUSTMENT_UNIT_PRICE}円/kWh</div>` +
       `<div style="color:var(--dg);font-weight:700">＝ 実質単価：<b>${eff}円/kWh</b></div>` +
       _monthly(eff);
   } else {
@@ -2827,7 +2828,6 @@ function _updateBeforePriceBreakdown(kp) {
       `<div style="padding-left:8px">リビング ${t.living}円 × ${Math.round(ratios.living*100)}% = ${(ratios.living*t.living).toFixed(2)}円</div>` +
       `<div style="padding-left:8px">ナイト ${t.night}円 × ${Math.round(ratios.ngt*100)}% = ${(ratios.ngt*t.night).toFixed(2)}円</div>` +
       `<div style="margin-top:2px">▶ 生活スタイル加重平均：<b>${base}円/kWh</b></div>` +
-      `<div>＋ 燃料費調整・再エネ賦課金等：+${ADJUSTMENT_UNIT_PRICE}円/kWh</div>` +
       `<div style="color:var(--dg);font-weight:700">＝ 概算実質単価：<b>${eff}円/kWh</b></div>` +
       _monthly(eff);
   }
@@ -3659,13 +3659,21 @@ function updateSelfSummary(dc, bc, ag, mb, up, remainKWh, remainBill, bk) {
   if (meritBreakdownEl) {
     const dcMonth = Math.round(dc / 12);
     const bcMonthKwh = Math.round(bc / 12);
-    const dcYen = Math.round(dcMonth * up);
-    const bcYen = Math.round(bcMonthKwh * up);
     meritBreakdownEl.style.display = (dc > 0 || bc > 0) ? '' : 'none';
     document.getElementById('merit-dc-kwh').textContent = `${fmt(dcMonth)} kWh`;
-    document.getElementById('merit-dc-yen').textContent = `約 ${fmt(dcYen)}`;
     document.getElementById('merit-bc-kwh').textContent = `${fmt(bcMonthKwh)} kWh`;
-    document.getElementById('merit-bc-yen').textContent = `約 ${fmt(bcYen)}`;
+    const totalSaving = mb - remainBill;
+    const totalKwh = dc + bc;
+    if (totalKwh > 0 && totalSaving > 0) {
+      const ratioSolar = dc / totalKwh;
+      const solarBenefit   = Math.round(totalSaving * ratioSolar);
+      const batteryBenefit = totalSaving - solarBenefit;
+      document.getElementById('merit-dc-yen').textContent = `約 ${fmt(solarBenefit)}`;
+      document.getElementById('merit-bc-yen').textContent = `約 ${fmt(batteryBenefit)}`;
+    } else {
+      document.getElementById('merit-dc-yen').textContent = '-';
+      document.getElementById('merit-bc-yen').textContent = '-';
+    }
   }
 }
 
