@@ -484,6 +484,24 @@ canvas#mini-chart { height: 150px !important; }
             </select>
           </div>
           <div id="estimated-price-disp" style="display:none;margin-bottom:8px;padding:5px 10px;border-radius:6px;background:#fff;border:1px solid var(--border);font-size:12px;color:var(--mg);font-weight:600"></div>
+          <!-- 従量電灯B/C 契約情報（常時表示：該当プラン選択時のみ表示） -->
+          <div id="juuryo-contract-row" style="display:none;margin-bottom:8px;padding:6px 10px;background:#fff;border-radius:6px;border:1px solid #cbd5e1">
+            <div id="juuryo-contract-b" style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:11px;color:var(--muted)">契約アンペア：</span>
+              <select id="juuryo-amp" onchange="updateJuuryoPanel();autoEstimateJyuryoKwh()" style="font-size:12px;padding:2px 6px;border:1px solid var(--border);border-radius:4px">
+                <option value="10">10A</option><option value="15">15A</option><option value="20">20A</option>
+                <option value="30">30A</option><option value="40">40A</option>
+                <option value="50">50A</option><option value="60" selected>60A</option>
+              </select>
+            </div>
+            <div id="juuryo-contract-c" style="display:none;align-items:center;gap:6px">
+              <span style="font-size:11px;color:var(--muted)">契約容量：</span>
+              <input type="number" id="juuryo-kva" value="10" min="6" step="0.5" placeholder="例：10"
+                oninput="updateJuuryoPanel();autoEstimateJyuryoKwh()"
+                style="width:60px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px">
+              <span style="font-size:11px;color:var(--muted)">kVA</span>
+            </div>
+          </div>
           <!-- 導入前 時間帯別使用比率パネル（TOUプラン選択時のみ表示） -->
           <div id="before-ratio-panel" style="display:none;margin-top:8px;padding:10px 12px;background:rgba(255,255,255,0.85);border-radius:6px;border:1px solid #cbd5e1">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -499,27 +517,7 @@ canvas#mini-chart { height: 150px !important; }
           </div>
           <details id="before-price-breakdown" style="display:none;margin-top:10px" ontoggle="(function(d){const s=d.querySelector('summary');s.textContent=d.open?'📊 料金内訳・計算根拠を表示 ▲':'📊 料金内訳・計算根拠を表示 ▼';})(this)">
             <summary style="cursor:pointer;font-size:12px;font-weight:700;padding:7px 12px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:8px;color:#475569;list-style:none;user-select:none">📊 料金内訳・計算根拠を表示 ▼</summary>
-            <!-- 段階料金・時間帯別内訳（選択プランに応じて表示） -->
-            <div id="juuryo-panel" style="display:none">
-              <div style="height:1px;background:var(--border);margin-bottom:8px"></div>
-              <div id="juuryo-panel-title" style="font-size:12px;font-weight:700;color:var(--mg);margin-bottom:8px">📋 従量電灯B 段階料金内訳</div>
-              <div id="juuryo-contract-b" style="margin-bottom:6px;display:flex;align-items:center;gap:6px">
-                <span style="font-size:11px;color:var(--muted)">契約アンペア：</span>
-                <select id="juuryo-amp" onchange="updateJuuryoPanel();autoEstimateJyuryoKwh()" style="font-size:12px;padding:2px 6px;border:1px solid var(--border);border-radius:4px">
-                  <option value="10">10A</option><option value="15">15A</option><option value="20">20A</option>
-                  <option value="30">30A</option><option value="40">40A</option>
-                  <option value="50">50A</option><option value="60" selected>60A</option>
-                </select>
-              </div>
-              <div id="juuryo-contract-c" style="margin-bottom:6px;align-items:center;gap:6px;display:none">
-                <span style="font-size:11px;color:var(--muted)">契約容量：</span>
-                <input type="number" id="juuryo-kva" value="10" min="6" step="0.5" placeholder="例：10"
-                  oninput="updateJuuryoPanel();autoEstimateJyuryoKwh()"
-                  style="width:60px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px">
-                <span style="font-size:11px;color:var(--muted)">kVA</span>
-              </div>
-              <div id="juuryo-breakdown" style="font-size:11px;line-height:1.9"></div>
-            </div>
+            <div id="juuryo-panel" style="display:none"></div>
             <div id="before-plan-breakdown-body" style="margin-top:6px;padding:8px;background:#fff;border-radius:6px;border:1px solid #cbd5e1;font-size:11px;line-height:1.8"></div>
             <div id="before-price-breakdown-body" style="margin-top:6px;padding:8px;background:#fff;border-radius:6px;border:1px solid #cbd5e1;font-size:11px;line-height:1.8"></div>
           </details>
@@ -1626,63 +1624,19 @@ function resetBcManual() {
 }
 
 function updateJuuryoPanel() {
-    const kp = document.getElementById('kyuden-plan').value;
-
+  const kp = document.getElementById('kyuden-plan').value;
   const isJuuryoB = kp === 'kyushu_juuryo_b';
   const isJuuryoC = kp === 'kyushu_juuryo_c';
-  const isDenka   = kp === 'kyushu_denka_night';
-  const isKiji    = kp === 'kyushu_kiji';
-
-  if (!isJuuryoB && !isJuuryoC && !isDenka && !isKiji) {
-    document.getElementById('juuryo-panel').style.display = 'none';
-    return;
+  const contractRow = document.getElementById('juuryo-contract-row');
+  if (contractRow) {
+    contractRow.style.display = (isJuuryoB || isJuuryoC) ? '' : 'none';
+    document.getElementById('juuryo-contract-b').style.display = isJuuryoB ? 'flex' : 'none';
+    document.getElementById('juuryo-contract-c').style.display = isJuuryoC ? 'flex' : 'none';
   }
-  // TOU plans: breakdown rendered by _updateBeforePlanBreakdown; hide juuryo-panel
-  if (isDenka || isKiji) {
-    document.getElementById('juuryo-panel').style.display = 'none';
-    return;
-  }
-  document.getElementById('juuryo-panel').style.display = 'block';
-
-  const body    = document.getElementById('juuryo-breakdown');
-  const titleEl = document.getElementById('juuryo-panel-title');
-  titleEl.textContent = isJuuryoB ? '📋 従量電灯B 料金内訳（3段階）' : '📋 従量電灯C 料金内訳（3段階）';
-
-  document.getElementById('juuryo-contract-b').style.display = isJuuryoB ? 'flex' : 'none';
-  document.getElementById('juuryo-contract-c').style.display = isJuuryoC ? 'flex' : 'none';
-
-  const f2 = n => n.toLocaleString('ja-JP', {maximumFractionDigits:2});
-  const fr = n => Math.round(n).toLocaleString();
-  const fxRow = (label, detail, amtStr, badgeHtml) =>
-    `<div style="display:flex;align-items:center;gap:4px;padding:3px 6px;font-size:11px;background:#fafafa;border-bottom:1px solid var(--border)">` +
-      `<span style="flex:0 0 250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}${badgeHtml||''}</span>` +
-      `<span style="flex:1;color:var(--muted);font-size:10px;white-space:nowrap">${detail}</span>` +
-      `<b style="flex:0 0 72px;text-align:right;white-space:nowrap">${amtStr}円</b>` +
-    `</div>`;
-  // 従量電灯B/C
+  document.getElementById('juuryo-panel').style.display = 'none';
   if (isJuuryoB || isJuuryoC) {
-    const mkwh = parseFloat(document.getElementById('mkwh').value) || 0;
-    if (mkwh <= 0) {
-      body.innerHTML = '<div style="color:#dc2626;font-size:11px;padding:4px 0">⚠ 月間使用量を入力してください</div>';
-      updatePriceStatus(activeTab === 'hypothesis' ? hypData : custData);
-      return;
-    }
-    const { s1, s2, s3, energy, base, eff } = calcJuuryoSteps(mkwh);
-    const basicCharge = _juuryoBasicCharge(kp);
-    const saieneAmt = Math.round(mkwh * SAIENE_LEVY  * 100) / 100;
-    const fuelAmt   = Math.round(mkwh * FUEL_ADJUST  * 100) / 100;
-    const total = Math.round(basicCharge + energy + saieneAmt + fuelAmt);
-    body.innerHTML =
-      `<div style="color:var(--muted);font-size:10px;margin-bottom:2px">🏷 段階別電力量料金</div>` +
-      `<div style="border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:6px">` +
-        fxRow('第1段階 〜120kWh',       `${s1}kWh × 18.37円`, f2(s1*18.37)) +
-        (s2>0 ? fxRow('第2段階 121〜300kWh', `${s2}kWh × 23.97円`, f2(s2*23.97)) : '') +
-        (s3>0 ? fxRow('第3段階 301kWh〜',    `${s3}kWh × 26.97円`, f2(s3*26.97)) : '') +
-        (fuelAmt > 0 ? fxRow('燃料費調整額', `${mkwh.toLocaleString()}kWh × ${FUEL_ADJUST}円/kWh`, f2(fuelAmt)) : '') +
-        fxRow('再エネ賦課金', `${mkwh.toLocaleString()}kWh × ${SAIENE_LEVY}円/kWh`, f2(saieneAmt)) +
-        fxRow('基本料金', '', f2(basicCharge)) +
-      `</div>` +
-      `<div style="font-size:10px;color:var(--muted)">電力量のみ平均：${base}円/kWh　／　調整済み：${eff}円/kWh</div>`;
+    _updateBeforePlanBreakdown(kp);
+    _updateBeforeBreakdownToggleVisibility();
     updatePriceStatus(activeTab === 'hypothesis' ? hypData : custData);
   }
 }
@@ -2837,10 +2791,8 @@ function _updateBeforePriceBreakdown(kp) {
 function _updateBeforePlanBreakdown(kp) {
   const bodyEl = document.getElementById('before-plan-breakdown-body');
   if (!bodyEl) return;
-  const ratios = getBeforeEffectiveRatios(kp);
   const mkwh = parseFloat(document.getElementById('mkwh').value) || 0;
   if (!mkwh) { bodyEl.innerHTML = ''; return; }
-  const annualKwh = mkwh * 12;
   const GRY = '#cbd5e1';
   const GRY_TXT = '#475569';
   const f2 = n => n.toLocaleString('ja-JP', {maximumFractionDigits:2});
@@ -2851,6 +2803,28 @@ function _updateBeforePlanBreakdown(kp) {
       `<span style="flex:1;color:var(--muted);font-size:10px;white-space:nowrap">${detail}</span>` +
       `<b style="flex:0 0 72px;text-align:right;white-space:nowrap">${amtStr}円</b>` +
     `</div>`;
+  // 従量電灯B/C
+  if (kp === 'kyushu_juuryo_b' || kp === 'kyushu_juuryo_c') {
+    const isB = kp === 'kyushu_juuryo_b';
+    const { s1, s2, s3, energy, base, eff } = calcJuuryoSteps(mkwh);
+    const basicCharge = _juuryoBasicCharge(kp);
+    const saieneAmt = Math.round(mkwh * SAIENE_LEVY * 100) / 100;
+    const fuelAmt   = Math.round(mkwh * FUEL_ADJUST  * 100) / 100;
+    bodyEl.innerHTML =
+      `<div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px">📋 ${isB ? '従量電灯B' : '従量電灯C'} 料金内訳（3段階）</div>` +
+      `<div style="border:1px solid ${GRY};border-radius:4px;overflow:hidden;margin-bottom:6px">` +
+        fxRow('第1段階 〜120kWh',       `${s1}kWh × 18.37円`, f2(s1*18.37)) +
+        (s2>0 ? fxRow('第2段階 121〜300kWh', `${s2}kWh × 23.97円`, f2(s2*23.97)) : '') +
+        (s3>0 ? fxRow('第3段階 301kWh〜',    `${s3}kWh × 26.97円`, f2(s3*26.97)) : '') +
+        (fuelAmt > 0 ? fxRow('燃料費調整額', `${mkwh.toLocaleString()}kWh × ${FUEL_ADJUST}円/kWh`, f2(fuelAmt)) : '') +
+        fxRow('再エネ賦課金', `${mkwh.toLocaleString()}kWh × ${SAIENE_LEVY}円/kWh`, f2(saieneAmt)) +
+        fxRow('基本料金', '', f2(basicCharge)) +
+      `</div>` +
+      `<div style="font-size:10px;color:var(--muted)">電力量のみ平均：${base}円/kWh　／　調整済み：${eff}円/kWh</div>`;
+    return;
+  }
+  const ratios = getBeforeEffectiveRatios(kp);
+  const annualKwh = mkwh * 12;
   const fxTotal = (monthlyAmt) =>
     `<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:${GRY_TXT};padding:6px 4px;margin-top:4px;border-top:2px solid ${GRY}">` +
       `<span>月額電気代（概算）</span><span style="font-size:20px;font-weight:700">約&nbsp;${fr(monthlyAmt)}&nbsp;円/月</span>` +
@@ -2929,10 +2903,9 @@ function _updateBeforePlanBreakdown(kp) {
 function _updateBeforeBreakdownToggleVisibility() {
   const toggleEl = document.getElementById('before-price-breakdown');
   if (!toggleEl) return;
-  const juuryoVisible       = document.getElementById('juuryo-panel')?.style.display !== 'none';
   const planBodyHasContent  = (document.getElementById('before-plan-breakdown-body')?.innerHTML  || '').trim() !== '';
   const priceBodyHasContent = (document.getElementById('before-price-breakdown-body')?.innerHTML || '').trim() !== '';
-  toggleEl.style.display = (juuryoVisible || planBodyHasContent || priceBodyHasContent) ? '' : 'none';
+  toggleEl.style.display = (planBodyHasContent || priceBodyHasContent) ? '' : 'none';
 }
 
 function _applyRatioDc(kp) {
@@ -3978,10 +3951,14 @@ function calc() {
     _updateBeforePriceBreakdown(_beforeKpRP);
     _updateBeforePlanBreakdown(_beforeKpRP);
   } else {
-    const _bpbb = document.getElementById('before-plan-breakdown-body');
-    if (_bpbb) _bpbb.innerHTML = '';
-    const _bpb2 = document.getElementById('before-price-breakdown-body');
-    if (_bpb2) _bpb2.innerHTML = '';
+    if (_beforeKpRP === 'kyushu_juuryo_b' || _beforeKpRP === 'kyushu_juuryo_c') {
+      _updateBeforePlanBreakdown(_beforeKpRP);
+    } else {
+      const _bpbb = document.getElementById('before-plan-breakdown-body');
+      if (_bpbb) _bpbb.innerHTML = '';
+      const _bpb2 = document.getElementById('before-price-breakdown-body');
+      if (_bpb2) _bpb2.innerHTML = '';
+    }
   }
   _updateBeforeBreakdownToggleVisibility();
   // 導入前 概算月額合計（全プラン共通）
