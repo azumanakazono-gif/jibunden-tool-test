@@ -47,7 +47,7 @@ body { font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; backgroun
 .calc-btn:hover { background: var(--dg); }
 .note { font-size: 11px; color: var(--muted); margin-top: 10px; padding: 8px 12px; background: #f9fafb; border-radius: 6px; border: 1px solid var(--border); line-height: 1.6; }
 @media print {
-  #warranty-notes { border: none; resize: none; background: transparent; }
+  .note { border: none; background: transparent; }
 }
 </style>
 </head>
@@ -147,19 +147,6 @@ body { font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; backgroun
         </div>
         <div class="result-row" style="margin-top:4px"><span>PPA 月額電力料金（概算）</span><span id="po-ppa-monthly">-</span></div>
       </div>
-    </div>
-  </div>
-
-
-  <!-- 保証内容 -->
-  <div class="section-card" id="warranty-section" style="margin-top:16px">
-    <div class="section-title">🛡️ 保証内容（任意）</div>
-    <div style="padding:12px;background:#f8fafc;border-radius:8px">
-      <textarea id="warranty-notes"
-        style="width:100%;min-height:120px;padding:8px;border:1px solid #cbd5e1;border-radius:4px;font-size:13px;font-family:inherit;resize:vertical">・システム保証 20年
-・出力保証 25年
-・パワコン保証 15年
-・自然災害補償 10年付</textarea>
     </div>
   </div>
 
