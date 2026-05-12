@@ -109,7 +109,7 @@ body { font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; backgroun
 .loan-divider { border: none; border-top: 1px solid var(--border); margin: 6px 0; }
 .cum-chart-wrap { margin-top: 14px; background: #fff; border-radius: 10px; padding: 14px; border: 1px solid var(--border); }
 .cum-chart-wrap .ct { font-size: 13px; color: var(--muted); margin-bottom: 10px; font-weight: 600; }
-canvas#mini-chart { height: 150px !important; }
+canvas#mini-chart { height: 220px !important; }
 .legend { display: flex; gap: 16px; margin-top: 8px; }
 .legend span { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 5px; }
 .legend b { display: inline-block; width: 22px; height: 4px; border-radius: 2px; }
@@ -844,12 +844,21 @@ canvas#mini-chart { height: 150px !important; }
             ✏️ 手動入力
           </button>
         </div>
-        <!-- 借入金額・金利・支払回数（常時表示） -->
-        <div class="grid3" style="margin-bottom:12px">
+        <!-- 借入金額・頭金・金利・支払回数（常時表示） -->
+        <div class="grid2" style="margin-bottom:8px">
           <div class="field">
             <label>借入金額（万円）</label>
-            <input type="number" id="la2" value="280" min="10" max="500" step="10" oninput="loanAmountEdited=true;calc()">
+            <input type="number" id="la2" value="280" min="10" max="500" step="10" oninput="loanAmountEdited=true;calcDpBorrow();calc()">
           </div>
+          <div class="field">
+            <label>頭金（万円）</label>
+            <input type="number" id="dp" value="0" min="0" step="10" oninput="calcDpBorrow();calc()">
+          </div>
+        </div>
+        <div id="dp-borrow-disp" style="font-size:12px;color:var(--mg);margin-bottom:8px;padding:5px 10px;background:var(--pg);border-radius:6px;border:1px solid var(--border)">
+          実際の借入額：<b id="dp-borrow-val">-</b>
+        </div>
+        <div class="grid2" style="margin-bottom:12px">
           <div class="field">
             <label>金利（年率 %）</label>
             <input type="number" id="lr" value="4.1" min="0.1" max="15" step="0.1" oninput="calc()">
@@ -3454,6 +3463,14 @@ function setLoanInputMode(mode) {
 }
 
 // 各方式の計算ロジック（共通）
+function calcDpBorrow() {
+  const la2 = v('la2') || 0;
+  const dp  = v('dp')  || 0;
+  const net = Math.max(0, la2 - dp);
+  const el  = document.getElementById('dp-borrow-val');
+  if (el) el.textContent = net.toLocaleString('ja-JP') + '万円';
+}
+
 function calcLoanValues(borrowAmt, annualRate, count) {
   const years = count / 12;
   const r     = annualRate / 12;
@@ -3531,9 +3548,12 @@ function calcLoan() {
     document.getElementById('loan-warning').textContent = '✏️ 金融機関から提示された月々返済額を使用しています。';
     return;
   }
-  const borrowAmt  = v('la2') * 10000;
+  const dp         = v('dp') || 0;
+  const borrowAmt  = Math.max(0, (v('la2') - dp)) * 10000;
   const annualRate = v('lr') / 100;
   const count      = v('lc');
+  const dpEl = document.getElementById('dp-borrow-val');
+  if (dpEl) dpEl.textContent = borrowAmt > 0 ? Math.round(borrowAmt/10000).toLocaleString('ja-JP') + '万円' : '0万円';
   const res = calcLoanValues(borrowAmt, annualRate, count);
   const cur = res[loanMethod];
 
@@ -4088,7 +4108,7 @@ function renderMiniChart(m, mb, wy, re, lp, ly, mt, showLoan, surplusKwh) {
   if(miniChart)miniChart.destroy();
   miniChart=new Chart(ctx,{type:'line',data:{labels,datasets},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-      scales:{x:{ticks:{maxTicksLimit:6,font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}},
+      scales:{x:{ticks:{maxTicksLimit:5,font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}},
               y:{ticks:{callback:v=>v+'万',font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}}}}}
   );
   document.getElementById('legend-loan-item').style.display = showLoan ? '' : 'none';
@@ -4113,6 +4133,7 @@ function clearForm() {
   document.getElementById('er').value=0;
   document.getElementById('wy').value=20;
   loanAmountEdited = false;
+  document.getElementById('dp').value=0;
   document.getElementById('lr').value=4.1;
   document.getElementById('lc').value=180;
   document.getElementById('le').checked=false; document.getElementById('lp-manual').value=0; setLoanInputMode('auto'); setLoanMethod('zansai'); toggleLoan();
