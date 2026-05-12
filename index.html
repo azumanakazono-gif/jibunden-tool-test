@@ -961,13 +961,6 @@ canvas#mini-chart { height: 150px !important; }
 
     <div class="section-card">
       <div class="section-title">📊 シミュレーション結果</div>
-      <div style="margin-bottom:14px">
-        <a href="payment-options.html" target="_blank" rel="noopener noreferrer"
-          style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:var(--mg);color:#fff;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;font-family:inherit">
-          🏦 導入手段 (Payment Options)
-          <span style="font-size:10px;opacity:.8">↗ 別タブで開く</span>
-        </a>
-      </div>
       <!-- 月額比較カード -->
       <div id="monthly-compare-card" style="border-radius:14px;padding:16px;border:2px solid #bbf7d0;background:linear-gradient(135deg,#f0fdf4,#dcfce7);box-shadow:0 2px 10px rgba(0,0,0,.08);margin-bottom:12px">
         <div style="font-size:13px;font-weight:700;color:#15803d;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #bbf7d0">💰 月額比較: 現在 → 導入後</div>
@@ -1121,11 +1114,16 @@ canvas#mini-chart { height: 150px !important; }
         <span class="d-label">ローン活用時の20年コスト差<br><span id="loan-diff-note" style="font-size:10px;opacity:.7"></span></span>
         <span class="d-val" id="rd-loan">-</span>
       </div>
-      <div style="text-align:center;margin-top:20px">
-        <a id="nav-payment-options" href="payment-options.html" target="_blank" rel="noopener noreferrer"
-          style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:var(--mg);color:#fff;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;border:none;cursor:pointer;font-family:inherit">
+      <div style="display:flex;gap:10px;margin-top:20px">
+        <a href="payment-options.html#loan-section" target="_blank" rel="noopener noreferrer"
+          style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 14px;background:var(--mg);color:#fff;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;font-family:inherit">
           🏦 導入手段 (Payment Options)
-          <span style="font-size:10px;opacity:.8">↗ 別タブで開く</span>
+          <span style="font-size:10px;opacity:.8">↗</span>
+        </a>
+        <a href="payment-options.html#warranty-section" target="_blank" rel="noopener noreferrer"
+          style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 14px;background:#0369a1;color:#fff;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;font-family:inherit">
+          🛡️ 保証内容 (Warranty Details)
+          <span style="font-size:10px;opacity:.8">↗</span>
         </a>
       </div>
     </div>
