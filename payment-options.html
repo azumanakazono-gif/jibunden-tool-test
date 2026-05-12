@@ -32,7 +32,7 @@ body { font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; backgroun
 .badge-ppa { background: #e0f2fe; color: #0c4a6e; }
 .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
 .field label { font-size: 13px; color: var(--muted); font-weight: 500; }
-.field input[type=number], .field select {
+.field input[type=number], .field input[type=text], .field select {
   border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 12px;
   font-size: 15px; background: #fff; color: var(--text); font-family: inherit;
 }
@@ -43,26 +43,25 @@ body { font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; backgroun
 .result-row span:first-child { font-size: 13px; color: var(--muted); }
 .result-row span:last-child { font-size: 15px; font-weight: 700; color: var(--dg); }
 .result-row.highlight span:last-child { color: var(--or); }
-.calc-btn { background: var(--mg); color: #fff; border: none; border-radius: 8px; padding: 11px 24px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; margin-top: 4px; }
-.calc-btn:hover { background: var(--dg); }
 .note { font-size: 11px; color: var(--muted); margin-top: 10px; padding: 8px 12px; background: #f9fafb; border-radius: 6px; border: 1px solid var(--border); line-height: 1.6; }
-.method-toggle { display: flex; gap: 0; margin-bottom: 16px; border-radius: 8px; overflow: hidden; border: 1.5px solid var(--border); }
+/* method toggle */
+.method-toggle { display: flex; gap: 0; margin-bottom: 16px; border: 1.5px solid var(--border); border-radius: 8px; overflow: hidden; }
+.method-toggle label { flex: 1; text-align: center; padding: 9px 12px; font-size: 13px; font-weight: 700; cursor: pointer; color: var(--muted); background: #fff; transition: all .15s; }
 .method-toggle input[type=radio] { display: none; }
-.method-toggle label {
-  flex: 1; text-align: center; padding: 9px 12px; font-size: 13px; font-weight: 600;
-  cursor: pointer; color: var(--muted); background: #f9fafb; transition: background .15s, color .15s;
-  border-right: 1px solid var(--border);
-}
-.method-toggle label:last-of-type { border-right: none; }
 .method-toggle input[type=radio]:checked + label { background: var(--mg); color: #fff; }
-.manual-toggle { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
-.manual-toggle input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--mg); cursor: pointer; }
-.manual-toggle label { font-size: 13px; font-weight: 600; color: var(--mg); cursor: pointer; }
-.manual-section { background: #f0f7f4; border: 1.5px dashed var(--lg); border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; }
-.manual-section .manual-title { font-size: 12px; font-weight: 700; color: var(--mg); margin-bottom: 10px; letter-spacing: .05em; }
-@media print {
-  .note { border: none; background: transparent; }
-}
+/* mode toggle */
+.mode-tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+.mode-tab { flex: 1; padding: 8px; border-radius: 8px; border: 1.5px solid var(--border); background: #fff; color: var(--muted); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.mode-tab.active { background: var(--dg); color: #fff; border-color: var(--dg); }
+.mode-panel { display: none; }
+.mode-panel.active { display: block; }
+/* 元金均等 schedule table */
+#gankin-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+#gankin-table th { background: var(--dg); color: #fff; padding: 5px 8px; text-align: right; }
+#gankin-table th:first-child { text-align: left; }
+#gankin-table td { padding: 4px 8px; text-align: right; border-bottom: 1px solid var(--border); }
+#gankin-table td:first-child { text-align: left; color: var(--muted); }
+@media print { .note { border: none; background: transparent; } }
 </style>
 </head>
 <body>
@@ -108,83 +107,96 @@ body { font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; backgroun
   <div class="section-card" id="loan-section">
     <div class="section-title">🔢 ローン試算</div>
 
-    <!-- 返済方式トグル -->
-    <div style="margin-bottom:16px">
-      <div style="font-size:13px;color:var(--muted);font-weight:500;margin-bottom:8px">返済方式</div>
-      <div class="method-toggle">
-        <input type="radio" name="loan-method" id="method-ei" value="equal-installment" checked onchange="calcLoan()">
-        <label for="method-ei">元利均等（Equal Installments）</label>
-        <input type="radio" name="loan-method" id="method-ep" value="equal-principal" onchange="calcLoan()">
-        <label for="method-ep">元金均等（Equal Principal）</label>
-      </div>
+    <!-- 入力モード：プリセット / 手動 -->
+    <div class="mode-tabs" style="margin-bottom:14px">
+      <button class="mode-tab active" onclick="setMode('preset')">📋 プリセット入力</button>
+      <button class="mode-tab" onclick="setMode('manual')">✏️ 自由入力 (Manual)</button>
     </div>
 
-    <!-- 通常入力 -->
-    <div class="grid3" style="margin-bottom:4px">
-      <div class="field">
-        <label>借入金額（万円）</label>
-        <input type="number" id="po-la" value="280" min="1" max="10000" step="1" oninput="calcLoan()">
-      </div>
-      <div class="field">
-        <label>金利（年率 %）</label>
-        <input type="number" id="po-lr" value="4.0" min="0" max="20" step="0.1" oninput="calcLoan()">
-      </div>
-      <div class="field">
-        <label>返済期間</label>
-        <select id="po-lc" onchange="toggleCustomPeriod(); calcLoan()">
-          <option value="60">5年（60回）</option>
-          <option value="84">7年（84回）</option>
-          <option value="120">10年（120回）</option>
-          <option value="180" selected>15年（180回）</option>
-          <option value="240">20年（240回）</option>
-          <option value="custom">カスタム（手入力）...</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- カスタム期間フィールド（「カスタム」選択時のみ表示） -->
-    <div id="po-custom-period-field" style="display:none;margin-bottom:14px">
-      <div class="field" style="max-width:200px;margin-bottom:0">
-        <label>返済期間（ヶ月・自由入力）</label>
-        <input type="number" id="po-custom-months" value="180" min="1" max="600" step="1" oninput="calcLoan()" placeholder="例: 180">
+    <!-- プリセットモード -->
+    <div id="mode-preset" class="mode-panel active">
+      <div class="grid3" style="margin-bottom:14px">
+        <div class="field">
+          <label>借入金額（万円）</label>
+          <input type="number" id="po-la" value="280" min="1" step="1" oninput="calcLoan()">
+        </div>
+        <div class="field">
+          <label>金利（年率 %）</label>
+          <input type="number" id="po-lr" value="4.0" min="0.01" max="30" step="0.1" oninput="calcLoan()">
+        </div>
+        <div class="field">
+          <label>返済期間</label>
+          <select id="po-lc" onchange="calcLoan()">
+            <option value="36">3年（36回）</option>
+            <option value="60">5年（60回）</option>
+            <option value="84">7年（84回）</option>
+            <option value="120">10年（120回）</option>
+            <option value="180" selected>15年（180回）</option>
+            <option value="240">20年（240回）</option>
+          </select>
+        </div>
       </div>
     </div>
 
     <!-- 自由入力モード -->
-    <div class="manual-toggle" style="margin-top:4px">
-      <input type="checkbox" id="manual-mode-toggle" onchange="toggleManualMode()">
-      <label for="manual-mode-toggle">自由入力モード (Manual Input) — 端数・任意金額を直接入力</label>
-    </div>
-    <div class="manual-section" id="manual-input-section" style="display:none">
-      <div class="manual-title">📝 自由入力（Manual Input） — プリセット以外のローン条件</div>
-      <div class="grid3">
-        <div class="field" style="margin-bottom:0">
-          <label>借入金額（円・精密入力）</label>
-          <input type="number" id="po-la-yen" value="2800000" min="1000" step="1" oninput="syncFromYen()" placeholder="例: 2856000">
+    <div id="mode-manual" class="mode-panel">
+      <div class="grid2" style="margin-bottom:14px">
+        <div class="field">
+          <label>借入金額（円・自由入力）</label>
+          <input type="number" id="po-la-m" placeholder="例: 2800000" min="0" step="10000" oninput="calcLoan()">
         </div>
-        <div class="field" style="margin-bottom:0">
+        <div class="field">
           <label>金利（年率 %）</label>
-          <input type="number" id="po-lr-manual" value="4.0" min="0" max="20" step="0.01" oninput="syncManualRate()" placeholder="例: 3.45">
+          <input type="number" id="po-lr-m" placeholder="例: 3.5" min="0" step="0.01" oninput="calcLoan()">
         </div>
-        <div class="field" style="margin-bottom:0">
-          <label>返済期間（ヶ月）</label>
-          <input type="number" id="po-months-manual" value="180" min="1" max="600" step="1" oninput="syncManualMonths()" placeholder="例: 180">
+        <div class="field">
+          <label>返済回数（回）</label>
+          <input type="number" id="po-lc-m" placeholder="例: 180" min="1" step="1" oninput="calcLoan()">
+        </div>
+        <div class="field">
+          <label>メモ（任意）</label>
+          <input type="text" id="po-memo" placeholder="例: ○○銀行 フラット35相当" style="font-size:13px">
         </div>
       </div>
     </div>
 
-    <!-- 結果 -->
-    <div id="po-loan-result" style="margin-top:14px">
-      <div class="result-row"><span id="po-monthly-label">月々の返済額（元利均等・固定）</span><span id="po-monthly">-</span></div>
-      <div class="result-row" id="po-lastmonth-row" style="display:none"><span>最終月の返済額</span><span id="po-lastmonth">-</span></div>
+    <!-- 返済方式トグル -->
+    <div class="method-toggle">
+      <input type="radio" id="m-kinri" name="po-method" value="kinri" checked onchange="calcLoan()">
+      <label for="m-kinri">元利均等 (Equal Installments)</label>
+      <input type="radio" id="m-gankin" name="po-method" value="gankin" onchange="calcLoan()">
+      <label for="m-gankin">元金均等 (Equal Principal)</label>
+    </div>
+
+    <!-- 元利均等 結果 -->
+    <div id="res-kinri">
+      <div class="result-row"><span id="lbl-monthly">月々の返済額（元利均等）</span><span id="po-monthly">-</span></div>
       <div class="result-row"><span>総返済額</span><span id="po-total">-</span></div>
       <div class="result-row highlight"><span>うち利息総額</span><span id="po-interest">-</span></div>
     </div>
-    <p class="note">⚠️ 概算です。実際の返済額はローン会社の計算により異なります。必ず契約前に金融機関へご確認ください。<br>💡 借入金額は小数点入力可（例: 285.5 → 2,855,000円）。カスタム期間・自由入力モードで任意条件を試算できます。</p>
+
+    <!-- 元金均等 結果 -->
+    <div id="res-gankin" style="display:none">
+      <div class="result-row"><span>初回返済額（最大）</span><span id="po-gankin-first">-</span></div>
+      <div class="result-row"><span>最終返済額（最小）</span><span id="po-gankin-last">-</span></div>
+      <div class="result-row"><span>総返済額</span><span id="po-gankin-total">-</span></div>
+      <div class="result-row highlight"><span>うち利息総額</span><span id="po-gankin-interest">-</span></div>
+      <details style="margin-top:8px">
+        <summary style="cursor:pointer;font-size:12px;color:var(--muted);padding:4px 0">返済スケジュール（年次）を表示</summary>
+        <div style="overflow-x:auto;margin-top:6px">
+          <table id="gankin-table">
+            <thead><tr><th>年</th><th>月々元金</th><th>初月利息</th><th>初月合計</th><th>年間合計</th><th>残高</th></tr></thead>
+            <tbody id="gankin-tbody"></tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+
+    <p class="note">⚠️ 概算です。実際の返済額はローン会社の計算により異なります。必ず契約前に金融機関へご確認ください。</p>
   </div>
 
   <!-- リース・PPA メモ欄（非表示・コードは保持） -->
-  <div class="section-card" style="display:none">
+  <div class="section-card" id="lease-ppa-section" style="display:none">
     <div class="section-title">📋 リース・PPA 条件メモ</div>
     <div class="grid2">
       <div>
@@ -215,120 +227,120 @@ body { font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; backgroun
 </div>
 
 <script>
-const fmt = n => Math.round(n).toLocaleString('ja-JP') + '円';
+const fmt  = n => Math.round(n).toLocaleString('ja-JP') + '円';
+const fmt0 = n => Math.round(n).toLocaleString('ja-JP');
+let currentMode = 'preset';
 
-function getRepaymentMethod() {
-  const radios = document.getElementsByName('loan-method');
-  for (const r of radios) if (r.checked) return r.value;
-  return 'equal-installment';
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-tab').forEach((b, i) =>
+    b.classList.toggle('active', (i === 0) === (mode === 'preset')));
+  document.getElementById('mode-preset').classList.toggle('active', mode === 'preset');
+  document.getElementById('mode-manual').classList.toggle('active', mode === 'manual');
+  calcLoan();
 }
 
-function toggleCustomPeriod() {
-  const sel = document.getElementById('po-lc');
-  const field = document.getElementById('po-custom-period-field');
-  field.style.display = sel.value === 'custom' ? 'block' : 'none';
-}
-
-function getMonths() {
-  const sel = document.getElementById('po-lc');
-  if (sel.value === 'custom') {
-    return parseInt(document.getElementById('po-custom-months').value) || 180;
+function getInputs() {
+  const method = document.querySelector('input[name="po-method"]:checked').value;
+  if (currentMode === 'preset') {
+    const principal = (parseFloat(document.getElementById('po-la').value) || 0) * 10000;
+    const rate      = parseFloat(document.getElementById('po-lr').value) || 0;
+    const count     = parseInt(document.getElementById('po-lc').value) || 180;
+    return { principal, rate, count, method };
+  } else {
+    const principal = parseFloat(document.getElementById('po-la-m').value) || 0;
+    const rate      = parseFloat(document.getElementById('po-lr-m').value) || 0;
+    const count     = parseInt(document.getElementById('po-lc-m').value) || 0;
+    return { principal, rate, count, method };
   }
-  return parseInt(sel.value) || 180;
-}
-
-function toggleManualMode() {
-  const on = document.getElementById('manual-mode-toggle').checked;
-  document.getElementById('manual-input-section').style.display = on ? 'block' : 'none';
-  if (on) {
-    // sync current values into manual fields
-    const laVal = parseFloat(document.getElementById('po-la').value) || 0;
-    document.getElementById('po-la-yen').value = Math.round(laVal * 10000);
-    document.getElementById('po-lr-manual').value = document.getElementById('po-lr').value;
-    document.getElementById('po-months-manual').value = getMonths();
-  }
-  calcLoan();
-}
-
-function syncFromYen() {
-  const yen = parseFloat(document.getElementById('po-la-yen').value) || 0;
-  // update main field (万円, 2 decimal places for precision)
-  document.getElementById('po-la').value = (yen / 10000).toFixed(2);
-  calcLoan();
-}
-
-function syncManualRate() {
-  document.getElementById('po-lr').value = document.getElementById('po-lr-manual').value;
-  calcLoan();
-}
-
-function syncManualMonths() {
-  const months = parseInt(document.getElementById('po-months-manual').value) || 180;
-  // force custom period selection
-  const sel = document.getElementById('po-lc');
-  sel.value = 'custom';
-  document.getElementById('po-custom-period-field').style.display = 'block';
-  document.getElementById('po-custom-months').value = months;
-  calcLoan();
 }
 
 function calcLoan() {
-  const manualOn = document.getElementById('manual-mode-toggle').checked;
-  let principal;
-  if (manualOn) {
-    principal = parseFloat(document.getElementById('po-la-yen').value) || 0;
-  } else {
-    principal = (parseFloat(document.getElementById('po-la').value) || 0) * 10000;
+  const { principal, rate, count, method } = getInputs();
+  const isGankin = method === 'gankin';
+  document.getElementById('res-kinri').style.display  = isGankin ? 'none' : '';
+  document.getElementById('res-gankin').style.display = isGankin ? '' : 'none';
+
+  if (principal <= 0 || count <= 0) {
+    setKinri('-', '-', '-');
+    setGankin('-', '-', '-', '-');
+    return;
   }
-  const annualRate = parseFloat(document.getElementById('po-lr').value) || 0;
-  const count = getMonths();
-  const method = getRepaymentMethod();
 
-  const monthlyLabel = document.getElementById('po-monthly-label');
-  const lastRow = document.getElementById('po-lastmonth-row');
-
-  if (principal <= 0 || count <= 0) { setLoan('-', null, '-', '-'); return; }
-
-  if (method === 'equal-installment') {
-    monthlyLabel.textContent = '月々の返済額（元利均等・固定）';
-    lastRow.style.display = 'none';
-    if (annualRate <= 0) {
-      const m = Math.round(principal / count);
-      setLoan(fmt(m), null, fmt(principal), '0円');
-      return;
-    }
-    const r = annualRate / 100 / 12;
-    const pow = Math.pow(1 + r, count);
-    const monthly = Math.round(principal * r * pow / (pow - 1));
-    const total = monthly * count;
-    setLoan(fmt(monthly), null, fmt(total), fmt(total - principal));
+  if (isGankin) {
+    calcGankin(principal, rate, count);
   } else {
-    // 元金均等: principal repayment is constant; interest decreases each month
-    monthlyLabel.textContent = '初回返済額（元金均等・逓減）';
-    lastRow.style.display = '';
-    const monthlyPrincipal = principal / count;
-    const r = annualRate / 100 / 12;
-    const firstMonthly = monthlyPrincipal + principal * r;
-    const lastMonthly = monthlyPrincipal * (1 + r);
-    // Total interest = P * r * (n+1) / 2
-    const totalInterest = annualRate <= 0 ? 0 : principal * r * (count + 1) / 2;
-    const total = principal + totalInterest;
-    setLoan(fmt(firstMonthly), fmt(lastMonthly), fmt(total), fmt(totalInterest));
+    calcKinri(principal, rate, count);
   }
 }
 
-function setLoan(monthly, lastMonthly, total, interest) {
-  document.getElementById('po-monthly').textContent = monthly;
-  if (lastMonthly !== null) {
-    document.getElementById('po-lastmonth').textContent = lastMonthly;
+function calcKinri(principal, annualRate, count) {
+  if (annualRate <= 0) {
+    const m = Math.round(principal / count);
+    setKinri(fmt(m), fmt(principal), '0円');
+    return;
   }
-  document.getElementById('po-total').textContent = total;
+  const r = annualRate / 100 / 12;
+  const monthly = Math.round(principal * r * Math.pow(1+r, count) / (Math.pow(1+r, count) - 1));
+  const total = monthly * count;
+  setKinri(fmt(monthly), fmt(total), fmt(total - principal));
+}
+
+function setKinri(monthly, total, interest) {
+  document.getElementById('po-monthly').textContent = monthly;
+  document.getElementById('po-total').textContent   = total;
   document.getElementById('po-interest').textContent = interest;
+}
+
+function calcGankin(principal, annualRate, count) {
+  const gankin = Math.round(principal / count);
+  const r = annualRate / 100 / 12;
+  let balance = principal, totalInterest = 0;
+  const tbody = document.getElementById('gankin-tbody');
+  tbody.innerHTML = '';
+  let firstMonthly = 0, lastMonthly = 0;
+
+  for (let m = 1; m <= count; m++) {
+    const interest = Math.round(balance * r * 100) / 100;
+    totalInterest += interest;
+    const monthly = gankin + interest;
+    if (m === 1) firstMonthly = monthly;
+    if (m === count) lastMonthly = gankin + Math.round(balance * r * 100) / 100;
+    balance -= gankin;
+
+    if (m % 12 === 1) {
+      const yr = Math.ceil(m / 12);
+      let yrTotal = 0;
+      const start = m - 1;
+      let b2 = principal - gankin * start;
+      for (let k = 0; k < 12 && (start + k) < count; k++) {
+        const gi = Math.round(b2 * r * 100) / 100;
+        yrTotal += gankin + gi;
+        b2 -= gankin;
+      }
+      const firstInterest = Math.round((principal - gankin * start) * r * 100) / 100;
+      const firstTotal    = gankin + firstInterest;
+      const remainBalance = Math.max(0, principal - gankin * start);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${yr}年目</td><td>${fmt0(gankin)}</td><td>${fmt0(firstInterest)}</td><td>${fmt0(firstTotal)}</td><td>${fmt0(Math.round(yrTotal))}</td><td>${fmt0(remainBalance)}</td>`;
+      tbody.appendChild(tr);
+    }
+  }
+
+  const totalPayment = gankin * count + totalInterest;
+  setGankin(fmt(Math.round(firstMonthly)), fmt(Math.round(lastMonthly)), fmt(Math.round(totalPayment)), fmt(Math.round(totalInterest)));
+}
+
+function setGankin(first, last, total, interest) {
+  document.getElementById('po-gankin-first').textContent    = first;
+  document.getElementById('po-gankin-last').textContent     = last;
+  document.getElementById('po-gankin-total').textContent    = total;
+  document.getElementById('po-gankin-interest').textContent = interest;
 }
 
 function calcLease() {
   const monthly = parseFloat(document.getElementById('po-lease-monthly').value) || 0;
-  const years = parseFloat(document.getElementById('po-lease-years').value) || 0;
+  const years   = parseFloat(document.getElementById('po-lease-years').value)   || 0;
   document.getElementById('po-lease-total').textContent = monthly > 0 && years > 0
     ? fmt(monthly * years * 12) : '-';
 }
