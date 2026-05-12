@@ -1124,7 +1124,7 @@ canvas#mini-chart { height: 220px !important; }
         <span class="d-val" id="rd-loan">-</span>
       </div>
       <div style="display:flex;gap:10px;margin-top:20px">
-        <a href="payment-options.html" target="_blank" rel="noopener noreferrer"
+        <a id="payment-options-link" href="payment-options.html" target="_blank" rel="noopener noreferrer"
           style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 14px;background:var(--mg);color:#fff;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;font-family:inherit">
           🏦 導入手段 (Payment Options)
           <span style="font-size:10px;opacity:.8">↗</span>
@@ -3627,6 +3627,9 @@ function updateSelfSummary(dc, bc, ag, mb, up, remainKWh, remainBill, bk) {
   document.getElementById('sell-revenue-prefix').style.display = hasRevenue ? '' : 'none';
   document.getElementById('sell-revenue-unit').style.display   = hasRevenue ? '' : 'none';
   document.getElementById('sell-revenue-card').style.opacity   = hasRevenue ? '1' : '0.4';
+  const _monthlySaleIncome = hasRevenue ? Math.round(annualSurplusRevenue / 12) : 0;
+  const _poLink = document.getElementById('payment-options-link');
+  if (_poLink) _poLink.href = 'payment-options.html' + (_monthlySaleIncome > 0 ? '?saleIncome=' + _monthlySaleIncome : '');
 
   // ── 補足情報 ──
   const showBattery = proposalMode !== 'pv_only';
