@@ -72,7 +72,6 @@ canvas#po-chart { height: 220px !important; }
 .dp-borrow { font-size: 12px; color: var(--mg); margin-bottom: 8px; padding: 5px 10px; background: var(--pg); border-radius: 6px; border: 1px solid var(--border); }
 .sale-auto-box { background: #d1fae5; border: 1px solid #6ee7b7; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #065f46; margin-bottom: 10px; line-height: 1.7; }
 .sale-auto-box b { font-weight: 700; }
-.sale-manual-wrap { margin-bottom: 10px; }
 @media print { .note { border: none; background: transparent; } }
 </style>
 </head>
@@ -225,13 +224,6 @@ canvas#po-chart { height: 220px !important; }
       <div id="sale-auto-section" style="display:none">
         <div class="sale-auto-box" id="sale-auto-box"></div>
       </div>
-      <div id="sale-manual-section" class="sale-manual-wrap">
-        <div class="field" style="margin-bottom:10px">
-          <label>月間売電収入（円）<span style="font-size:11px;color:var(--muted);margin-left:6px">現金・ローンの支出から差し引く</span></label>
-          <input type="number" id="po-sale-income" value="0" min="0" step="100" oninput="calcLoan()">
-        </div>
-      </div>
-
       <canvas id="po-chart"></canvas>
       <div class="legend">
         <span><b style="background:#EA580C"></b>電力会社（現状）</span>
@@ -352,8 +344,8 @@ function getCumulativeSaleIncomeYen(upToYear) {
     }
     return total;
   }
-  // 自動パラメータなし → 手動入力を使ってフラット計算
-  const monthly = parseFloat(document.getElementById('po-sale-income').value) || 0;
+  // 自動パラメータなし → URLパラメータ saleIncome をフラット月額として計算
+  const monthly = parseFloat(_urlSaleIncome) || 0;
   return monthly * 12 * upToYear;
 }
 
@@ -617,16 +609,9 @@ function calcPpa() {
 
 // ── 初期化 ──
 if (_hasAutoParams) {
-  // 自動取得モード：情報ボックスを表示、手動入力を非表示
-  document.getElementById('sale-auto-section').style.display  = '';
-  document.getElementById('sale-manual-section').style.display = 'none';
+  // FIT自動計算モード：売電収入情報ボックスを表示
+  document.getElementById('sale-auto-section').style.display = '';
   document.getElementById('sale-auto-box').innerHTML = buildSaleAutoBoxHtml();
-} else {
-  // 手動モード：saleIncome URL パラメータがあれば入力欄にセット
-  if (_urlSaleIncome !== null) {
-    const el = document.getElementById('po-sale-income');
-    if (el) el.value = Math.max(0, parseInt(_urlSaleIncome) || 0);
-  }
 }
 
 calcLoan();
