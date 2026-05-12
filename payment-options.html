@@ -285,6 +285,7 @@ const _surplusKwhYear  = parseFloat(_urlParams.get('surplusKwhYear')) || 0;
 const _fitPeriodId     = _urlParams.get('fitPeriodId') || 'fy2026';
 const _fitCapacity     = _urlParams.get('fitCapacity') || 'under10';
 const _saleMode        = _urlParams.get('saleMode') || 'fit';
+const _monthlyRemainingCost = parseFloat(_urlParams.get('monthlyRemainingCost')) || 0;
 // 余剰kWhと FIT モードがある場合は自動計算を使う
 const _hasAutoParams   = _surplusKwhYear > 0 && _saleMode === 'fit';
 
@@ -509,12 +510,15 @@ function renderChart(inputs, monthly, loanCount) {
   for (let y = 0; y <= YEARS; y++) {
     labels.push(y + '年');
     nowD.push(Math.round(monthlyBill * 12 * y / 10000));
-    // 年別FIT単価を反映した累計売電収入（万円）
-    const saleDeductMan = getCumulativeSaleIncomeYen(y) / 10000;
-    cashD.push(Math.round((totalMan - saleDeductMan) * 10) / 10);
+    // 年別FIT単価を反映した累計売電収入（円）、月額残り電気代の累積（円）
+    const cumSaleYen      = getCumulativeSaleIncomeYen(y);
+    const cumRemainingYen = _monthlyRemainingCost * 12 * y;
+    // 現金一括: 初期費用 + (月額残り電気代 - 売電収入) の累積
+    cashD.push(Math.round((totalMan + (cumRemainingYen - cumSaleYen) / 10000) * 10) / 10);
     if (monthly > 0 && loanCount > 0) {
-      const paid = Math.min(y * 12, loanCount) * monthly / 10000;
-      loanD.push(Math.round((dpMan + paid - saleDeductMan) * 10) / 10);
+      const paidYen = Math.min(y * 12, loanCount) * monthly;
+      // ローン活用: 頭金 + (月々返済 + 月額残り電気代 - 売電収入) の累積
+      loanD.push(Math.round((dpMan + (paidYen + cumRemainingYen - cumSaleYen) / 10000) * 10) / 10);
     }
   }
   const showLoan = loanD.length > 0;
