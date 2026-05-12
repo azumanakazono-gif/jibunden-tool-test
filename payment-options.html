@@ -269,11 +269,12 @@ let poChart = null;
 // ── URL パラメータ解析 ──
 const _urlParams       = new URLSearchParams(location.search);
 const _urlSaleIncome   = _urlParams.get('saleIncome');
+let saleIncome = _urlSaleIncome;
 const _surplusKwhYear  = parseFloat(_urlParams.get('surplusKwhYear')) || 0;
 const _fitPeriodId     = _urlParams.get('fitPeriodId') || 'fy2026';
 const _fitCapacity     = _urlParams.get('fitCapacity') || 'under10';
 const _saleMode        = _urlParams.get('saleMode') || 'fit';
-const _monthlyRemainingCost = parseFloat(_urlParams.get('monthlyRemainingCost')) || 0;
+let _monthlyRemainingCost = parseFloat(_urlParams.get('monthlyRemainingCost')) || 0;
 // 余剰kWhと FIT モードがある場合は自動計算を使う
 const _hasAutoParams   = _surplusKwhYear > 0 && _saleMode === 'fit';
 
@@ -486,6 +487,7 @@ function renderChart(inputs, monthly, loanCount) {
   const { totalMan, dpMan, monthlyBill } = inputs;
   if (totalMan <= 0) { return; }
   const YEARS = 20;
+  if (!_monthlyRemainingCost) _monthlyRemainingCost = parseFloat(_urlParams.get('monthlyRemainingCost')) || 6224;
   const labels = [], nowD = [], cashD = [], loanD = [];
   for (let y = 0; y <= YEARS; y++) {
     labels.push(y + '年');
