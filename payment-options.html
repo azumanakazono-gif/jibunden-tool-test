@@ -490,15 +490,9 @@ function renderChart(inputs, monthly, loanCount) {
   for (let y = 0; y <= YEARS; y++) {
     labels.push(y + '年');
     nowD.push(Math.round(monthlyBill * 12 * y / 10000));
-    // 年別FIT単価を反映した累計売電収入（円）、月額残り電気代の累積（円）
-    const cumSaleYen      = getCumulativeSaleIncomeYen(y);
-    const cumRemainingYen = _monthlyRemainingCost * 12 * y;
-    // 現金一括: 初期費用 + (月額残り電気代 - 売電収入) の累積
-    cashD.push(Math.round((totalMan + (cumRemainingYen - cumSaleYen) / 10000) * 10) / 10);
+    cashD.push(Math.round(totalMan + ((_monthlyRemainingCost * 12 * y) - getCumulativeSaleIncomeYen(y)) / 10000));
     if (monthly > 0 && loanCount > 0) {
-      const paidYen = Math.min(y * 12, loanCount) * monthly;
-      // ローン活用: 頭金 + (月々返済 + 月額残り電気代 - 売電収入) の累積
-      loanD.push(Math.round((dpMan + (paidYen + cumRemainingYen - cumSaleYen) / 10000) * 10) / 10);
+      loanD.push(Math.round(dpMan + ((Math.min(y * 12, loanCount) * monthly) + (_monthlyRemainingCost * 12 * y) - getCumulativeSaleIncomeYen(y)) / 10000));
     }
   }
   const y20cumSale      = getCumulativeSaleIncomeYen(20);
