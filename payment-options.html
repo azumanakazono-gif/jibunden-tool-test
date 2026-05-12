@@ -452,6 +452,49 @@ function calcKinri(principal, annualRate, count) {
   return monthly;
 }
 
+// 20年目の各終点に金額ラベルを描画するカスタムプラグイン
+const rightEndLabelsPlugin = {
+  id: 'rightEndLabels',
+  afterDraw(chart) {
+    const { ctx } = chart;
+    const entries = [];
+    chart.data.datasets.forEach((ds, i) => {
+      const meta = chart.getDatasetMeta(i);
+      if (meta.hidden || !meta.data.length) return;
+      const lastIdx = meta.data.length - 1;
+      const pt = meta.data[lastIdx];
+      const val = ds.data[lastIdx];
+      if (val == null) return;
+      entries.push({ rawY: pt.y, adjY: pt.y, x: pt.x, val, color: ds.borderColor });
+    });
+
+    // y座標（ピクセル）昇順にソートしてから重なり補正
+    entries.sort((a, b) => a.rawY - b.rawY);
+    const MIN_GAP = 17;
+    for (let i = 1; i < entries.length; i++) {
+      if (entries[i].adjY - entries[i - 1].adjY < MIN_GAP) {
+        entries[i].adjY = entries[i - 1].adjY + MIN_GAP;
+      }
+    }
+
+    ctx.save();
+    ctx.font = 'bold 11px "Hiragino Kaku Gothic ProN", Meiryo, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    entries.forEach(e => {
+      // 終点の小さな丸
+      ctx.beginPath();
+      ctx.arc(e.x, e.rawY, 3.5, 0, Math.PI * 2);
+      ctx.fillStyle = e.color;
+      ctx.fill();
+      // ラベルテキスト
+      ctx.fillStyle = e.color;
+      ctx.fillText(Math.round(e.val) + '万円', e.x + 8, e.adjY);
+    });
+    ctx.restore();
+  }
+};
+
 function renderChart(inputs, monthly, loanCount) {
   const { totalMan, dpMan, monthlyBill } = inputs;
   if (totalMan <= 0) { return; }
@@ -479,8 +522,14 @@ function renderChart(inputs, monthly, loanCount) {
   document.getElementById('legend-loan').style.display = showLoan ? '' : 'none';
   const ctx = document.getElementById('po-chart').getContext('2d');
   if (poChart) poChart.destroy();
-  poChart = new Chart(ctx, { type: 'line', data: { labels, datasets },
-    options: { responsive: true, maintainAspectRatio: false,
+  poChart = new Chart(ctx, {
+    type: 'line',
+    plugins: [rightEndLabelsPlugin],
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { right: 80 } },
       plugins: { legend: { display: false } },
       scales: {
         x: { ticks: { maxTicksLimit: 5, font: { size: 10 } }, grid: { color: 'rgba(0,0,0,.05)' } },
