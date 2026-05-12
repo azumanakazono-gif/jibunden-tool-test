@@ -501,6 +501,9 @@ function renderChart(inputs, monthly, loanCount) {
       loanD.push(Math.round((dpMan + (paidYen + cumRemainingYen - cumSaleYen) / 10000) * 10) / 10);
     }
   }
+  const y20cumSale      = getCumulativeSaleIncomeYen(20);
+  const y20cumRemaining = _monthlyRemainingCost * 12 * 20;
+  console.log('[renderChart] 20年目 残り電気代累積:', y20cumRemaining, '円 / 売電収入累積:', y20cumSale, '円 / 差引(残り-売電):', (y20cumRemaining - y20cumSale), '円 =', Math.round((y20cumRemaining - y20cumSale) / 10000 * 10) / 10, '万円');
   const showLoan = loanD.length > 0;
   const datasets = [
     { label: '電力会社（現状）', data: nowD,  borderColor: '#EA580C', backgroundColor: 'rgba(234,88,12,.07)',  borderWidth: 2.5, pointRadius: 0, tension: 0 },
