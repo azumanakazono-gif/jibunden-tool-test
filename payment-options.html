@@ -220,10 +220,6 @@ canvas#po-chart { height: 220px !important; }
     <div class="chart-wrap">
       <div class="ct">📊 20年間 実質累計支出イメージ（万円）</div>
 
-      <!-- 売電収入：自動取得 or 手動入力 -->
-      <div id="sale-auto-section" style="display:none">
-        <div class="sale-auto-box" id="sale-auto-box"></div>
-      </div>
       <canvas id="po-chart"></canvas>
       <div class="legend">
         <span><b style="background:#EA580C"></b>電力会社（現状）</span>
@@ -335,16 +331,8 @@ function getSellPriceForYear(year) {
   return year <= rate.years ? rate.price : POST_FIT_DEFAULT;
 }
 
-// y年目までの累計売電収入（円）を返す
+// y年目までの累計売電収入（円）を返す — URLパラメータ saleIncome のみ使用
 function getCumulativeSaleIncomeYen(upToYear) {
-  if (_hasAutoParams) {
-    let total = 0;
-    for (let y = 1; y <= upToYear; y++) {
-      total += _surplusKwhYear * getSellPriceForYear(y);
-    }
-    return total;
-  }
-  // 自動パラメータなし → URLパラメータ saleIncome をフラット月額として計算
   const monthly = parseFloat(_urlSaleIncome) || 0;
   return monthly * 12 * upToYear;
 }
@@ -608,12 +596,6 @@ function calcPpa() {
 }
 
 // ── 初期化 ──
-if (_hasAutoParams) {
-  // FIT自動計算モード：売電収入情報ボックスを表示
-  document.getElementById('sale-auto-section').style.display = '';
-  document.getElementById('sale-auto-box').innerHTML = buildSaleAutoBoxHtml();
-}
-
 calcLoan();
 </script>
 </body>
