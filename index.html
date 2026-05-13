@@ -3985,7 +3985,7 @@ function calc() {
     else{dd.textContent='月々 約'+fmt(Math.abs(mdiff))+'円 増加（返済後は削減）';dr.className='loan-row neg';}
 
     // ミニチャート（ローンON: 3系列）
-    renderMiniChart(m, mb, wy, re, lp, ly, mt, true, _surplusKwhChart);
+    _prepareChartData(m, mb, wy, re, lp, ly, mt, true, _surplusKwhChart); renderMiniChart();
     // 単価比較カード（ローン総額ベース）
     const _genUP_loan = (ag > 0 && wy > 0) ? parseFloat((loanTotal / (ag * wy)).toFixed(1)) : null;
     const _loanYears = Math.round(lp > 0 ? ly : wy);
@@ -3998,7 +3998,7 @@ function calc() {
     document.getElementById('stacked-legend-loan-r').style.display = 'none';
     document.getElementById('rk-loan-row').style.display = 'none';
     // ミニチャート（ローンOFF: 2系列）
-    renderMiniChart(m, mb, wy, m.remainBill, 0, 0, 0, false, _surplusKwhChart);
+    _prepareChartData(m, mb, wy, m.remainBill, 0, 0, 0, false, _surplusKwhChart); renderMiniChart();
     // 単価比較カード（現金購入ベース）
     const _genUP_cash = (ag > 0 && wy > 0) ? parseFloat((m.totalCostMan * 10000 / (ag * wy)).toFixed(1)) : null;
     _updateUnitPriceCompare(up, _genUP_cash, wy, { isLoan: false });
@@ -4100,7 +4100,7 @@ function _updateUnitPriceCompare(buyUP, genUP, years, opts) {
   }
 }
 
-function renderMiniChart(m, mb, wy, re, lp, ly, mt, showLoan, surplusKwh) {
+function _prepareChartData(m, mb, wy, re, lp, ly, mt, showLoan, surplusKwh) {
   const er = v('er') / 100;
   const hasSell = proposalMode !== 'battery_only' && (surplusKwh || 0) > 0;
   const labels=[], nowD=[], cashD=[], loanD=[];
@@ -4123,21 +4123,32 @@ function renderMiniChart(m, mb, wy, re, lp, ly, mt, showLoan, surplusKwh) {
   if(showLoan) datasets.push(
     {label:'ローン活用',data:loanD,borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.07)',borderWidth:2.5,pointRadius:0,tension:0}
   );
-  if (window.myChart instanceof Chart) { window.myChart.destroy(); window.myChart = null; }
-  const ctx=document.getElementById('mini-chart').getContext('2d');
-  window.myChart=new Chart(ctx,{type:'line',data:{labels,datasets},
-    options:{
-      animation: false,
-      layout: { padding: 10 },
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { ticks: { maxTicksLimit: 5, font: { size: 10 } }, grid: { display: false } },
-        y: { beginAtZero: true, ticks: { callback: v => v + '万', font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.05)' } }
-      },
-      responsive: true,
-      maintainAspectRatio: false
+  window.chartLabels   = labels;
+  window.chartDatasets = datasets;
+  window.chartShowLoan = showLoan;
+}
+
+function renderMiniChart() {
+  const ctx = document.getElementById('mini-chart').getContext('2d');
+  if (window.myChart instanceof Chart) {
+    window.myChart.destroy();
+  }
+  const chartOptions = {
+    animation: false,
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { maxTicksLimit: 5, font: { size: 10 } } },
+      y: { beginAtZero: true, ticks: { callback: v => v + '万', font: { size: 10 } } }
     }
+  };
+  window.myChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels: window.chartLabels || [], datasets: window.chartDatasets || [] },
+    options: chartOptions
   });
+  const showLoan = window.chartShowLoan;
   document.getElementById('legend-loan-item').style.display = showLoan ? '' : 'none';
   const erVal=v('er');
   document.getElementById('legend-now-label').textContent = erVal>0?`年${erVal}%上昇想定`:'現状維持';
@@ -5113,9 +5124,7 @@ window.addEventListener('DOMContentLoaded', () => {
 </div>
 <script>
 window.onload = () => {
-  setTimeout(() => {
-    calc(); // calc() が renderMiniChart() を正しい引数で呼び出す
-  }, 100);
+  setTimeout(renderMiniChart, 100);
 };
 </script>
 </body>
