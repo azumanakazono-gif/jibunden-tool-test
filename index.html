@@ -4123,13 +4123,17 @@ function renderMiniChart(m, mb, wy, re, lp, ly, mt, showLoan, surplusKwh) {
   if(showLoan) datasets.push(
     {label:'ローン活用',data:loanD,borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.07)',borderWidth:2.5,pointRadius:0,tension:0}
   );
+  if (window.myChart instanceof Chart) {
+    window.myChart.destroy();
+    window.myChart = null;
+  }
   const ctx=document.getElementById('mini-chart').getContext('2d');
-  if (window.myChart instanceof Chart) { window.myChart.destroy(); window.myChart = null; }
   window.myChart=new Chart(ctx,{type:'line',data:{labels,datasets},
     options:{
       animation:false,
-      transitions:{active:{animation:{duration:0}}},
+      hover:{animationDuration:0},
       responsiveAnimationDuration:0,
+      transitions:{active:{animation:{duration:0}}},
       responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
       scales:{x:{ticks:{maxTicksLimit:5,font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}},
               y:{ticks:{callback:v=>v+'万',font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}}}}
@@ -5075,8 +5079,10 @@ window.addEventListener('DOMContentLoaded', () => {
     updateRatioPanel();           // 電化でナイト（導入後）スライダーを初期表示
     document.getElementById('kyuden-plan').addEventListener('change', updateRatioPanelVisibility);
     renderPostPlanBreakdown();    // 導入後内訳を即時表示
-    autoEstimateKwhFromBill(true); // mb→mkwh 初期整合性 → 内部で calc() を呼び出し
-    setTimeout(renderPostPlanBreakdown, 0); // 全同期処理完了後に確実に再描画（最終書き込みで勝利保証）
+    setTimeout(() => {
+      autoEstimateKwhFromBill(true); // mb→mkwh 初期整合性 → 内部で calc() / renderMiniChart を呼び出し
+      renderPostPlanBreakdown();     // 全同期処理完了後に確実に再描画（最終書き込みで勝利保証）
+    }, 0);
     updateRatioPanelVisibility();
     const _stb = document.getElementById('scroll-top-btn');
     if (_stb) {
