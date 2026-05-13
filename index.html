@@ -3631,18 +3631,18 @@ function updateSelfSummary(dc, bc, ag, mb, up, remainKWh, remainBill, bk) {
   const _poLink = document.getElementById('payment-options-link');
   localStorage.setItem('jibunden_subsidy', v('sub'));
   if (_poLink) {
+    const _poParams = new URLSearchParams({
+      totalCost: v('ck'),
+      subsidy:   v('sub'),
+    });
     if (hasRevenue) {
-      const _poParams = new URLSearchParams({
-        saleIncome:      _monthlySaleIncome,
-        surplusKwhYear:  Math.round(surplusKwh),
-        fitPeriodId:     fitPeriodId,
-        fitCapacity:     fitCapacity,
-        saleMode:        saleMode
-      });
-      _poLink.href = 'payment-options.html?' + _poParams.toString();
-    } else {
-      _poLink.href = 'payment-options.html';
+      _poParams.set('saleIncome',     _monthlySaleIncome);
+      _poParams.set('surplusKwhYear', Math.round(surplusKwh));
+      _poParams.set('fitPeriodId',    fitPeriodId);
+      _poParams.set('fitCapacity',    fitCapacity);
+      _poParams.set('saleMode',       saleMode);
     }
+    _poLink.href = 'payment-options.html?' + _poParams.toString();
   }
 
   // ── 補足情報 ──
