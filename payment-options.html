@@ -607,11 +607,8 @@ function calcPpa() {
 updateLoan();
 
 window.onload = function() {
-  const costInput = document.getElementById('po-cost');
-  if (costInput && _urlTotalCost > 0) {
-    costInput.value = Math.round(_urlTotalCost - subsidy);
-    updateLoan(); // ローン再計算を強制実行
-  }
+  document.getElementById('po-cost').value = Math.round(_urlTotalCost - subsidy);
+  updateLoan();
 };
 </script>
 </body>
