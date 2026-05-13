@@ -4124,20 +4124,16 @@ function renderMiniChart(m, mb, wy, re, lp, ly, mt, showLoan, surplusKwh) {
     {label:'ローン活用',data:loanD,borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.07)',borderWidth:2.5,pointRadius:0,tension:0}
   );
   const ctx=document.getElementById('mini-chart').getContext('2d');
-  if (window.myChart) {
-    window.myChart.data.labels = labels;
-    window.myChart.data.datasets = datasets;
-    window.myChart.update('none');
-  } else {
-    window.myChart=new Chart(ctx,{type:'line',data:{labels,datasets},
-      options:{
-        animation:false,
-        transitions:{active:{animation:{duration:0}}},
-        responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-        scales:{x:{ticks:{maxTicksLimit:5,font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}},
-                y:{ticks:{callback:v=>v+'万',font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}}}}
-    });
-  }
+  if (window.myChart instanceof Chart) { window.myChart.destroy(); window.myChart = null; }
+  window.myChart=new Chart(ctx,{type:'line',data:{labels,datasets},
+    options:{
+      animation:false,
+      transitions:{active:{animation:{duration:0}}},
+      responsiveAnimationDuration:0,
+      responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{ticks:{maxTicksLimit:5,font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}},
+              y:{ticks:{callback:v=>v+'万',font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}}}}
+  });
   document.getElementById('legend-loan-item').style.display = showLoan ? '' : 'none';
   const erVal=v('er');
   document.getElementById('legend-now-label').textContent = erVal>0?`年${erVal}%上昇想定`:'現状維持';
