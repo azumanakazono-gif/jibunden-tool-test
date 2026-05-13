@@ -129,27 +129,27 @@ canvas#po-chart { height: 220px !important; }
     <div id="mode-preset" class="mode-panel active">
       <div class="field" style="margin-bottom:10px">
         <label>現在の月々電気代（円）</label>
-        <input type="number" id="po-mb" value="20000" min="0" step="1000" oninput="calcLoan()">
+        <input type="number" id="po-mb" value="20000" min="0" step="1000" oninput="updateLoan()">
       </div>
       <div class="grid2" style="margin-bottom:8px">
         <div class="field">
           <label>工事費用（万円）</label>
-          <input type="number" id="po-la" value="280" min="1" step="1" oninput="calcLoan()">
+          <input type="number" id="po-cost" value="280" min="1" step="1" oninput="updateLoan()">
         </div>
         <div class="field">
           <label>頭金（万円）</label>
-          <input type="number" id="po-dp" value="0" min="0" step="10" oninput="calcLoan()">
+          <input type="number" id="po-dp" value="0" min="0" step="10" oninput="updateLoan()">
         </div>
       </div>
       <div class="dp-borrow">実際の借入額：<b id="po-borrow-val">-</b></div>
       <div class="grid2" style="margin-bottom:14px">
         <div class="field">
           <label>金利（年率 %）</label>
-          <input type="number" id="po-lr" value="4.0" min="0.01" max="30" step="0.1" oninput="calcLoan()">
+          <input type="number" id="po-lr" value="4.0" min="0.01" max="30" step="0.1" oninput="updateLoan()">
         </div>
         <div class="field">
           <label>返済期間</label>
-          <select id="po-lc" onchange="calcLoan()">
+          <select id="po-lc" onchange="updateLoan()">
             <option value="36">3年（36回）</option>
             <option value="60">5年（60回）</option>
             <option value="84">7年（84回）</option>
@@ -166,15 +166,15 @@ canvas#po-chart { height: 220px !important; }
       <div class="grid2" style="margin-bottom:14px">
         <div class="field">
           <label>借入金額（円・自由入力）</label>
-          <input type="number" id="po-la-m" placeholder="例: 2800000" min="0" step="10000" oninput="calcLoan()">
+          <input type="number" id="po-la-m" placeholder="例: 2800000" min="0" step="10000" oninput="updateLoan()">
         </div>
         <div class="field">
           <label>金利（年率 %）</label>
-          <input type="number" id="po-lr-m" placeholder="例: 3.5" min="0" step="0.01" oninput="calcLoan()">
+          <input type="number" id="po-lr-m" placeholder="例: 3.5" min="0" step="0.01" oninput="updateLoan()">
         </div>
         <div class="field">
           <label>返済回数（回）</label>
-          <input type="number" id="po-lc-m" placeholder="例: 180" min="1" step="1" oninput="calcLoan()">
+          <input type="number" id="po-lc-m" placeholder="例: 180" min="1" step="1" oninput="updateLoan()">
         </div>
         <div class="field">
           <label>メモ（任意）</label>
@@ -185,9 +185,9 @@ canvas#po-chart { height: 220px !important; }
 
     <!-- 返済方式トグル -->
     <div class="method-toggle">
-      <input type="radio" id="m-kinri" name="po-method" value="kinri" checked onchange="calcLoan()">
+      <input type="radio" id="m-kinri" name="po-method" value="kinri" checked onchange="updateLoan()">
       <label for="m-kinri">元利均等 (Equal Installments)</label>
-      <input type="radio" id="m-gankin" name="po-method" value="gankin" onchange="calcLoan()">
+      <input type="radio" id="m-gankin" name="po-method" value="gankin" onchange="updateLoan()">
       <label for="m-gankin">元金均等 (Equal Principal)</label>
     </div>
 
@@ -275,6 +275,8 @@ const _fitPeriodId     = _urlParams.get('fitPeriodId') || 'fy2026';
 const _fitCapacity     = _urlParams.get('fitCapacity') || 'under10';
 const _saleMode        = _urlParams.get('saleMode') || 'fit';
 let _monthlyRemainingCost = parseFloat(_urlParams.get('monthlyRemainingCost')) || 0;
+const _urlTotalCost       = parseFloat(_urlParams.get('totalCost')) || 0;
+const subsidy             = parseFloat(_urlParams.get('subsidy')) || 0;
 // 余剰kWhと FIT モードがある場合は自動計算を使う
 const _hasAutoParams   = _surplusKwhYear > 0 && _saleMode === 'fit';
 
@@ -371,14 +373,14 @@ function setMode(mode) {
     b.classList.toggle('active', (i === 0) === (mode === 'preset')));
   document.getElementById('mode-preset').classList.toggle('active', mode === 'preset');
   document.getElementById('mode-manual').classList.toggle('active', mode === 'manual');
-  calcLoan();
+  updateLoan();
 }
 
 function getInputs() {
   const method = document.querySelector('input[name="po-method"]:checked').value;
   const monthlyBill = parseFloat(document.getElementById('po-mb') ? document.getElementById('po-mb').value : 0) || 0;
   if (currentMode === 'preset') {
-    const totalMan  = parseFloat(document.getElementById('po-la').value) || 0;
+    const totalMan  = parseFloat(document.getElementById('po-cost').value) || 0;
     const dpMan     = parseFloat(document.getElementById('po-dp').value) || 0;
     const borrowMan = Math.max(0, totalMan - dpMan);
     const principal = borrowMan * 10000;
@@ -395,7 +397,7 @@ function getInputs() {
   }
 }
 
-function calcLoan() {
+function updateLoan() {
   const inputs = getInputs();
   const { principal, rate, count, method } = inputs;
   const isGankin = method === 'gankin';
@@ -592,7 +594,10 @@ function calcPpa() {
 }
 
 // ── 初期化 ──
-calcLoan();
+if (_urlTotalCost > 0) {
+  document.getElementById('po-cost').value = Math.round(_urlTotalCost - subsidy);
+}
+updateLoan();
 </script>
 </body>
 </html>
