@@ -424,6 +424,15 @@ function updateLoan() {
   }
 }
 
+setInterval(() => {
+  const costInput = document.getElementById('po-cost');
+  const subsidy = parseFloat(new URLSearchParams(window.location.search).get('subsidy')) || parseFloat(localStorage.getItem('jibunden_subsidy')) || 0;
+  if (costInput && _urlTotalCost > 0 && costInput.value == _urlTotalCost) {
+    costInput.value = Math.round(_urlTotalCost - subsidy);
+    updateLoan();
+  }
+}, 500);
+
 function calcKinri(principal, annualRate, count) {
   if (annualRate <= 0) {
     const m = Math.round(principal / count);
