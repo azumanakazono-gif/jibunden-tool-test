@@ -595,10 +595,15 @@ function calcPpa() {
 }
 
 // ── 初期化 ──
-if (_urlTotalCost > 0) {
-  document.getElementById('po-cost').value = Math.round(_urlTotalCost - subsidy);
-}
 updateLoan();
+
+window.onload = function() {
+  const costInput = document.getElementById('po-cost');
+  if (costInput && _urlTotalCost > 0) {
+    costInput.value = Math.round(_urlTotalCost - subsidy);
+    updateLoan(); // ローン再計算を強制実行
+  }
+};
 </script>
 </body>
 </html>
