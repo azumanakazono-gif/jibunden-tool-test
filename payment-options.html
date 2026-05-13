@@ -165,7 +165,7 @@ canvas#po-chart { height: 220px !important; }
     <div id="mode-manual" class="mode-panel">
       <div class="grid2" style="margin-bottom:14px">
         <div class="field">
-          <label>借入金額（円・自由入力）</label>
+          <label>借入金額（円）</label>
           <input type="number" id="po-la-m" placeholder="例: 2800000" min="0" step="10000" oninput="updateLoan()">
         </div>
         <div class="field">
@@ -177,10 +177,11 @@ canvas#po-chart { height: 220px !important; }
           <input type="number" id="po-lc-m" placeholder="例: 180" min="1" step="1" oninput="updateLoan()">
         </div>
         <div class="field">
-          <label>メモ（任意）</label>
-          <input type="text" id="po-memo" placeholder="例: ○○銀行 フラット35相当" style="font-size:13px">
+          <label>月々の返済額（円）</label>
+          <input type="number" id="po-monthly-m" placeholder="例: 18500" min="0" step="100" oninput="updateLoan()">
         </div>
       </div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:10px">※ 月々の返済額を入力すると、借入金額・返済回数から総返済額・利息を自動表示します。</p>
     </div>
 
     <!-- 返済方式トグル -->
@@ -374,6 +375,7 @@ function setMode(mode) {
     b.classList.toggle('active', (i === 0) === (mode === 'preset')));
   document.getElementById('mode-preset').classList.toggle('active', mode === 'preset');
   document.getElementById('mode-manual').classList.toggle('active', mode === 'manual');
+  document.querySelector('.method-toggle').style.display = mode === 'manual' ? 'none' : '';
   updateLoan();
 }
 
@@ -391,19 +393,39 @@ function getInputs() {
     if (el) el.textContent = borrowMan.toLocaleString('ja-JP') + '万円';
     return { principal, rate, count, method, totalMan, dpMan, borrowMan, monthlyBill };
   } else {
-    const principal = parseFloat(document.getElementById('po-la-m').value) || 0;
-    const rate      = parseFloat(document.getElementById('po-lr-m').value) || 0;
-    const count     = parseInt(document.getElementById('po-lc-m').value) || 0;
-    return { principal, rate, count, method, totalMan: principal/10000, dpMan: 0, borrowMan: principal/10000, monthlyBill };
+    const principal    = parseFloat(document.getElementById('po-la-m').value) || 0;
+    const rate         = parseFloat(document.getElementById('po-lr-m').value) || 0;
+    const count        = parseInt(document.getElementById('po-lc-m').value) || 0;
+    const manualMonthly = parseFloat(document.getElementById('po-monthly-m').value) || 0;
+    return { principal, rate, count, method, totalMan: principal/10000, dpMan: 0, borrowMan: principal/10000, monthlyBill, manualMonthly };
   }
 }
 
 function updateLoan() {
   const inputs = getInputs();
-  const { principal, rate, count, method } = inputs;
-  const isGankin = method === 'gankin';
+  const { principal, rate, count, method, manualMonthly } = inputs;
+  const isManualMonthly = currentMode === 'manual' && manualMonthly > 0;
+  const isGankin = method === 'gankin' && !isManualMonthly;
+
   document.getElementById('res-kinri').style.display  = isGankin ? 'none' : '';
   document.getElementById('res-gankin').style.display = isGankin ? '' : 'none';
+
+  const lbl = document.getElementById('lbl-monthly');
+  if (isManualMonthly) {
+    lbl.textContent = '月々の返済額';
+    if (count > 0) {
+      const total    = manualMonthly * count;
+      const interest = principal > 0 ? total - principal : null;
+      setKinri(fmt(manualMonthly), fmt(total), interest !== null ? fmt(interest) : '-');
+      renderChart(inputs, manualMonthly, count);
+    } else {
+      setKinri(fmt(manualMonthly), '-', '-');
+      renderChart(inputs, 0, 0);
+    }
+    return;
+  }
+
+  lbl.textContent = '月々の返済額（元利均等）';
 
   if (principal <= 0 || count <= 0) {
     setKinri('-', '-', '-');
