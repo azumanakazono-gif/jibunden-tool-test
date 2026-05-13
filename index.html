@@ -3989,7 +3989,7 @@ function calc() {
     else{dd.textContent='月々 約'+fmt(Math.abs(mdiff))+'円 増加（返済後は削減）';dr.className='loan-row neg';}
 
     // ミニチャート（ローンON: 3系列）
-    _prepareChartData(m, mb, wy, re, lp, ly, mt, true, _surplusKwhChart); renderMiniChart();
+    _prepareChartData(m, mb, wy, re, lp, ly, mt, true, _surplusKwhChart); setTimeout(() => { renderMiniChart(); }, 0);
     // 単価比較カード（ローン総額ベース）
     const _genUP_loan = (ag > 0 && wy > 0) ? parseFloat((loanTotal / (ag * wy)).toFixed(1)) : null;
     const _loanYears = Math.round(lp > 0 ? ly : wy);
@@ -4002,7 +4002,7 @@ function calc() {
     document.getElementById('stacked-legend-loan-r').style.display = 'none';
     document.getElementById('rk-loan-row').style.display = 'none';
     // ミニチャート（ローンOFF: 2系列）
-    _prepareChartData(m, mb, wy, m.remainBill, 0, 0, 0, false, _surplusKwhChart); renderMiniChart();
+    _prepareChartData(m, mb, wy, m.remainBill, 0, 0, 0, false, _surplusKwhChart); setTimeout(() => { renderMiniChart(); }, 0);
     // 単価比較カード（現金購入ベース）
     const _genUP_cash = (ag > 0 && wy > 0) ? parseFloat((m.totalCostMan * 10000 / (ag * wy)).toFixed(1)) : null;
     _updateUnitPriceCompare(up, _genUP_cash, wy, { isLoan: false });
@@ -4132,6 +4132,8 @@ function _prepareChartData(m, mb, wy, re, lp, ly, mt, showLoan, surplusKwh) {
   window.chartShowLoan = showLoan;
 }
 
+Chart.defaults.animation = false;
+Chart.defaults.transitions.active.animation.duration = 0;
 function renderMiniChart() {
   const ctx = document.getElementById('mini-chart').getContext('2d');
   if (window.myChart instanceof Chart) {
@@ -4141,16 +4143,15 @@ function renderMiniChart() {
     type: 'line',
     data: { labels: window.chartLabels || [], datasets: window.chartDatasets || [] },
     options: {
-      animation: { duration: 0 },
+      animation: false,
       hover: { animationDuration: 0 },
       responsiveAnimationDuration: 0,
-      elements: { line: { tension: 0 } },
-      plugins: { legend: { display: false } },
       responsive: true,
       maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
       scales: {
-        x: { ticks: { maxTicksLimit: 5 } },
-        y: { beginAtZero: true, ticks: { callback: v => v + '万' } }
+        x: { ticks: { maxTicksLimit: 5, font: { size: 10 } } },
+        y: { beginAtZero: true, ticks: { callback: v => v + '万', font: { size: 10 } } }
       }
     }
   });
@@ -5130,7 +5131,7 @@ window.addEventListener('DOMContentLoaded', () => {
 </div>
 <script>
 window.onload = () => {
-  setTimeout(renderMiniChart, 100);
+  setTimeout(() => { renderMiniChart(); }, 0);
 };
 </script>
 </body>
