@@ -82,8 +82,18 @@ canvas#po-chart { height: 220px !important; }
     <h1>🏦 導入手段 (Payment Options)</h1>
     <div class="sub">じぶん電気 提案書作成ツール</div>
   </div>
-  <a href="javascript:window.close()" class="back-btn">✕ 閉じる</a>
+  <div style="display:flex;align-items:center;gap:10px">
+    <a id="slide-link" href="loan-presentation.html" target="_blank" class="back-btn" style="background:rgba(212,175,55,.18);border:1px solid rgba(212,175,55,.5);color:#F0C844;">📊 プレゼン用スライドを表示</a>
+    <a href="javascript:window.close()" class="back-btn">✕ 閉じる</a>
+  </div>
 </div>
+<script>
+(function(){
+  const link = document.getElementById('slide-link');
+  const q = location.search;
+  if (q) link.href = 'loan-presentation.html' + q;
+})();
+</script>
 
 <div class="body">
 
