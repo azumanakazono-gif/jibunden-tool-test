@@ -14,11 +14,6 @@
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; }
-.header { background: var(--dg); padding: 20px 32px; display: flex; align-items: center; gap: 16px; }
-.header h1 { color: #fff; font-size: 18px; font-weight: 700; }
-.header .sub { color: var(--ac); font-size: 13px; margin-top: 2px; }
-.back-btn { background: rgba(255,255,255,.12); border: none; border-radius: 8px; color: #fff; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
-.back-btn:hover { background: rgba(255,255,255,.22); }
 .body { padding: 28px 32px; max-width: 860px; margin: 0 auto; }
 .section-card { background: var(--card); border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; border: 1px solid var(--border); }
 .section-title { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--mg); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--pg); }
@@ -66,28 +61,18 @@ body { font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; backgroun
 .sale-auto-box { background: #d1fae5; border: 1px solid #6ee7b7; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #065f46; margin-bottom: 10px; line-height: 1.7; }
 .sale-auto-box b { font-weight: 700; }
 @media print { .note { border: none; background: transparent; } }
+/* action area */
+.action-area { display: flex; gap: 12px; margin-top: 32px; margin-bottom: 8px; flex-wrap: wrap; }
+.action-area .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; border: none; font-family: inherit; text-decoration: none; transition: opacity .15s, transform .1s; }
+.action-area .btn:hover { opacity: .88; transform: translateY(-1px); }
+.action-area .btn:active { transform: translateY(0); }
+.btn-primary  { background: var(--dg); color: #fff; }
+.btn-success  { background: #16a34a; color: #fff; }
+.btn-secondary { background: #e5e7eb; color: #374151; }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div>
-    <h1>🏦 導入手段 (Payment Options)</h1>
-    <div class="sub">じぶん電気 提案書作成ツール</div>
-  </div>
-  <div style="display:flex;align-items:center;gap:10px">
-    <a id="slide-link" href="loan-presentation.html" target="_blank" class="back-btn" style="background:rgba(212,175,55,.18);border:1px solid rgba(212,175,55,.5);color:#F0C844;">📊 プレゼン用スライドを表示</a>
-    <button onclick="generateLoanPPTX()" class="back-btn" style="background:rgba(201,162,42,.22);border:1px solid rgba(201,162,42,.55);color:#E8C040;cursor:pointer;font-family:inherit">📥 PPTXで保存</button>
-    <a href="javascript:window.close()" class="back-btn">✕ 閉じる</a>
-  </div>
-</div>
-<script>
-(function(){
-  const link = document.getElementById('slide-link');
-  const q = location.search;
-  if (q) link.href = 'loan-presentation.html' + q;
-})();
-</script>
 
 <div class="body">
 
@@ -221,6 +206,19 @@ body { font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; backgroun
     </div>
 
     <p class="note">⚠️ 概算です。実際の返済額はローン会社の計算により異なります。必ず契約前に金融機関へご確認ください。</p>
+  </div>
+
+  <!-- アクションエリア -->
+  <div class="action-area">
+    <a id="slide-link" href="loan-presentation.html" target="_blank" class="btn btn-primary">
+      🖥️ プレゼン用スライドを表示
+    </a>
+    <button onclick="generateLoanPPTX()" class="btn btn-success">
+      📂 PPTXで保存
+    </button>
+    <a href="javascript:window.close()" class="btn btn-secondary">
+      ✕ 閉じる
+    </a>
   </div>
 
   <!-- リース・PPA メモ欄（非表示・コードは保持） -->
@@ -532,6 +530,8 @@ function calcPpa() {
 updateLoan();
 
 window.onload = () => {
+  const q = location.search;
+  if (q) document.getElementById('slide-link').href = 'loan-presentation.html' + q;
   setTimeout(() => {
     document.getElementById('po-cost').value = Math.round(_urlTotalCost - subsidy);
     updateLoan();
