@@ -399,11 +399,14 @@ html,body{
         <div class="cf-box cur">
           <div class="cf-lbl">▲ 現在（電力会社へ支払い続ける）</div>
           <div><span class="cf-amount" id="s3-cur-amount">2.1</span><span class="cf-unit">万円/月</span></div>
-          <div class="cf-note">毎月電力会社に消えていく費用<br>補助金なしでは永遠に掛け捨て</div>
+          <div class="cf-note">毎月電力会社に消えていく費用<br>補助金で実質負担を削減済み</div>
           <div class="cf-bk">
             <div class="cf-bk-row"><span>月額電気代</span><span id="s3-cur-monthly">21,000円</span></div>
-            <div class="cf-bk-row"><span>工事総額</span><span id="s3-bk-total">280万円</span></div>
-            <div class="cf-bk-row" style="color:#5cd985"><span>▲ 補助金</span><span id="s3-bk-sub">38万円</span></div>
+            <div class="cf-bk-row"><span>年間コスト</span><span id="s3-cur-annual">252,000円</span></div>
+            <div class="cf-bk-row"><span>20年累計</span><span id="s3-cur-20y">504万円</span></div>
+            <div class="cf-bk-divider">■ 補助金効果</div>
+            <div class="cf-bk-row sub"><span>工事総額</span><span id="s3-bk-total">280万円</span></div>
+            <div class="cf-bk-row sub" style="color:#5cd985"><span>▲ 補助金</span><span id="s3-bk-sub">38万円</span></div>
           </div>
         </div>
         <div class="cf-box nw">
@@ -503,9 +506,9 @@ html,body{
       </div>
       <div class="chart-wrap">
         <div class="chart-badges">
-          <div class="c-badge"><div class="dot-badge" style="background:#e87070"></div>従来の累積電気代（点線）</div>
-          <div class="c-badge"><div class="dot-badge" style="background:#2D6A4F"></div>ローン導入後の累積支払</div>
-          <div class="c-badge"><div class="dot-badge" style="background:var(--gold)"></div>累積節約額</div>
+          <div class="c-badge"><div class="dot-badge" style="background:#e87070"></div>現状の累積電気代（赤点線）</div>
+          <div class="c-badge"><div class="dot-badge" style="background:#2D6A4F"></div>ローン戦略の累積支払（緑実線）</div>
+          <div class="c-badge"><div class="dot-badge" style="background:rgba(82,183,136,0.35);border-radius:3px;width:22px;height:10px"></div>節約エリア（塗りつぶし）</div>
           <div style="margin-left:auto;font-size:12px;color:var(--w30)">縦線 = 完済タイミング（15年目）</div>
         </div>
         <div class="chart-annot">
@@ -630,11 +633,13 @@ const jissitsu20y     = jissitsuMonthly * 12 * loanYears + effectivePost * 12 * 
 
 /* ── Slide 3（補助金ありの場合のみ） ── */
 if (hasSubsidy) {
-  document.getElementById('s3-saving').textContent     = fmt(saving4);
-  document.getElementById('s3-cur-amount').textContent = (CURRENT / 10000).toFixed(1);
+  document.getElementById('s3-saving').textContent      = fmt(saving4);
+  document.getElementById('s3-cur-amount').textContent  = (CURRENT / 10000).toFixed(1);
   document.getElementById('s3-cur-monthly').textContent = fmt(CURRENT) + '円';
-  document.getElementById('s3-bk-total').textContent   = Math.round(totalCostRaw / 10000) + '万円';
-  document.getElementById('s3-bk-sub').textContent     = Math.round(subsidyRaw / 10000) + '万円';
+  document.getElementById('s3-cur-annual').textContent  = fmt(CURRENT * 12) + '円';
+  document.getElementById('s3-cur-20y').textContent     = Math.round(CURRENT * 12 * 20 / 10000) + '万円';
+  document.getElementById('s3-bk-total').textContent    = Math.round(totalCostRaw / 10000) + '万円';
+  document.getElementById('s3-bk-sub').textContent      = Math.round(subsidyRaw / 10000) + '万円';
   document.getElementById('s3-new-amount').textContent  = (jissitsuMonthly / 10000).toFixed(2);
   document.getElementById('s3-net-note').textContent    = Math.round(netCost / 10000);
   document.getElementById('s3-jis-monthly').textContent = fmt(jissitsuMonthly) + '円';
@@ -694,7 +699,6 @@ function build20YChart() {
   const labels = [];
   const trad   = [];
   const solar  = [];
-  const saves  = [];
 
   const loanYears        = Math.round(MONTHS / 12);
   const effectiveLoanMon = pmt + RESIDUAL - SALE_INCOME_MON;
@@ -711,10 +715,9 @@ function build20YChart() {
     }
     trad.push(Math.round(tradCum / 10000));
     solar.push(Math.round(solarCum / 10000));
-    saves.push(Math.round((tradCum - solarCum) / 10000));
   }
 
-  const totalSave = saves[20];
+  const totalSave = trad[20] - solar[20];
   document.getElementById('s6-total-save').textContent = totalSave + '万円';
 
   const ctx = document.getElementById('chart20y').getContext('2d');
@@ -749,35 +752,30 @@ function build20YChart() {
       labels,
       datasets: [
         {
-          label: '従来の累積電気代',
+          label: '現状の累積電気代',
           data: trad,
           borderColor: '#e87070',
-          backgroundColor: 'rgba(232,112,112,0.08)',
+          backgroundColor: 'transparent',
           fill: false,
           tension: 0.3,
           pointRadius: 3,
           borderWidth: 2,
           borderDash: [6, 4],
+          order: 2,
         },
         {
-          label: 'ローン導入後の累積支払',
+          label: 'ローン戦略の累積支払',
           data: solar,
           borderColor: '#2D6A4F',
-          backgroundColor: 'rgba(45,106,79,0.08)',
-          fill: false,
+          fill: {
+            target: 0,
+            above: 'rgba(232,112,112,0.08)',
+            below: 'rgba(82,183,136,0.22)',
+          },
           tension: 0.3,
           pointRadius: 3,
           borderWidth: 2.5,
-        },
-        {
-          label: '累積節約額',
-          data: saves,
-          borderColor: '#52B788',
-          backgroundColor: 'rgba(82,183,136,0.1)',
-          fill: true,
-          tension: 0.3,
-          pointRadius: 3,
-          borderWidth: 2.5,
+          order: 1,
         },
       ]
     },
@@ -952,7 +950,9 @@ async function exportToPPTX() {
       sl.addText('▲ 現在（電力会社へ支払い続ける）',{x:0.5,y:1.93,w:4.1,h:0.28,fontSize:11,bold:true,color:'e87070',fontFace:'Meiryo'});
       sl.addText(`${(CURRENT/10000).toFixed(1)}`,{x:0.5,y:2.26,w:2.9,h:0.78,fontSize:50,bold:true,color:'f87171',fontFace:'Meiryo',margin:0});
       sl.addText('万円/月',{x:3.4,y:2.66,w:1.2,h:0.38,fontSize:13,bold:true,color:'f87171',fontFace:'Meiryo',valign:'bottom'});
-      sl.addText(`月額電気代　${_f(CURRENT)}円\n工事総額　${Math.round(totalCostRaw/10000)}万円\n補助金（控除）　▲${Math.round(subsidyRaw/10000)}万円`,{x:0.5,y:3.2,w:4.1,h:1.6,fontSize:13,color:MUT,fontFace:'Meiryo',paraSpaceBefore:5});
+      sl.addText(`月額電気代　${_f(CURRENT)}円\n年間コスト　${_f(CURRENT*12)}円\n20年累計　${Math.round(CURRENT*12*20/10000)}万円`,{x:0.5,y:3.2,w:4.1,h:0.78,fontSize:13,color:MUT,fontFace:'Meiryo',paraSpaceBefore:5});
+      sl.addText('■ 補助金効果',{x:0.5,y:4.04,w:4.1,h:0.22,fontSize:11,bold:true,color:'5cd985',fontFace:'Meiryo'});
+      sl.addText(`工事総額 ${Math.round(totalCostRaw/10000)}万円　補助金 ▲${Math.round(subsidyRaw/10000)}万円`,{x:0.5,y:4.26,w:4.1,h:0.55,fontSize:11,color:MUT,fontFace:'Meiryo',paraSpaceBefore:2});
       // Right card: new monthly
       sl.addShape(pres.ShapeType.rect,{x:5.3,y:1.82,w:4.3,h:3.25,fill:{color:'0f2a1e'},line:{color:GLD}});
       sl.addText('✦ 導入後の実質持ち出し額',{x:5.4,y:1.93,w:4.1,h:0.28,fontSize:11,bold:true,color:GLD,fontFace:'Meiryo'});
@@ -1009,7 +1009,7 @@ async function exportToPPTX() {
   /* Slide 6: 20-year chart */
   slideNum++;
   {const sl=pres.addSlide();sh(sl,`SLIDE ${String(slideNum).padStart(2,'0')} / 20-YEAR ANALYSIS`,'の累積メリット分析','20年間');
-    const labels=[],tradD=[],solarD=[],saveD=[];
+    const labels=[],tradD=[],solarD=[];
     const expLoanMon=pmt+RESIDUAL-SALE_INCOME_MON;
     const expPostMon=RESIDUAL-SALE_INCOME_MON;
     const expLoanYrs=Math.round(MONTHS/12);
@@ -1019,14 +1019,15 @@ async function exportToPPTX() {
       const so=y<=expLoanYrs
         ?Math.round(expLoanMon*12*y/10000)
         :Math.round(expLoanMon*12*expLoanYrs/10000+expPostMon*12*(y-expLoanYrs)/10000);
-      tradD.push(tr);solarD.push(so);saveD.push(tr-so);
+      tradD.push(tr);solarD.push(so);
     }
+    const totalSavePPTX = tradD[20] - solarD[20];
     sl.addShape(pres.ShapeType.rect,{x:7.2,y:1.2,w:2.5,h:0.88,fill:{color:NAV2},line:{color:GLD}});
     sl.addText('20年間の総節約額',{x:7.2,y:1.25,w:2.5,h:0.28,fontSize:10,bold:true,color:GLD,align:'center',fontFace:'Meiryo',margin:0});
-    sl.addText(`${saveD[20]}万円`,{x:7.2,y:1.5,w:2.5,h:0.5,fontSize:22,bold:true,color:GLD2,align:'center',fontFace:'Meiryo',margin:0});
+    sl.addText(`${totalSavePPTX}万円`,{x:7.2,y:1.5,w:2.5,h:0.5,fontSize:22,bold:true,color:GLD2,align:'center',fontFace:'Meiryo',margin:0});
     sl.addChart(pres.ChartType.line,
-      [{name:'従来の累積電気代',labels,values:tradD},{name:'ローン導入後の累積支払',labels,values:solarD},{name:'累積節約額',labels,values:saveD}],
-      {x:0.4,y:1.2,w:9.2,h:3.9,chartColors:['E87070','2D6A4F','52B788'],lineDataSymbol:'none',showLegend:true,legendPos:'t',legendFontSize:11,showValue:false,valAxisTitle:'累積額（万円）',plotAreaFillColor:'EAF4EF'});
+      [{name:'現状の累積電気代',labels,values:tradD},{name:'ローン戦略の累積支払',labels,values:solarD}],
+      {x:0.4,y:1.2,w:9.2,h:3.9,chartColors:['E87070','2D6A4F'],lineDataSymbol:'none',showLegend:true,legendPos:'t',legendFontSize:11,showValue:false,valAxisTitle:'累積額（万円）',plotAreaFillColor:'EAF4EF'});
   }
 
   /* Slide 7: Post-payoff */
