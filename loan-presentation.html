@@ -417,7 +417,7 @@ html,body{
           <div class="ib-lbl">実質負担総額</div>
           <div class="ib-num" id="s3-net">242</div>
           <div class="ib-unit">万円</div>
-          <div class="ib-note">この金額をローンで<br>分割してスタート</div>
+          <div class="ib-note" id="s3-net-note">この金額をローンで<br>分割してスタート</div>
         </div>
       </div>
       <div class="inv-sub-note">
@@ -596,11 +596,13 @@ function parseToYen(raw, defaultYen) {
   return n < 10000 ? Math.round(n * 10000) : Math.round(n);
 }
 
-const params       = new URLSearchParams(location.search);
-const totalCostRaw = parseToYen(params.get('totalCost'), 2800000);
-const subsidyRaw   = parseToYen(params.get('subsidy'), 0);   // 0 = 補助金なし
-const hasSubsidy   = subsidyRaw > 0;
-const netCost         = totalCostRaw - subsidyRaw;
+const params          = new URLSearchParams(location.search);
+const totalCostRaw    = parseToYen(params.get('totalCost'), 2800000);
+const subsidyRaw      = parseToYen(params.get('subsidy'), 0);      // 0 = 補助金なし
+const downPaymentRaw  = parseToYen(params.get('downPayment'), 0);  // 0 = 頭金なし
+const hasSubsidy      = subsidyRaw > 0;
+const netCost         = totalCostRaw - subsidyRaw;           // 実質負担総額（補助金差引後）
+const loanPrincipal   = netCost - downPaymentRaw;            // 実際の借入元金（頭金も差引）
 const RESIDUAL        = parseFloat(params.get('monthlyRemainingCost')) || 1600;
 const CURRENT         = 21000;
 const SALE_INCOME_MON = parseFloat(params.get('saleIncome')) || 0;
@@ -631,9 +633,9 @@ if (!hasSubsidy) {
   const s3El = document.querySelector('.slide.s3');
   if (s3El) s3El.remove();
 }
-const pmt          = calcPMT(netCost);
+const pmt          = calcPMT(loanPrincipal);
 const totalPaid    = pmt * MONTHS;
-const totalInterest = totalPaid - netCost;
+const totalInterest = totalPaid - loanPrincipal;
 const newMonthly   = pmt + RESIDUAL;
 const saving       = CURRENT - newMonthly;
 const annualSaving20  = (CURRENT - RESIDUAL) * 12;
@@ -664,6 +666,10 @@ if (hasSubsidy) {
   document.getElementById('s3-net').textContent   = Math.round(netCost / 10000);
   document.getElementById('s3-sub2').textContent  = Math.round(subsidyRaw / 10000) + '万円';
   document.getElementById('s3-pct').textContent   = (subsidyRaw / totalCostRaw * 100).toFixed(1) + '%';
+  if (downPaymentRaw > 0) {
+    document.getElementById('s3-net-note').innerHTML =
+      '頭金 ' + Math.round(downPaymentRaw/10000) + '万円 を除いた<br>借入額：' + Math.round(loanPrincipal/10000) + '万円';
+  }
 }
 
 /* ── Slide 4 ── */
@@ -678,13 +684,17 @@ document.getElementById('s4-jis-annual').textContent  = fmt(jissitsuAnnual) + '�
 document.getElementById('s4-jis-20y').textContent     = Math.round(jissitsu20y / 10000) + '万円';
 
 /* ── Slide 5 ── */
-document.getElementById('s5-pmt').textContent     = fmt(pmt);
-document.getElementById('s5-pmt2').textContent    = fmt(pmt) + ' 円';
-document.getElementById('s5-net').textContent     = fmt(netCost) + ' 円';
-document.getElementById('s5-total').textContent   = fmt(totalPaid) + ' 円';
+document.getElementById('s5-pmt').textContent      = fmt(pmt);
+document.getElementById('s5-pmt2').textContent     = fmt(pmt) + ' 円';
+document.getElementById('s5-net').textContent      = fmt(loanPrincipal) + ' 円';
+document.getElementById('s5-total').textContent    = fmt(totalPaid) + ' 円';
 document.getElementById('s5-interest').textContent = fmt(totalInterest) + ' 円';
-document.getElementById('s5-pmt-note').textContent = '実質' + Math.round(netCost/10000) + '万円 / 15年想定';
+document.getElementById('s5-pmt-note').textContent = '実質' + Math.round(loanPrincipal/10000) + '万円 / 15年想定';
 document.getElementById('s5-sub-note').textContent = Math.round(subsidyRaw/10000) + '万円';
+if (downPaymentRaw > 0) {
+  const s5note = document.getElementById('s5-note');
+  s5note.innerHTML += '<br>※ 頭金 ' + Math.round(downPaymentRaw/10000) + '万円 を差し引いた後の借入額（' + fmt(loanPrincipal) + '円）を基準に算出しています。';
+}
 
 /* ── Slide 6: s6-total-save を事前計算（グラフ構築前から正しい値を表示） ── */
 {
@@ -886,7 +896,7 @@ async function exportToPPTX() {
   const newMonthly = pmt + RESIDUAL;
   const saving     = Math.max(0, CURRENT - newMonthly);
   const totalPaid  = pmt * MONTHS;
-  const totalInt   = Math.max(0, totalPaid - netCost);
+  const totalInt   = Math.max(0, totalPaid - loanPrincipal);
   const postMon    = CURRENT - RESIDUAL;
   const postAnn    = postMon * 12;
 
@@ -963,7 +973,10 @@ async function exportToPPTX() {
       sl.addText('実質負担総額',{x:7.0,y:1.4,w:2.5,h:0.3,fontSize:12,bold:true,color:GLD,align:'center',fontFace:'Meiryo'});
       sl.addText(`${netMan}`,{x:7.0,y:1.8,w:2.5,h:0.88,fontSize:52,bold:true,color:GLD2,align:'center',fontFace:'Meiryo',margin:0});
       sl.addText('万円',{x:7.0,y:2.68,w:2.5,h:0.3,fontSize:18,bold:true,color:GLD2,align:'center',fontFace:'Meiryo',margin:0});
-      sl.addText('この金額をローンで\n分割してスタート',{x:7.0,y:3.1,w:2.5,h:0.75,fontSize:12,color:MUT,align:'center',fontFace:'Meiryo',paraSpaceBefore:4});
+      sl.addText(downPaymentRaw > 0
+        ? '頭金' + Math.round(downPaymentRaw/10000) + '万円を除く\n借入額：' + Math.round(loanPrincipal/10000) + '万円'
+        : 'この金額をローンで\n分割してスタート',
+        {x:7.0,y:3.1,w:2.5,h:0.75,fontSize:12,color:MUT,align:'center',fontFace:'Meiryo',paraSpaceBefore:4});
       // Footer note
       sl.addShape(pres.ShapeType.rect,{x:0.4,y:5.0,w:9.2,h:0.42,fill:{color:NAV2},line:{color:GLD}});
       sl.addText(`補助金 ${subMan}万円 の適用により実質負担を削減。総額の約 ${(subsidyRaw/totalCostRaw*100).toFixed(1)}% が補助金でカバーされます。`,{x:0.5,y:5.0,w:9.0,h:0.42,fontSize:12,color:GLD2,align:'center',valign:'middle',fontFace:'Meiryo',margin:0});
@@ -1001,8 +1014,8 @@ async function exportToPPTX() {
     sl.addText('月々のご返済額',{x:0.5,y:1.78,w:3.8,h:0.35,fontSize:13,bold:true,color:GLD,align:'center',fontFace:'Meiryo',margin:0});
     sl.addText(`${_f(pmt)}`,{x:0.5,y:2.18,w:3.8,h:0.88,fontSize:44,bold:true,color:GLD2,align:'center',fontFace:'Meiryo',margin:0});
     sl.addText('円 / 月',{x:0.5,y:3.06,w:3.8,h:0.36,fontSize:18,bold:true,color:GLD,align:'center',fontFace:'Meiryo',margin:0});
-    sl.addText(`実質${Math.round(netCost/10000)}万円 / 15年想定`,{x:0.5,y:3.52,w:3.8,h:0.28,fontSize:12,color:MUT,align:'center',fontFace:'Meiryo',margin:0});
-    [['借入額（実質負担）',`${_f(netCost)}円`],['返済期間','15年（180回払い）'],['適用金利（想定）','年 4.0%'],['月々返済額',`${_f(pmt)}円`],['総返済額',`${_f(totalPaid)}円`],['支払利息総額',`${_f(totalInt)}円`]].forEach((r,i)=>{
+    sl.addText(`実質${Math.round(loanPrincipal/10000)}万円 / 15年想定`,{x:0.5,y:3.52,w:3.8,h:0.28,fontSize:12,color:MUT,align:'center',fontFace:'Meiryo',margin:0});
+    [['借入額（実質負担）',`${_f(loanPrincipal)}円`],['返済期間','15年（180回払い）'],['適用金利（想定）','年 4.0%'],['月々返済額',`${_f(pmt)}円`],['総返済額',`${_f(totalPaid)}円`],['支払利息総額',`${_f(totalInt)}円`]].forEach((r,i)=>{
       const ty=1.38+i*0.52;const hl=i===3;
       sl.addShape(pres.ShapeType.rect,{x:4.6,y:ty,w:4.95,h:0.48,fill:{color:hl?'0a1f15':NAV2},line:{color:hl?GLD:'1a3a2a'}});
       sl.addText(r[0],{x:4.7,y:ty,w:2.3,h:0.48,fontSize:13,color:MUT,fontFace:'Meiryo',valign:'middle'});
