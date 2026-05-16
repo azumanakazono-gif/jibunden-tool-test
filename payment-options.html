@@ -348,8 +348,17 @@ function getSellPriceForYear(year) {
   return year <= rate.years ? rate.price : POST_FIT_DEFAULT;
 }
 
-// y年目までの累計売電収入（円）を返す — URLパラメータ saleIncome のみ使用
+// y年目までの累計売電収入（円）を返す — 卒FIT考慮
 function getCumulativeSaleIncomeYen(upToYear) {
+  if (_surplusKwhYear > 0) {
+    // FIT期間ごとに単価が変わる年次計算
+    let total = 0;
+    for (let y = 1; y <= upToYear; y++) {
+      total += _surplusKwhYear * getSellPriceForYear(y);
+    }
+    return total;
+  }
+  // 固定月額フォールバック（surplusKwhYearなし）
   const monthly = parseFloat(_urlSaleIncome) || 0;
   return monthly * 12 * upToYear;
 }

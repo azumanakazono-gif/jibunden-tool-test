@@ -201,7 +201,7 @@ html,body{
 .cf-unit{font-size:26px;font-weight:700}
 .cf-box.cur .cf-unit{color:#f87171}
 .cf-box.nw .cf-unit{color:var(--gold-light)}
-.cf-note{font-size:17px;color:var(--w60);margin-top:10px;line-height:1.65}
+.cf-note{font-size:17px;color:var(--w60);margin-top:10px;line-height:1.65;min-height:56px}
 .cf-bk{margin-top:auto;padding-top:20px;border-top:1px solid var(--w10)}
 .cf-bk-row{display:flex;justify-content:space-between;padding:5px 0}
 .cf-bk-row span:first-child{font-size:16px;color:var(--w60)}
@@ -503,7 +503,7 @@ html,body{
         <div class="chart-badges">
           <div class="c-badge"><div class="dot-badge" style="background:#e87070"></div>現状の累積電気代（赤点線）</div>
           <div class="c-badge"><div class="dot-badge" style="background:#2D6A4F"></div>ローン戦略の累積支払（緑実線）</div>
-          <div class="c-badge"><div class="dot-badge" style="background:rgba(82,183,136,0.35);border-radius:3px;width:22px;height:10px"></div>節約エリア（塗りつぶし）</div>
+          <div class="c-badge"><div class="dot-badge" style="background:rgba(82,183,136,0.5);border-radius:3px;width:22px;height:10px"></div>節約エリア（緑）</div>
           <div style="margin-left:auto;font-size:12px;color:var(--w30)">縦線 = 完済タイミング（15年目）</div>
         </div>
         <div class="chart-annot">
@@ -604,6 +604,11 @@ const netCost         = totalCostRaw - subsidyRaw;
 const RESIDUAL        = parseFloat(params.get('monthlyRemainingCost')) || 1600;
 const CURRENT         = 21000;
 const SALE_INCOME_MON = parseFloat(params.get('saleIncome')) || 0;
+const SURPLUS_KWH_YEAR = parseFloat(params.get('surplusKwhYear')) || 0;
+const FIT_YEARS        = parseInt(params.get('fitYears')) || 10;
+const POST_FIT_SALE_MON = SURPLUS_KWH_YEAR > 0
+  ? Math.round(SURPLUS_KWH_YEAR * 7 / 12)
+  : SALE_INCOME_MON;
 
 /* 補助金が0の場合はスライド3をDOMから削除 */
 if (!hasSubsidy) {
@@ -624,7 +629,17 @@ const saving4         = Math.max(0, CURRENT - jissitsuMonthly);
 const loanYears       = Math.round(MONTHS / 12);
 const effectivePost   = RESIDUAL - SALE_INCOME_MON;
 const jissitsuAnnual  = jissitsuMonthly * 12;
-const jissitsu20y     = jissitsuMonthly * 12 * loanYears + effectivePost * 12 * (20 - loanYears);
+
+/* 卒FIT考慮: year-by-year cumulative solar cost */
+function calcSolarCum(upToYear) {
+  let total = 0;
+  for (let yr = 1; yr <= upToYear; yr++) {
+    const saleM = (SURPLUS_KWH_YEAR > 0 && yr > FIT_YEARS) ? POST_FIT_SALE_MON : SALE_INCOME_MON;
+    total += (yr <= loanYears ? pmt + RESIDUAL - saleM : RESIDUAL - saleM) * 12;
+  }
+  return total;
+}
+const jissitsu20y = calcSolarCum(20);
 
 /* ── Slide 3（補助金ありの場合のみ） ── */
 if (hasSubsidy) {
@@ -657,11 +672,8 @@ document.getElementById('s5-sub-note').textContent = Math.round(subsidyRaw/10000
 
 /* ── Slide 6: s6-total-save を事前計算（グラフ構築前から正しい値を表示） ── */
 {
-  const _loanYrs  = Math.round(MONTHS / 12);
-  const _effLoan  = pmt + RESIDUAL - SALE_INCOME_MON;
-  const _effPost  = RESIDUAL - SALE_INCOME_MON;
-  const _trad20   = CURRENT * 12 * 20;
-  const _solar20  = _effLoan * 12 * _loanYrs + _effPost * 12 * (20 - _loanYrs);
+  const _trad20  = CURRENT * 12 * 20;
+  const _solar20 = calcSolarCum(20);
   document.getElementById('s6-total-save').textContent = Math.round((_trad20 - _solar20) / 10000) + '万円';
 }
 
@@ -682,21 +694,10 @@ function build20YChart() {
   const trad   = [];
   const solar  = [];
 
-  const loanYears        = Math.round(MONTHS / 12);
-  const effectiveLoanMon = pmt + RESIDUAL - SALE_INCOME_MON;
-  const effectivePostMon = RESIDUAL - SALE_INCOME_MON;
-
   for (let y = 0; y <= 20; y++) {
     labels.push(y === 0 ? '現在' : y + '年目');
-    const tradCum  = CURRENT * 12 * y;
-    let solarCum;
-    if (y <= loanYears) {
-      solarCum = effectiveLoanMon * 12 * y;
-    } else {
-      solarCum = effectiveLoanMon * 12 * loanYears + effectivePostMon * 12 * (y - loanYears);
-    }
-    trad.push(Math.round(tradCum / 10000));
-    solar.push(Math.round(solarCum / 10000));
+    trad.push(Math.round(CURRENT * 12 * y / 10000));
+    solar.push(Math.round(calcSolarCum(y) / 10000));
   }
 
   const totalSave = trad[20] - solar[20];
@@ -751,8 +752,8 @@ function build20YChart() {
           borderColor: '#2D6A4F',
           fill: {
             target: 0,
-            above: 'rgba(232,112,112,0.08)',
-            below: 'rgba(250,204,21,0.2)',
+            above: 'rgba(82,183,136,0.05)',
+            below: 'rgba(82,183,136,0.2)',
           },
           tension: 0.3,
           pointRadius: 3,
@@ -997,16 +998,10 @@ async function exportToPPTX() {
   slideNum++;
   {const sl=pres.addSlide();sh(sl,`SLIDE ${String(slideNum).padStart(2,'0')} / 20-YEAR ANALYSIS`,'の累積メリット分析','20年間');
     const labels=[],tradD=[],solarD=[];
-    const expLoanMon=pmt+RESIDUAL-SALE_INCOME_MON;
-    const expPostMon=RESIDUAL-SALE_INCOME_MON;
-    const expLoanYrs=Math.round(MONTHS/12);
     for(let y=0;y<=20;y++){
       labels.push(y+'年');
-      const tr=Math.round(CURRENT*12*y/10000);
-      const so=y<=expLoanYrs
-        ?Math.round(expLoanMon*12*y/10000)
-        :Math.round(expLoanMon*12*expLoanYrs/10000+expPostMon*12*(y-expLoanYrs)/10000);
-      tradD.push(tr);solarD.push(so);
+      tradD.push(Math.round(CURRENT*12*y/10000));
+      solarD.push(Math.round(calcSolarCum(y)/10000));
     }
     const totalSavePPTX = tradD[20] - solarD[20];
     sl.addShape(pres.ShapeType.rect,{x:7.2,y:1.2,w:2.5,h:0.88,fill:{color:NAV2},line:{color:GLD}});
