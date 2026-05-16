@@ -63,7 +63,7 @@ body { font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; backgroun
 #gankin-table td { padding: 4px 8px; text-align: right; border-bottom: 1px solid var(--border); }
 #gankin-table td:first-child { text-align: left; color: var(--muted); }
 /* chart */
-.chart-wrap { margin-top: 14px; background: #fff; border-radius: 10px; padding: 14px; border: 1px solid var(--border); }
+.chart-wrap { margin-top: 14px; background: #fff; border-radius: 10px; padding: 14px; border: 1px solid var(--border); width: 100%; max-width: 100%; }
 .chart-wrap .ct { font-size: 13px; color: var(--muted); margin-bottom: 10px; font-weight: 600; }
 canvas#po-chart { height: 220px !important; }
 .legend { display: flex; gap: 16px; margin-top: 8px; flex-wrap: wrap; }
@@ -495,7 +495,7 @@ const rightEndLabelsPlugin = {
 
     ctx.save();
     ctx.font = 'bold 14px "Hiragino Kaku Gothic ProN", Meiryo, sans-serif';
-    ctx.textAlign = 'left';
+    ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
     entries.forEach(e => {
       // 終点の丸
@@ -505,7 +505,7 @@ const rightEndLabelsPlugin = {
       ctx.fill();
       // 白い縁取りでグラフ線に重なっても読めるように
       const text = Math.round(e.val) + '万円';
-      const tx = e.x + 10, ty = e.adjY;
+      const tx = e.x - 10, ty = e.adjY;
       ctx.lineWidth = 4;
       ctx.strokeStyle = 'rgba(255,255,255,0.9)';
       ctx.lineJoin = 'round';
@@ -554,7 +554,7 @@ function renderChart(inputs, monthly, loanCount) {
       layout: {
         padding: {
           top: 10,
-          right: 150,
+          right: 20,
           bottom: 10,
           left: 10
         }
