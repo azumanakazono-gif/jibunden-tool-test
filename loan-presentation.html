@@ -141,7 +141,7 @@ html,body{
 /* ═══════════════════════════════════════════
    SLIDE 3 — INVESTMENT
 ═══════════════════════════════════════════ */
-.s3{background:var(--navy);padding:52px 72px}
+.s3{background:var(--navy);padding:44px 72px}
 .inv-flow{display:flex;align-items:center;justify-content:center;gap:28px;flex:1}
 .ib{border-radius:16px;padding:40px 44px;text-align:center;min-width:210px}
 .ib.total{background:linear-gradient(135deg,#0f2a1e,#1B4332);border:1px solid var(--w10)}
@@ -160,6 +160,9 @@ html,body{
 .ib.sub .ib-num{color:#5cd985}
 .ib.net .ib-num{color:var(--gold-light)}
 .ib-unit{font-size:22px;font-weight:700}
+.ib.total .ib-unit{color:var(--w)}
+.ib.sub .ib-unit{color:#5cd985}
+.ib.net .ib-unit{color:var(--gold-light)}
 .ib-note{font-size:16px;color:var(--w60);margin-top:8px;line-height:1.6}
 .inv-op{font-size:62px;font-weight:300;min-width:52px;text-align:center}
 .inv-op.minus{color:#f87171}
@@ -196,6 +199,8 @@ html,body{
 .cf-box.cur .cf-amount{color:#f87171}
 .cf-box.nw .cf-amount{color:var(--gold-light)}
 .cf-unit{font-size:26px;font-weight:700}
+.cf-box.cur .cf-unit{color:#f87171}
+.cf-box.nw .cf-unit{color:var(--gold-light)}
 .cf-note{font-size:17px;color:var(--w60);margin-top:10px;line-height:1.65}
 .cf-bk{margin-top:auto;padding-top:20px;border-top:1px solid var(--w10)}
 .cf-bk-row{display:flex;justify-content:space-between;padding:5px 0}
@@ -373,35 +378,38 @@ html,body{
 
     <!-- ── SLIDE 3 ── -->
     <div class="slide s3" data-idx="2">
-      <div class="sh">
+      <div class="sh" style="margin-bottom:0">
         <div class="slide-num">SLIDE 03 / INVESTMENT</div>
-        <div class="slide-ttl"><span class="g">投資額</span>の透明性</div>
+        <div class="slide-ttl"><span class="g">補助金活用</span>と実質コスト</div>
       </div>
-      <div class="inv-flow">
-        <div class="ib total">
-          <div class="ib-lbl">工事総額</div>
-          <div class="ib-num" id="s3-total">280</div>
-          <div class="ib-unit">万円</div>
-          <div class="ib-note">太陽光パネル＋工事費<br>一式込みの正直価格</div>
-        </div>
-        <div class="inv-op minus">－</div>
-        <div class="ib sub">
-          <div class="ib-lbl">補助金（国・自治体）</div>
-          <div class="ib-num" id="s3-sub">38</div>
-          <div class="ib-unit">万円</div>
-          <div class="ib-note">各種補助金を<br>フル活用した場合</div>
-        </div>
-        <div class="inv-op eq">=</div>
-        <div class="ib net">
-          <div class="ib-lbl">お客様の実質負担</div>
-          <div class="ib-num" id="s3-net">242</div>
-          <div class="ib-unit">万円</div>
-          <div class="ib-note">この金額をローンで<br>分割してスタート</div>
-        </div>
+      <div class="s4-banner">
+        月々の家計負担が <strong id="s3-saving">1,500</strong>円 軽減されます
       </div>
-      <div class="inv-sub-note" id="s3-note">
-        補助金 <strong id="s3-sub2" style="color:var(--gold-light)">38万円</strong> の適用により、実質負担を大幅に削減。
-        総額のうち約 <strong id="s3-pct" style="color:var(--gold-light)">13.6%</strong> が補助金でカバーされます。
+      <div class="cf-row">
+        <div class="cf-box cur">
+          <div class="cf-lbl">▲ 現在（電力会社へ支払い続ける）</div>
+          <div><span class="cf-amount" id="s3-cur-amount">2.1</span><span class="cf-unit">万円/月</span></div>
+          <div class="cf-note">毎月電力会社に消えていく費用<br>補助金なしでは永遠に掛け捨て</div>
+          <div class="cf-bk">
+            <div class="cf-bk-row"><span>月額電気代</span><span id="s3-cur-monthly">21,000円</span></div>
+            <div class="cf-bk-row"><span>工事総額</span><span id="s3-bk-total">280万円</span></div>
+            <div class="cf-bk-row" style="color:#5cd985"><span>▲ 補助金</span><span id="s3-bk-sub">38万円</span></div>
+          </div>
+        </div>
+        <div class="cf-box nw">
+          <div class="cf-lbl">✦ 導入後の実質持ち出し額</div>
+          <div><span class="cf-amount" id="s3-new-amount">1.45</span><span class="cf-unit">万円/月</span></div>
+          <div class="cf-note">補助金適用後の実質<span id="s3-net-note">242</span>万円をローン分割<br>売電収入を差し引いた実質負担</div>
+          <div class="cf-bk">
+            <div class="cf-bk-row"><span>ローン返済</span><span id="s3-loan-row">17,900円</span></div>
+            <div class="cf-bk-row"><span>電気代（残）</span><span id="s3-res-row">1,600円</span></div>
+            <div class="cf-bk-row" style="color:#5cd985"><span>▲ 売電収入</span><span id="s3-sale-row3">0円</span></div>
+            <div class="cf-bk-row" style="border-top:1px solid var(--w10);margin-top:4px;padding-top:10px">
+              <span style="font-weight:700;color:var(--w)">実質持ち出し</span>
+              <span id="s3-jissitsu" style="color:var(--gold-light);font-weight:700">19,500円</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -602,21 +610,26 @@ const saving       = CURRENT - newMonthly;
 const annualSaving20  = (CURRENT - RESIDUAL) * 12;
 const monthlySavePost = CURRENT - RESIDUAL;
 
+/* ── Shared cashflow calculations (used in Slides 3 & 4) ── */
+const jissitsuMonthly = pmt + RESIDUAL - SALE_INCOME_MON;
+const saving4         = Math.max(0, CURRENT - jissitsuMonthly);
+
 /* ── Slide 3（補助金ありの場合のみ） ── */
 if (hasSubsidy) {
-  document.getElementById('s3-total').textContent = Math.round(totalCostRaw / 10000);
-  document.getElementById('s3-sub').textContent   = Math.round(subsidyRaw / 10000);
-  document.getElementById('s3-net').textContent   = Math.round(netCost / 10000);
-  document.getElementById('s3-sub2').textContent  = Math.round(subsidyRaw / 10000) + '万円';
-  document.getElementById('s3-pct').textContent   = (subsidyRaw / totalCostRaw * 100).toFixed(1) + '%';
-  document.getElementById('s3-note').innerHTML =
-    '補助金 <strong style="color:var(--gold-light)">' + Math.round(subsidyRaw/10000) + '万円</strong> の適用により、実質負担を大幅に削減。' +
-    '総額のうち約 <strong style="color:var(--gold-light)">' + (subsidyRaw / totalCostRaw * 100).toFixed(1) + '%</strong> が補助金でカバーされます。';
+  document.getElementById('s3-saving').textContent     = fmt(saving4);
+  document.getElementById('s3-cur-amount').textContent = (CURRENT / 10000).toFixed(1);
+  document.getElementById('s3-cur-monthly').textContent = fmt(CURRENT) + '円';
+  document.getElementById('s3-bk-total').textContent   = Math.round(totalCostRaw / 10000) + '万円';
+  document.getElementById('s3-bk-sub').textContent     = Math.round(subsidyRaw / 10000) + '万円';
+  document.getElementById('s3-new-amount').textContent = (jissitsuMonthly / 10000).toFixed(2);
+  document.getElementById('s3-net-note').textContent   = Math.round(netCost / 10000);
+  document.getElementById('s3-loan-row').textContent   = fmt(pmt) + '円';
+  document.getElementById('s3-res-row').textContent    = fmt(RESIDUAL) + '円';
+  document.getElementById('s3-sale-row3').textContent  = SALE_INCOME_MON > 0 ? fmt(SALE_INCOME_MON) + '円' : '0円';
+  document.getElementById('s3-jissitsu').textContent   = fmt(jissitsuMonthly) + '円';
 }
 
 /* ── Slide 4 ── */
-const jissitsuMonthly = pmt + RESIDUAL - SALE_INCOME_MON;
-const saving4         = Math.max(0, CURRENT - jissitsuMonthly);
 document.getElementById('s4-cur-amount').textContent  = (CURRENT / 10000).toFixed(1);
 document.getElementById('s4-cur-monthly').textContent = fmt(CURRENT) + '円';
 document.getElementById('s4-cur-annual').textContent  = fmt(CURRENT * 12) + '円';
@@ -909,46 +922,46 @@ async function exportToPPTX() {
     sl.addText('電気代がローン返済に置き換わり\n15年で完済すれば\n\n以降は電気代がほぼゼロの生活へ',{x:5.2,y:2.22,w:4.2,h:2.6,fontSize:13,color:MUT,align:'center',fontFace:'Meiryo',paraSpaceBefore:4});
   }
 
-  /* Slide 3: Investment（補助金ありの場合のみ） */
+  /* Slide 3: 補助金活用と実質コスト（補助金ありの場合のみ） */
   if (hasSubsidy) {
     slideNum++;
-    {const sl=pres.addSlide();sh(sl,`SLIDE ${String(slideNum).padStart(2,'0')} / INVESTMENT`,'の透明性','投資額');
-      const grossMan=Math.round(totalCostRaw/10000),subMan=Math.round(subsidyRaw/10000),netMan=Math.round(netCost/10000);
-      const boxes=[
-        {x:0.4,label:'工事総額',val:grossMan,tc:WHT,lc:MUT,fill:NAV2,bd:WHT,note:'太陽光パネル＋工事費\n一式込みの正直価格'},
-        {x:3.7,label:'補助金（国・自治体）',val:subMan,tc:'5cd985',lc:'5cd985',fill:'071E12',bd:'2ECC71',note:'各種補助金を\nフル活用した場合'},
-        {x:7.0,label:'お客様の実質負担',val:netMan,tc:GLD2,lc:GLD,fill:'0a1f15',bd:GLD,note:'この金額をローンで\n分割してスタート'},
-      ];
-      boxes.forEach((b,i)=>{
-        if(i>0)sl.addText(i===1?'－':'＝',{x:b.x-0.62,y:2.2,w:0.55,h:0.85,fontSize:28,bold:true,color:i===1?'f87171':GLD,align:'center',fontFace:'Meiryo',valign:'middle'});
-        sl.addShape(pres.ShapeType.rect,{x:b.x,y:1.2,w:2.5,h:3.85,fill:{color:b.fill},line:{color:b.bd}});
-        sl.addText(b.label,{x:b.x+0.1,y:1.42,w:2.3,h:0.36,fontSize:11,bold:true,color:b.lc,align:'center',fontFace:'Meiryo'});
-        sl.addText(`${b.val}`,{x:b.x+0.1,y:1.9,w:2.3,h:0.88,fontSize:44,bold:true,color:b.tc,align:'center',fontFace:'Meiryo',margin:0});
-        sl.addText('万円',{x:b.x+0.1,y:2.78,w:2.3,h:0.3,fontSize:16,bold:true,color:b.tc,align:'center',fontFace:'Meiryo',margin:0});
-        sl.addText(b.note,{x:b.x+0.1,y:3.18,w:2.3,h:0.75,fontSize:11,color:MUT,align:'center',fontFace:'Meiryo'});
-      });
-      sl.addShape(pres.ShapeType.rect,{x:0.4,y:5.05,w:9.2,h:0.42,fill:{color:NAV2},line:{color:GLD}});
-      sl.addText(`補助金 ${subMan}万円 の適用により実質負担を削減。総額の約 ${(subMan/grossMan*100).toFixed(1)}% が補助金でカバーされます。`,{x:0.5,y:5.05,w:9,h:0.42,fontSize:12,color:GLD2,align:'center',valign:'middle',fontFace:'Meiryo',margin:0});
+    {const sl=pres.addSlide();sh(sl,`SLIDE ${String(slideNum).padStart(2,'0')} / INVESTMENT`,'と実質コスト','補助金活用');
+      // Banner
+      sl.addShape(pres.ShapeType.rect,{x:0.4,y:1.2,w:9.2,h:0.48,fill:{color:NAV2},line:{color:GLD}});
+      sl.addText(`月々の家計負担が ${_f(saving4)}円 軽減されます`,{x:0.4,y:1.2,w:9.2,h:0.48,fontSize:15,bold:true,color:WHT,align:'center',valign:'middle',fontFace:'Meiryo',margin:0});
+      // Left card: current
+      sl.addShape(pres.ShapeType.rect,{x:0.4,y:1.82,w:4.3,h:3.25,fill:{color:'2D1B1B'},line:{color:RED}});
+      sl.addText('▲ 現在（電力会社へ支払い続ける）',{x:0.5,y:1.93,w:4.1,h:0.28,fontSize:11,bold:true,color:'e87070',fontFace:'Meiryo'});
+      sl.addText(`${(CURRENT/10000).toFixed(1)}`,{x:0.5,y:2.26,w:2.9,h:0.78,fontSize:50,bold:true,color:'f87171',fontFace:'Meiryo',margin:0});
+      sl.addText('万円/月',{x:3.4,y:2.66,w:1.2,h:0.38,fontSize:13,bold:true,color:'f87171',fontFace:'Meiryo',valign:'bottom'});
+      sl.addText(`月額電気代　${_f(CURRENT)}円\n工事総額　${Math.round(totalCostRaw/10000)}万円\n補助金（控除）　▲${Math.round(subsidyRaw/10000)}万円`,{x:0.5,y:3.2,w:4.1,h:1.6,fontSize:13,color:MUT,fontFace:'Meiryo',paraSpaceBefore:5});
+      // Right card: new monthly
+      sl.addShape(pres.ShapeType.rect,{x:5.3,y:1.82,w:4.3,h:3.25,fill:{color:'0f2a1e'},line:{color:GLD}});
+      sl.addText('✦ 導入後の実質持ち出し額',{x:5.4,y:1.93,w:4.1,h:0.28,fontSize:11,bold:true,color:GLD,fontFace:'Meiryo'});
+      sl.addText(`${(jissitsuMonthly/10000).toFixed(2)}`,{x:5.4,y:2.26,w:2.9,h:0.78,fontSize:50,bold:true,color:GLD2,fontFace:'Meiryo',margin:0});
+      sl.addText('万円/月',{x:8.3,y:2.66,w:1.2,h:0.38,fontSize:13,bold:true,color:GLD2,fontFace:'Meiryo',valign:'bottom'});
+      sl.addText(`ローン返済　${_f(pmt)}円\n電気代（残）　${_f(RESIDUAL)}円\n売電収入　▲${_f(SALE_INCOME_MON)}円\n実質持ち出し　${_f(jissitsuMonthly)}円`,{x:5.4,y:3.2,w:4.1,h:1.6,fontSize:13,color:MUT,fontFace:'Meiryo',paraSpaceBefore:5});
     }
   }
 
   /* Slide 4: Monthly Cashflow */
   slideNum++;
   {const sl=pres.addSlide();sh(sl,`SLIDE ${String(slideNum).padStart(2,'0')} / MONTHLY CASHFLOW`,'分析','月間収支');
-    sl.addShape(pres.ShapeType.rect,{x:0.4,y:1.2,w:3.65,h:3.85,fill:{color:'1A0606'},line:{color:RED}});
-    sl.addText('▲ 現在の月額電気代',{x:0.5,y:1.32,w:3.45,h:0.3,fontSize:11,bold:true,color:'e87070',fontFace:'Meiryo'});
-    sl.addText(`${(CURRENT/10000).toFixed(1)}`,{x:0.5,y:1.68,w:2.4,h:0.88,fontSize:56,bold:true,color:'f87171',fontFace:'Meiryo',margin:0});
-    sl.addText('万円/月',{x:2.9,y:2.18,w:1.1,h:0.42,fontSize:14,bold:true,color:'f87171',fontFace:'Meiryo',valign:'bottom'});
-    sl.addText(`月額電気代　${_f(CURRENT)}円\n年間コスト　${_f(CURRENT*12)}円\n20年累計　${Math.round(CURRENT*12*20/10000)}万円`,{x:0.5,y:3.2,w:3.45,h:1.6,fontSize:13,color:MUT,fontFace:'Meiryo',paraSpaceBefore:4});
-    sl.addShape(pres.ShapeType.rect,{x:3.98,y:2.65,w:2.08,h:1.42,fill:{color:NAV2},line:{color:GLD}});
-    sl.addText('月々お得',{x:3.98,y:2.73,w:2.08,h:0.26,fontSize:11,bold:true,color:GLD,align:'center',fontFace:'Meiryo',margin:0});
-    sl.addText(`${_f(saving)}`,{x:3.98,y:2.99,w:2.08,h:0.6,fontSize:34,bold:true,color:GLD2,align:'center',fontFace:'Meiryo',margin:0});
-    sl.addText('円',{x:3.98,y:3.59,w:2.08,h:0.22,fontSize:14,bold:true,color:GLD,align:'center',fontFace:'Meiryo',margin:0});
-    sl.addShape(pres.ShapeType.rect,{x:6.12,y:1.2,w:3.42,h:3.85,fill:{color:'071a12'},line:{color:GLD}});
-    sl.addText('✦ ローン導入後の月額合計',{x:6.22,y:1.32,w:3.22,h:0.3,fontSize:11,bold:true,color:GLD,fontFace:'Meiryo'});
-    sl.addText(`${(newMonthly/10000).toFixed(2)}`,{x:6.22,y:1.68,w:2.3,h:0.88,fontSize:56,bold:true,color:GLD2,fontFace:'Meiryo',margin:0});
-    sl.addText('万円/月',{x:8.52,y:2.18,w:1.02,h:0.42,fontSize:14,bold:true,color:GLD2,fontFace:'Meiryo',valign:'bottom'});
-    sl.addText(`ローン返済　${_f(pmt)}円\n電気代（残）　${_f(RESIDUAL)}円\n合計　${_f(newMonthly)}円`,{x:6.22,y:3.2,w:3.22,h:1.6,fontSize:13,color:MUT,fontFace:'Meiryo',paraSpaceBefore:4});
+    // Banner
+    sl.addShape(pres.ShapeType.rect,{x:0.4,y:1.2,w:9.2,h:0.48,fill:{color:NAV2},line:{color:GLD}});
+    sl.addText(`月々の家計負担が ${_f(saving4)}円 軽減されます`,{x:0.4,y:1.2,w:9.2,h:0.48,fontSize:15,bold:true,color:WHT,align:'center',valign:'middle',fontFace:'Meiryo',margin:0});
+    // Left card: current
+    sl.addShape(pres.ShapeType.rect,{x:0.4,y:1.82,w:4.3,h:3.25,fill:{color:'2D1B1B'},line:{color:RED}});
+    sl.addText('▲ 現在（電力会社へ支払い続ける）',{x:0.5,y:1.93,w:4.1,h:0.28,fontSize:11,bold:true,color:'e87070',fontFace:'Meiryo'});
+    sl.addText(`${(CURRENT/10000).toFixed(1)}`,{x:0.5,y:2.26,w:2.9,h:0.78,fontSize:50,bold:true,color:'f87171',fontFace:'Meiryo',margin:0});
+    sl.addText('万円/月',{x:3.4,y:2.66,w:1.2,h:0.38,fontSize:13,bold:true,color:'f87171',fontFace:'Meiryo',valign:'bottom'});
+    sl.addText(`月額電気代　${_f(CURRENT)}円\n年間コスト　${_f(CURRENT*12)}円\n20年累計　${Math.round(CURRENT*12*20/10000)}万円`,{x:0.5,y:3.2,w:4.1,h:1.6,fontSize:13,color:MUT,fontFace:'Meiryo',paraSpaceBefore:5});
+    // Right card: 実質持ち出し (jissitsuMonthly)
+    sl.addShape(pres.ShapeType.rect,{x:5.3,y:1.82,w:4.3,h:3.25,fill:{color:'0f2a1e'},line:{color:GLD}});
+    sl.addText('✦ 導入後の実質持ち出し額',{x:5.4,y:1.93,w:4.1,h:0.28,fontSize:11,bold:true,color:GLD,fontFace:'Meiryo'});
+    sl.addText(`${(jissitsuMonthly/10000).toFixed(2)}`,{x:5.4,y:2.26,w:2.9,h:0.78,fontSize:50,bold:true,color:GLD2,fontFace:'Meiryo',margin:0});
+    sl.addText('万円/月',{x:8.3,y:2.66,w:1.2,h:0.38,fontSize:13,bold:true,color:GLD2,fontFace:'Meiryo',valign:'bottom'});
+    sl.addText(`ローン返済　${_f(pmt)}円\n電気代（残）　${_f(RESIDUAL)}円\n売電収入　▲${_f(SALE_INCOME_MON)}円\n実質持ち出し　${_f(jissitsuMonthly)}円`,{x:5.4,y:3.2,w:4.1,h:1.6,fontSize:13,color:MUT,fontFace:'Meiryo',paraSpaceBefore:5});
   }
 
   /* Slide 5: Repayment */
