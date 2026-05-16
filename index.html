@@ -189,30 +189,31 @@ canvas#mini-chart { height: 220px !important; }
   background: linear-gradient(135deg, #f59e0b 0%, #f97316 60%, #ea580c 100%);
   border: none;
   box-shadow: 0 6px 24px rgba(234,88,12,.35), 0 2px 8px rgba(0,0,0,.15);
+  padding: 10px 16px;
 }
 #solar-util-card .section-title {
   color: #fff;
   border-bottom-color: rgba(255,255,255,.35);
+  font-size: 12px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+}
+#solar-util-card #self-rate-card,
+#solar-util-card #surplus-rate-card {
+  padding: 8px 12px !important;
+}
+#self-rate-val,
+#surplus-rate-val {
+  font-size: 26px !important;
 }
 @media (max-width: 768px) {
   #solar-util-card {
-    position: -webkit-sticky !important;
-    position: sticky !important;
-    top: 0;
-    padding: 12px 14px;
+    padding: 8px 12px;
   }
   #solar-util-card .section-title {
-    font-size: 12px;
-    margin-bottom: 10px;
-    padding-bottom: 6px;
-  }
-  #solar-util-card #self-rate-card,
-  #solar-util-card #surplus-rate-card {
-    padding: 10px 8px !important;
-  }
-  #self-rate-val,
-  #surplus-rate-val {
-    font-size: 30px !important;
+    font-size: 11px;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
   }
 }
 #test-env-ribbon {
@@ -399,21 +400,24 @@ canvas#mini-chart { height: 220px !important; }
 
     <div class="section-card" id="solar-util-card">
       <div class="section-title">☀️ 太陽光の活用割合</div>
-      <!-- 自家消費率 / 余剰率 グローバルサマリー -->
-      <div class="grid2" style="gap:10px">
-        <div id="self-rate-card" style="border-radius:12px;padding:16px 12px;border:2px solid var(--dg);background:var(--mg);box-shadow:0 2px 8px rgba(0,0,0,.10)">
-          <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:4px">自家消費率</div>
-          <div style="font-size:42px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em"><span id="self-rate-val">-</span><span style="font-size:22px;font-weight:700">%</span></div>
-          <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:6px">発電のうちご家庭で使う割合</div>
-          <div id="self-rate-warning" style="display:none;margin-top:8px;font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.25);border-radius:6px;padding:6px 8px;line-height:1.5">
-            ⚠ 自家消費率が100%を超えています<br>
-            <span style="font-weight:400;opacity:.9">発電量・自家消費量・蓄電池放電量の前提を見直してください</span>
+      <!-- 自家消費率 / 余剰率 横並びコンパクト表示 -->
+      <div style="display:flex;gap:8px">
+        <div id="self-rate-card" style="flex:1;border-radius:10px;padding:8px 12px;border:2px solid var(--dg);background:var(--mg);box-shadow:0 2px 8px rgba(0,0,0,.10);display:flex;align-items:center;gap:10px">
+          <div style="font-size:26px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em;white-space:nowrap"><span id="self-rate-val">-</span><span style="font-size:15px;font-weight:700">%</span></div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.9)">自家消費率</div>
+            <div style="font-size:10px;color:rgba(255,255,255,.65)">宅内で使う割合</div>
+          </div>
+          <div id="self-rate-warning" style="display:none;margin-left:auto;font-size:10px;font-weight:700;color:#fff;background:rgba(0,0,0,.25);border-radius:5px;padding:4px 6px;line-height:1.4">
+            ⚠ 100%超<br><span style="font-weight:400;opacity:.85">前提を見直して</span>
           </div>
         </div>
-        <div id="surplus-rate-card" style="border-radius:12px;padding:16px 12px;border:2px solid #0d9488;background:#0f766e;box-shadow:0 2px 8px rgba(0,0,0,.10)">
-          <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:4px">余剰率</div>
-          <div style="font-size:42px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em"><span id="surplus-rate-val">-</span><span style="font-size:22px;font-weight:700">%</span></div>
-          <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:6px">発電のうち売電に回る割合</div>
+        <div id="surplus-rate-card" style="flex:1;border-radius:10px;padding:8px 12px;border:2px solid #0d9488;background:#0f766e;box-shadow:0 2px 8px rgba(0,0,0,.10);display:flex;align-items:center;gap:10px">
+          <div style="font-size:26px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em;white-space:nowrap"><span id="surplus-rate-val">-</span><span style="font-size:15px;font-weight:700">%</span></div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.9)">余剰率</div>
+            <div style="font-size:10px;color:rgba(255,255,255,.65)">売電に回る割合</div>
+          </div>
         </div>
       </div>
     </div>
