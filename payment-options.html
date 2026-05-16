@@ -127,7 +127,7 @@ body { font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; backgroun
         </div>
         <div class="field">
           <label>頭金（万円）</label>
-          <input type="number" id="po-dp" value="0" min="0" step="10" oninput="updateLoan()">
+          <input type="number" id="po-dp" value="0" min="0" step="10" oninput="updateLoan();updateSlideLink()">
         </div>
       </div>
       <div class="dp-borrow">実際の借入額：<b id="po-borrow-val">-</b></div>
@@ -526,15 +526,35 @@ function calcPpa() {
     ? fmt(rate * kwh) : '-';
 }
 
+// ── slide-link URL を po-dp の最新値込みで更新 ──
+function updateSlideLink() {
+  const base = new URLSearchParams(location.search);
+  const dpVal = parseFloat(document.getElementById('po-dp').value) || 0;
+  if (dpVal > 0) {
+    base.set('downPayment', dpVal);
+  } else {
+    base.delete('downPayment');
+  }
+  const qs = base.toString();
+  document.getElementById('slide-link').href = 'loan-presentation.html' + (qs ? '?' + qs : '');
+}
+
 // ── 初期化 ──
 updateLoan();
 
 window.onload = () => {
-  const q = location.search;
-  if (q) document.getElementById('slide-link').href = 'loan-presentation.html' + q;
+  // URL から downPayment を取得して po-dp に反映
+  const urlDp = parseFloat(_urlParams.get('downPayment')) || 0;
+  if (urlDp > 0) {
+    const dpInput = document.getElementById('po-dp');
+    if (dpInput) dpInput.value = urlDp;
+  }
+  // slide-link を更新（downPayment 含む）
+  updateSlideLink();
   setTimeout(() => {
     document.getElementById('po-cost').value = Math.round(_urlTotalCost - subsidy);
     updateLoan();
+    updateSlideLink();
   }, 50);
 };
 
