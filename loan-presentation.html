@@ -329,14 +329,18 @@ html,body{
 .bc-desc{font-size:16px;color:var(--w60);line-height:1.65}
 .s7-bot{
   margin-top:16px;
-  background:linear-gradient(90deg,rgba(27,67,50,.06),rgba(27,67,50,.12),rgba(27,67,50,.06));
-  border:1px solid rgba(27,67,50,.2);border-radius:12px;
-  padding:16px 40px;display:flex;justify-content:space-between;align-items:flex-start;gap:24px;
+  background:linear-gradient(135deg,#1B4332 0%,#2D6A4F 100%);
+  border-radius:14px;
+  padding:20px 36px 16px;
+  box-shadow:0 4px 20px rgba(27,67,50,.3);
 }
-.sb-left .sb-ttl{font-size:18px;font-weight:700;color:var(--w)}
-.sb-left .sb-note{font-size:15px;color:var(--w60);margin-top:4px}
-.sb-left .sb-notice{font-size:11px;color:var(--w30);margin-top:6px;line-height:1.55}
-.sb-val{font-size:38px;font-weight:900;color:var(--gold-light);white-space:nowrap;padding-top:4px}
+.s7-bot-top{display:flex;justify-content:space-between;align-items:center;gap:24px}
+.sb-left .sb-ttl{font-size:18px;font-weight:700;color:#fff;letter-spacing:.02em}
+.sb-left .sb-note{font-size:15px;color:rgba(255,255,255,.75);margin-top:5px;line-height:1.5}
+.sb-right{display:flex;align-items:baseline;gap:3px;flex-shrink:0}
+.sb-num{font-size:54px;font-weight:900;color:#fbbf24;line-height:1}
+.sb-unit{font-size:26px;font-weight:700;color:#fbbf24;line-height:1}
+.sb-caution{margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.18);font-size:11.5px;color:rgba(255,255,255,.65);line-height:1.7}
 </style>
 </head>
 <body>
@@ -554,12 +558,16 @@ html,body{
           </div>
         </div>
         <div class="s7-bot">
-          <div class="sb-left">
-            <div class="sb-ttl">完済後20年間（16〜35年目）の総節約額</div>
-            <div class="sb-note">電気代の負担を大幅軽減 × 導入から20年間の長期メーカー保証</div>
-            <div class="sb-notice">※20年目までは長期保証で守られます。20年以降の機器更新や故障対応費用についても、この<span id="s7-bot-note-val">466万円</span>の節約メリットの中からスマートに準備可能です。</div>
+          <div class="s7-bot-top">
+            <div class="sb-left">
+              <div class="sb-ttl">完済後20年間（16〜35年目）の総節約額</div>
+              <div class="sb-note">電気代の負担を大幅軽減 × 導入から20年間の長期メーカー保証</div>
+            </div>
+            <div class="sb-right">
+              <span class="sb-num" id="s7-20y">466</span><span class="sb-unit">万円</span>
+            </div>
           </div>
-          <div class="sb-val" id="s7-20y">466万円</div>
+          <div class="sb-caution">※20年目までは長期メーカー保証で守られます。20年目以降の機器更新や故障対応費用についても、この466万円の節約メリットの中からスマートに準備可能です。</div>
         </div>
       </div>
     </div>
@@ -718,8 +726,7 @@ const twenty7  = Math.round(annual7 * 20 / 10000);
 document.getElementById('s7-monthly').textContent = fmt(monthlySavePost);
 document.getElementById('s7-annual').textContent  = (annual7 / 10000).toFixed(1);
 document.getElementById('s7-10y').textContent     = ten7;
-document.getElementById('s7-20y').textContent          = twenty7 + '万円';
-document.getElementById('s7-bot-note-val').textContent = twenty7 + '万円';
+document.getElementById('s7-20y').textContent          = twenty7;
 
 /* ─────────────────────────────────────────
    20-Year Chart (Slide 6)
