@@ -553,10 +553,8 @@ html,body{
 /* ─────────────────────────────────────────
    URL Parameters
 ───────────────────────────────────────── */
-const RATE   = 0.04;         // 年利 4.0%
-const MONTHS = 180;          // 15年
-const RESIDUAL = 1600;       // 完済後も残る電気代/月
-const CURRENT  = 21000;      // 現在の電気代/月
+const RATE   = 0.04;
+const MONTHS = 180;
 
 function calcPMT(principal) {
   const r = RATE / 12;
@@ -574,7 +572,10 @@ const params       = new URLSearchParams(location.search);
 const totalCostRaw = parseInt(params.get('totalCost')) || 2800000;
 const subsidyRaw   = parseInt(params.get('subsidy'))   || 0;   // 0 = 補助金なし
 const hasSubsidy   = subsidyRaw > 0;
-const netCost      = totalCostRaw - subsidyRaw;
+const netCost         = totalCostRaw - subsidyRaw;
+const RESIDUAL        = parseFloat(params.get('monthlyRemainingCost')) || 1600;
+const CURRENT         = 21000;
+const SALE_INCOME_MON = parseFloat(params.get('saleIncome')) || 0;
 
 /* 補助金が0の場合はスライド3をDOMから削除 */
 if (!hasSubsidy) {
@@ -617,6 +618,16 @@ document.getElementById('s5-interest').textContent = fmt(totalInterest) + ' 円'
 document.getElementById('s5-pmt-note').textContent = '実質' + Math.round(netCost/10000) + '万円 / 15年想定';
 document.getElementById('s5-sub-note').textContent = Math.round(subsidyRaw/10000) + '万円';
 
+/* ── Slide 6: s6-total-save を事前計算（グラフ構築前から正しい値を表示） ── */
+{
+  const _loanYrs  = Math.round(MONTHS / 12);
+  const _effLoan  = pmt + RESIDUAL - SALE_INCOME_MON;
+  const _effPost  = RESIDUAL - SALE_INCOME_MON;
+  const _trad20   = CURRENT * 12 * 20;
+  const _solar20  = _effLoan * 12 * _loanYrs + _effPost * 12 * (20 - _loanYrs);
+  document.getElementById('s6-total-save').textContent = Math.round((_trad20 - _solar20) / 10000) + '万円';
+}
+
 /* ── Slide 7 ── */
 const annual7  = monthlySavePost * 12;
 const ten7     = Math.round(annual7 * 10 / 10000);
@@ -635,14 +646,18 @@ function build20YChart() {
   const solar  = [];
   const saves  = [];
 
+  const loanYears        = Math.round(MONTHS / 12);
+  const effectiveLoanMon = pmt + RESIDUAL - SALE_INCOME_MON;
+  const effectivePostMon = RESIDUAL - SALE_INCOME_MON;
+
   for (let y = 0; y <= 20; y++) {
     labels.push(y === 0 ? '現在' : y + '年目');
     const tradCum  = CURRENT * 12 * y;
     let solarCum;
-    if (y <= 15) {
-      solarCum = newMonthly * 12 * y;
+    if (y <= loanYears) {
+      solarCum = effectiveLoanMon * 12 * y;
     } else {
-      solarCum = newMonthly * 12 * 15 + RESIDUAL * 12 * (y - 15);
+      solarCum = effectiveLoanMon * 12 * loanYears + effectivePostMon * 12 * (y - loanYears);
     }
     trad.push(Math.round(tradCum / 10000));
     solar.push(Math.round(solarCum / 10000));
@@ -650,7 +665,7 @@ function build20YChart() {
   }
 
   const totalSave = saves[20];
-  document.getElementById('s6-total-save').textContent = totalSave.toFixed(1) + '万円';
+  document.getElementById('s6-total-save').textContent = totalSave + '万円';
 
   const ctx = document.getElementById('chart20y').getContext('2d');
 
@@ -937,10 +952,15 @@ async function exportToPPTX() {
   slideNum++;
   {const sl=pres.addSlide();sh(sl,`SLIDE ${String(slideNum).padStart(2,'0')} / 20-YEAR ANALYSIS`,'の累積メリット分析','20年間');
     const labels=[],tradD=[],solarD=[],saveD=[];
+    const expLoanMon=pmt+RESIDUAL-SALE_INCOME_MON;
+    const expPostMon=RESIDUAL-SALE_INCOME_MON;
+    const expLoanYrs=Math.round(MONTHS/12);
     for(let y=0;y<=20;y++){
       labels.push(y+'年');
       const tr=Math.round(CURRENT*12*y/10000);
-      const so=y<=15?Math.round(newMonthly*12*y/10000):Math.round(newMonthly*12*15/10000+RESIDUAL*12*(y-15)/10000);
+      const so=y<=expLoanYrs
+        ?Math.round(expLoanMon*12*y/10000)
+        :Math.round(expLoanMon*12*expLoanYrs/10000+expPostMon*12*(y-expLoanYrs)/10000);
       tradD.push(tr);solarD.push(so);saveD.push(tr-so);
     }
     sl.addShape(pres.ShapeType.rect,{x:7.2,y:1.2,w:2.5,h:0.88,fill:{color:NAV2},line:{color:GLD}});
