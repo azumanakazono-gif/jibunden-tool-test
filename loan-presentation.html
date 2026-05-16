@@ -8,12 +8,12 @@
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 <style>
 :root {
-  --navy:       #07111F;
-  --navy-mid:   #112240;
-  --navy-light: #1B3461;
-  --gold:       #C9A22A;
-  --gold-light: #E8C040;
-  --gold-pale:  #FFF3C4;
+  --navy:       #0b1a15;
+  --navy-mid:   #0f2a1e;
+  --navy-light: #1B4332;
+  --gold:       #52B788;
+  --gold-light: #74C69D;
+  --gold-pale:  #D8F3DC;
   --w:          #FFFFFF;
   --w85:        rgba(255,255,255,0.85);
   --w60:        rgba(255,255,255,0.60);
@@ -45,7 +45,7 @@ html,body{
   position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
   display:flex;align-items:center;gap:14px;z-index:999;
   background:rgba(0,0,0,0.55);padding:8px 22px;border-radius:40px;
-  backdrop-filter:blur(10px);border:1px solid rgba(201,162,42,0.25);
+  backdrop-filter:blur(10px);border:1px solid rgba(82,183,136,0.25);
 }
 .nbtn{
   width:40px;height:40px;border-radius:50%;
@@ -70,20 +70,20 @@ html,body{
    SLIDE 1 — TITLE
 ═══════════════════════════════════════════ */
 .s1{
-  background:linear-gradient(135deg,#040B18 0%,#0B1A36 50%,#152B5A 100%);
+  background:linear-gradient(135deg,#040f0a 0%,#0b1a15 50%,#132b1e 100%);
   align-items:center;justify-content:center;text-align:center;position:relative;
 }
 .s1-grid{
   position:absolute;inset:0;
   background-image:
-    linear-gradient(rgba(201,162,42,.055) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(201,162,42,.055) 1px,transparent 1px);
+    linear-gradient(rgba(82,183,136,.055) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(82,183,136,.055) 1px,transparent 1px);
   background-size:72px 72px;
 }
 .s1-glow{
   position:absolute;inset:0;
-  background:radial-gradient(ellipse at 25% 55%,rgba(201,162,42,.12) 0%,transparent 55%),
-             radial-gradient(ellipse at 75% 45%,rgba(27,52,97,.8) 0%,transparent 60%);
+  background:radial-gradient(ellipse at 25% 55%,rgba(82,183,136,.12) 0%,transparent 55%),
+             radial-gradient(ellipse at 75% 45%,rgba(27,67,50,.8) 0%,transparent 60%);
 }
 .s1-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center}
 .s1-badge{
@@ -101,7 +101,7 @@ html,body{
 .s1-tags{display:flex;gap:14px;justify-content:center}
 .s1-tag{
   padding:9px 22px;
-  background:rgba(201,162,42,.09);border:1px solid rgba(201,162,42,.3);
+  background:rgba(82,183,136,.09);border:1px solid rgba(82,183,136,.3);
   border-radius:8px;color:var(--gold-light);font-size:14px;font-weight:600;
 }
 .s1-corner{
@@ -119,14 +119,14 @@ html,body{
   display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
 }
 .cb.before{background:linear-gradient(135deg,#250808,#3A1111);border:1px solid rgba(232,64,64,.3)}
-.cb.after{background:linear-gradient(135deg,#071E12,#0F2E1C);border:1px solid rgba(201,162,42,.4)}
+.cb.after{background:linear-gradient(135deg,#071E12,#0F2E1C);border:1px solid rgba(82,183,136,.4)}
 .cb-icon{font-size:44px;margin-bottom:14px}
 .cb-tag{
   font-size:12px;font-weight:700;letter-spacing:.12em;padding:4px 14px;
   border-radius:20px;margin-bottom:14px;display:inline-block;
 }
 .cb.before .cb-tag{background:rgba(232,64,64,.15);color:#f87171}
-.cb.after .cb-tag{background:rgba(201,162,42,.15);color:var(--gold-light)}
+.cb.after .cb-tag{background:rgba(82,183,136,.15);color:var(--gold-light)}
 .cb-main{font-size:30px;font-weight:800;line-height:1.2;margin-bottom:12px}
 .cb.before .cb-main{color:#f87171}
 .cb.after .cb-main{color:var(--gold-light)}
@@ -144,12 +144,12 @@ html,body{
 .s3{background:var(--navy);padding:52px 72px}
 .inv-flow{display:flex;align-items:center;justify-content:center;gap:28px;flex:1}
 .ib{border-radius:16px;padding:40px 44px;text-align:center;min-width:210px}
-.ib.total{background:linear-gradient(135deg,#112240,#1B3461);border:1px solid var(--w10)}
+.ib.total{background:linear-gradient(135deg,#0f2a1e,#1B4332);border:1px solid var(--w10)}
 .ib.sub{background:linear-gradient(135deg,#071E12,#0F2E1C);border:1px solid rgba(46,204,113,.3)}
 .ib.net{
-  background:linear-gradient(135deg,#1A1100,#2D1E00);
-  border:2px solid rgba(201,162,42,.6);
-  box-shadow:0 0 48px rgba(201,162,42,.18);
+  background:linear-gradient(135deg,#0a1f15,#112e1e);
+  border:2px solid rgba(82,183,136,.6);
+  box-shadow:0 0 48px rgba(82,183,136,.18);
 }
 .ib-lbl{font-size:12px;font-weight:700;letter-spacing:.15em;margin-bottom:14px}
 .ib.total .ib-lbl{color:var(--w60)}
@@ -166,7 +166,7 @@ html,body{
 .inv-op.eq{color:var(--gold)}
 .inv-sub-note{
   text-align:center;margin-top:32px;font-size:14px;color:var(--w60);
-  background:rgba(201,162,42,.07);border:1px solid rgba(201,162,42,.2);
+  background:rgba(82,183,136,.07);border:1px solid rgba(82,183,136,.2);
   border-radius:8px;padding:12px 24px;
 }
 
@@ -180,7 +180,7 @@ html,body{
   display:flex;flex-direction:column;border:1px solid var(--w10);
 }
 .cf-box.cur{background:linear-gradient(135deg,#1A0606,#2D1010);border-color:rgba(232,64,64,.2)}
-.cf-box.nw{background:linear-gradient(135deg,#071223,#112240);border-color:rgba(201,162,42,.3)}
+.cf-box.nw{background:linear-gradient(135deg,#071a12,#0f2a1e);border-color:rgba(82,183,136,.3)}
 .cf-lbl{font-size:12px;font-weight:700;letter-spacing:.15em;margin-bottom:20px}
 .cf-box.cur .cf-lbl{color:#e87070}
 .cf-box.nw .cf-lbl{color:var(--gold)}
@@ -199,8 +199,8 @@ html,body{
 }
 .cf-vs{font-size:22px;font-weight:900;color:var(--w30);letter-spacing:.1em}
 .cf-save-box{
-  background:linear-gradient(135deg,rgba(201,162,42,.14),rgba(201,162,42,.06));
-  border:1px solid rgba(201,162,42,.35);border-radius:14px;
+  background:linear-gradient(135deg,rgba(82,183,136,.14),rgba(82,183,136,.06));
+  border:1px solid rgba(82,183,136,.35);border-radius:14px;
   padding:22px 28px;text-align:center;
 }
 .cf-save-lbl{font-size:12px;color:var(--gold);font-weight:700;letter-spacing:.1em;margin-bottom:8px}
@@ -216,15 +216,15 @@ html,body{
 .rep-left{display:flex;flex-direction:column;align-items:center;min-width:300px}
 .rep-circle{
   width:264px;height:264px;border-radius:50%;
-  background:linear-gradient(135deg,#1A1100,#2D1E00);
+  background:linear-gradient(135deg,#0a1f15,#112e1e);
   border:3px solid var(--gold);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   text-align:center;position:relative;
-  box-shadow:0 0 72px rgba(201,162,42,.22),inset 0 0 40px rgba(201,162,42,.06);
+  box-shadow:0 0 72px rgba(82,183,136,.22),inset 0 0 40px rgba(82,183,136,.06);
 }
 .rep-circle::before{
   content:'';position:absolute;inset:7px;border-radius:50%;
-  border:1px solid rgba(201,162,42,.22);
+  border:1px solid rgba(82,183,136,.22);
 }
 .rc-lbl{font-size:12px;color:var(--gold);font-weight:700;letter-spacing:.1em;margin-bottom:6px}
 .rc-val{font-size:50px;font-weight:900;color:var(--gold-light);line-height:1}
@@ -257,7 +257,7 @@ html,body{
 .c-badge .dot-badge{width:18px;height:4px;border-radius:2px}
 .chart-annot{
   position:absolute;right:24px;top:20px;
-  background:rgba(201,162,42,.13);border:1px solid rgba(201,162,42,.4);
+  background:rgba(82,183,136,.13);border:1px solid rgba(82,183,136,.4);
   border-radius:8px;padding:10px 16px;text-align:right;
 }
 .ca-lbl{font-size:11px;color:var(--gold);font-weight:700;letter-spacing:.1em}
@@ -269,17 +269,17 @@ html,body{
    SLIDE 7 — POST-PAYOFF
 ═══════════════════════════════════════════ */
 .s7{
-  background:linear-gradient(145deg,#07111F 0%,#112240 55%,#07111F 100%);
+  background:linear-gradient(145deg,#0b1a15 0%,#0f2a1e 55%,#0b1a15 100%);
   padding:52px 72px;position:relative;
 }
 .s7::before{
   content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse at 50% 120%,rgba(201,162,42,.12) 0%,transparent 65%);
+  background:radial-gradient(ellipse at 50% 120%,rgba(82,183,136,.12) 0%,transparent 65%);
 }
 .s7-inner{position:relative;z-index:1;flex:1;display:flex;flex-direction:column}
 .ben-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;flex:1}
 .ben-card{
-  background:rgba(255,255,255,.03);border:1px solid rgba(201,162,42,.2);
+  background:rgba(255,255,255,.03);border:1px solid rgba(82,183,136,.2);
   border-radius:16px;padding:28px 24px;
   display:flex;flex-direction:column;align-items:center;text-align:center;
   position:relative;overflow:hidden;
@@ -295,8 +295,8 @@ html,body{
 .bc-desc{font-size:13px;color:var(--w60);line-height:1.65}
 .s7-bot{
   margin-top:24px;
-  background:linear-gradient(90deg,rgba(201,162,42,.08),rgba(201,162,42,.18),rgba(201,162,42,.08));
-  border:1px solid rgba(201,162,42,.3);border-radius:12px;
+  background:linear-gradient(90deg,rgba(82,183,136,.08),rgba(82,183,136,.18),rgba(82,183,136,.08));
+  border:1px solid rgba(82,183,136,.3);border-radius:12px;
   padding:18px 40px;display:flex;justify-content:space-between;align-items:center;
 }
 .sb-left .sb-ttl{font-size:16px;font-weight:700;color:var(--w)}
@@ -481,8 +481,8 @@ html,body{
       </div>
       <div class="chart-wrap">
         <div class="chart-badges">
-          <div class="c-badge"><div class="dot-badge" style="background:#e87070"></div>従来の累積電気代</div>
-          <div class="c-badge"><div class="dot-badge" style="background:#4080D0"></div>ローン導入後の累積支払</div>
+          <div class="c-badge"><div class="dot-badge" style="background:#e87070"></div>従来の累積電気代（点線）</div>
+          <div class="c-badge"><div class="dot-badge" style="background:#2D6A4F"></div>ローン導入後の累積支払</div>
           <div class="c-badge"><div class="dot-badge" style="background:var(--gold)"></div>累積節約額</div>
           <div style="margin-left:auto;font-size:12px;color:var(--w30)">縦線 = 完済タイミング（15年目）</div>
         </div>
@@ -545,7 +545,7 @@ html,body{
     <div class="dots" id="dotsEl"></div>
     <span class="counter" id="counterEl">1 / 7</span>
     <button class="nbtn" id="btnNext">▶</button>
-    <button class="nbtn" onclick="exportToPPTX()" title="PPTXダウンロード" style="background:rgba(201,162,42,.18);font-size:14px">📥</button>
+    <button class="nbtn" onclick="exportToPPTX()" title="PPTXダウンロード" style="background:rgba(82,183,136,.18);font-size:14px">📥</button>
   </div>
 </div>
 
@@ -690,7 +690,7 @@ function build20YChart() {
       const {ctx: c, chartArea: {top, bottom}} = chart;
       c.save();
       c.setLineDash([6, 4]);
-      c.strokeStyle = 'rgba(201,162,42,0.55)';
+      c.strokeStyle = 'rgba(82,183,136,0.55)';
       c.lineWidth = 1.5;
       c.beginPath();
       c.moveTo(x, top);
@@ -698,7 +698,7 @@ function build20YChart() {
       c.stroke();
       c.setLineDash([]);
       c.font = '700 11px sans-serif';
-      c.fillStyle = 'rgba(201,162,42,0.9)';
+      c.fillStyle = 'rgba(82,183,136,0.9)';
       c.textAlign = 'center';
       c.fillText('✓ 完済', x, top - 6);
       c.restore();
@@ -719,27 +719,27 @@ function build20YChart() {
           tension: 0.3,
           pointRadius: 3,
           borderWidth: 2,
+          borderDash: [6, 4],
         },
         {
           label: 'ローン導入後の累積支払',
           data: solar,
-          borderColor: '#4080D0',
-          backgroundColor: 'rgba(64,128,208,0.08)',
+          borderColor: '#2D6A4F',
+          backgroundColor: 'rgba(45,106,79,0.08)',
           fill: false,
           tension: 0.3,
           pointRadius: 3,
-          borderWidth: 2,
+          borderWidth: 2.5,
         },
         {
           label: '累積節約額',
           data: saves,
-          borderColor: '#C9A22A',
-          backgroundColor: 'rgba(201,162,42,0.12)',
+          borderColor: '#52B788',
+          backgroundColor: 'rgba(82,183,136,0.1)',
           fill: true,
           tension: 0.3,
           pointRadius: 3,
           borderWidth: 2.5,
-          borderDash: [],
         },
       ]
     },
@@ -751,10 +751,10 @@ function build20YChart() {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: 'rgba(7,17,31,0.92)',
-          titleColor: '#C9A22A',
+          backgroundColor: 'rgba(7,20,14,0.92)',
+          titleColor: '#52B788',
           bodyColor: 'rgba(255,255,255,0.8)',
-          borderColor: 'rgba(201,162,42,0.3)',
+          borderColor: 'rgba(82,183,136,0.3)',
           borderWidth: 1,
           callbacks: {
             label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(1) + '万円'
@@ -845,8 +845,8 @@ document.addEventListener('keydown', e => {
 ───────────────────────────────────────── */
 async function exportToPPTX() {
   const _f = n => Math.round(n).toLocaleString('ja-JP');
-  const NAV='07111F',NAV2='112240',NAV3='1B3461';
-  const GLD='C9A22A',GLD2='E8C040';
+  const NAV='0b1a15',NAV2='0f2a1e',NAV3='1B4332';
+  const GLD='52B788',GLD2='74C69D';
   const WHT='FFFFFF',MUT='9CA3AF',RED='E84040';
   const newMonthly = pmt + RESIDUAL;
   const saving     = Math.max(0, CURRENT - newMonthly);
@@ -910,7 +910,7 @@ async function exportToPPTX() {
       const boxes=[
         {x:0.4,label:'工事総額',val:grossMan,tc:WHT,lc:MUT,fill:NAV2,bd:WHT,note:'太陽光パネル＋工事費\n一式込みの正直価格'},
         {x:3.7,label:'補助金（国・自治体）',val:subMan,tc:'5cd985',lc:'5cd985',fill:'071E12',bd:'2ECC71',note:'各種補助金を\nフル活用した場合'},
-        {x:7.0,label:'お客様の実質負担',val:netMan,tc:GLD2,lc:GLD,fill:'1A1100',bd:GLD,note:'この金額をローンで\n分割してスタート'},
+        {x:7.0,label:'お客様の実質負担',val:netMan,tc:GLD2,lc:GLD,fill:'0a1f15',bd:GLD,note:'この金額をローンで\n分割してスタート'},
       ];
       boxes.forEach((b,i)=>{
         if(i>0)sl.addText(i===1?'－':'＝',{x:b.x-0.62,y:2.2,w:0.55,h:0.85,fontSize:28,bold:true,color:i===1?'f87171':GLD,align:'center',fontFace:'Meiryo',valign:'middle'});
@@ -937,7 +937,7 @@ async function exportToPPTX() {
     sl.addText('月々お得',{x:3.98,y:2.73,w:2.08,h:0.26,fontSize:11,bold:true,color:GLD,align:'center',fontFace:'Meiryo',margin:0});
     sl.addText(`${_f(saving)}`,{x:3.98,y:2.99,w:2.08,h:0.6,fontSize:34,bold:true,color:GLD2,align:'center',fontFace:'Meiryo',margin:0});
     sl.addText('円',{x:3.98,y:3.59,w:2.08,h:0.22,fontSize:14,bold:true,color:GLD,align:'center',fontFace:'Meiryo',margin:0});
-    sl.addShape(pres.ShapeType.rect,{x:6.12,y:1.2,w:3.42,h:3.85,fill:{color:'071223'},line:{color:GLD}});
+    sl.addShape(pres.ShapeType.rect,{x:6.12,y:1.2,w:3.42,h:3.85,fill:{color:'071a12'},line:{color:GLD}});
     sl.addText('✦ ローン導入後の月額合計',{x:6.22,y:1.32,w:3.22,h:0.3,fontSize:11,bold:true,color:GLD,fontFace:'Meiryo'});
     sl.addText(`${(newMonthly/10000).toFixed(2)}`,{x:6.22,y:1.68,w:2.3,h:0.88,fontSize:56,bold:true,color:GLD2,fontFace:'Meiryo',margin:0});
     sl.addText('万円/月',{x:8.52,y:2.18,w:1.02,h:0.42,fontSize:14,bold:true,color:GLD2,fontFace:'Meiryo',valign:'bottom'});
@@ -947,14 +947,14 @@ async function exportToPPTX() {
   /* Slide 5: Repayment */
   slideNum++;
   {const sl=pres.addSlide();sh(sl,`SLIDE ${String(slideNum).padStart(2,'0')} / REPAYMENT`,'シミュレーション','返済額');
-    sl.addShape(pres.ShapeType.rect,{x:0.4,y:1.3,w:4.0,h:3.75,fill:{color:'1A1100'},line:{color:GLD}});
+    sl.addShape(pres.ShapeType.rect,{x:0.4,y:1.3,w:4.0,h:3.75,fill:{color:'0a1f15'},line:{color:GLD}});
     sl.addText('月々のご返済額',{x:0.5,y:1.78,w:3.8,h:0.35,fontSize:13,bold:true,color:GLD,align:'center',fontFace:'Meiryo',margin:0});
     sl.addText(`${_f(pmt)}`,{x:0.5,y:2.18,w:3.8,h:0.88,fontSize:44,bold:true,color:GLD2,align:'center',fontFace:'Meiryo',margin:0});
     sl.addText('円 / 月',{x:0.5,y:3.06,w:3.8,h:0.36,fontSize:18,bold:true,color:GLD,align:'center',fontFace:'Meiryo',margin:0});
     sl.addText(`実質${Math.round(netCost/10000)}万円 / 15年想定`,{x:0.5,y:3.52,w:3.8,h:0.28,fontSize:12,color:MUT,align:'center',fontFace:'Meiryo',margin:0});
     [['借入額（実質負担）',`${_f(netCost)}円`],['返済期間','15年（180回払い）'],['適用金利（想定）','年 4.0%'],['月々返済額',`${_f(pmt)}円`],['総返済額',`${_f(totalPaid)}円`],['支払利息総額',`${_f(totalInt)}円`]].forEach((r,i)=>{
       const ty=1.38+i*0.52;const hl=i===3;
-      sl.addShape(pres.ShapeType.rect,{x:4.6,y:ty,w:4.95,h:0.48,fill:{color:hl?'1A1100':NAV2},line:{color:hl?GLD:'2A3A5A'}});
+      sl.addShape(pres.ShapeType.rect,{x:4.6,y:ty,w:4.95,h:0.48,fill:{color:hl?'0a1f15':NAV2},line:{color:hl?GLD:'1a3a2a'}});
       sl.addText(r[0],{x:4.7,y:ty,w:2.3,h:0.48,fontSize:13,color:MUT,fontFace:'Meiryo',valign:'middle'});
       sl.addText(r[1],{x:7.1,y:ty,w:2.35,h:0.48,fontSize:hl?18:14,bold:true,color:hl?GLD2:WHT,fontFace:'Meiryo',valign:'middle',align:'right'});
     });
@@ -980,7 +980,7 @@ async function exportToPPTX() {
     sl.addText(`${saveD[20]}万円`,{x:7.2,y:1.5,w:2.5,h:0.5,fontSize:22,bold:true,color:GLD2,align:'center',fontFace:'Meiryo',margin:0});
     sl.addChart(pres.ChartType.line,
       [{name:'従来の累積電気代',labels,values:tradD},{name:'ローン導入後の累積支払',labels,values:solarD},{name:'累積節約額',labels,values:saveD}],
-      {x:0.4,y:1.2,w:9.2,h:3.9,chartColors:['E87070','4080D0','C9A22A'],lineDataSymbol:'none',showLegend:true,legendPos:'t',legendFontSize:11,showValue:false,valAxisTitle:'累積額（万円）',plotAreaFillColor:'EFF4FF'});
+      {x:0.4,y:1.2,w:9.2,h:3.9,chartColors:['E87070','2D6A4F','52B788'],lineDataSymbol:'none',showLegend:true,legendPos:'t',legendFontSize:11,showValue:false,valAxisTitle:'累積額（万円）',plotAreaFillColor:'EAF4EF'});
   }
 
   /* Slide 7: Post-payoff */
