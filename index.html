@@ -280,14 +280,6 @@ canvas#mini-chart { height: 220px !important; }
       <h1 id="main-title">お客様情報を入力してください</h1>
       <div class="sub">入力内容をもとにPPTXを自動生成します</div>
     </div>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
-      <button onclick="generatePPTX('real')" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;max-width:320px;padding:14px 24px;background:#1d4ed8;color:#fff;font-size:15px;font-weight:700;border:none;border-radius:10px;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(29,78,216,.35);letter-spacing:.03em">
-        <span style="font-size:18px">👤</span> 実データ版を出力
-      </button>
-      <button onclick="generatePPTX('model')" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;max-width:320px;padding:8px 16px;background:transparent;color:#9ca3af;font-size:12px;font-weight:400;border:1px solid #d1d5db;border-radius:8px;cursor:pointer;font-family:inherit">
-        <span style="font-size:13px">🔬</span> モデルケース版を出力（サンプル）
-      </button>
-    </div>
   </div>
 
   <!-- ── 入力フォーム ── -->
@@ -1142,6 +1134,16 @@ canvas#mini-chart { height: 220px !important; }
           🛡️ 保証内容 (Warranty Details)
           <span style="font-size:10px;opacity:.8">↗</span>
         </a>
+      </div>
+
+      <!-- アクションエリア（ページ下部） -->
+      <div style="display:flex;gap:12px;margin-top:28px;flex-wrap:wrap">
+        <button onclick="generatePPTX('real')" style="flex:1;min-width:200px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 24px;background:#1d4ed8;color:#fff;font-size:15px;font-weight:700;border:none;border-radius:10px;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(29,78,216,.3);letter-spacing:.03em">
+          👤 実データ版PPTXを出力
+        </button>
+        <button onclick="generatePPTX('model')" style="flex:1;min-width:200px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:14px 24px;background:#f1f5f9;color:#475569;font-size:14px;font-weight:600;border:1.5px solid #cbd5e1;border-radius:10px;cursor:pointer;font-family:inherit">
+          🔬 モデルケース版を出力（サンプル）
+        </button>
       </div>
     </div>
 
