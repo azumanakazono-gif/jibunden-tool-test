@@ -604,11 +604,27 @@ const netCost         = totalCostRaw - subsidyRaw;
 const RESIDUAL        = parseFloat(params.get('monthlyRemainingCost')) || 1600;
 const CURRENT         = 21000;
 const SALE_INCOME_MON = parseFloat(params.get('saleIncome')) || 0;
-const SURPLUS_KWH_YEAR = parseFloat(params.get('surplusKwhYear')) || 0;
-const FIT_YEARS        = parseInt(params.get('fitYears')) || 10;
-const POST_FIT_SALE_MON = SURPLUS_KWH_YEAR > 0
-  ? Math.round(SURPLUS_KWH_YEAR * 7 / 12)
-  : SALE_INCOME_MON;
+const SURPLUS_KWH_YEAR  = parseFloat(params.get('surplusKwhYear')) || 0;
+const FIT_YEARS         = parseInt(params.get('fitYears')) || 10;
+const FIT_EARLY_YEARS   = parseInt(params.get('fitEarlyYears')) || 0;  // 0 = no split (e.g. fy2024)
+const LATE_FIT_RATE     = parseFloat(params.get('fitLateRate')) || 8.3; // 円/kWh (fy2026: 5-10年目)
+const POST_FIT_RATE     = 7; // 円/kWh 卒FIT固定
+/* 月額売電収入: FIT前半/後半/卒FIT */
+const SALE_INCOME_EARLY = SALE_INCOME_MON; // params.saleIncome = FIT前半の月額
+const SALE_INCOME_LATE  = SURPLUS_KWH_YEAR > 0
+  ? Math.round(SURPLUS_KWH_YEAR * LATE_FIT_RATE / 12) : SALE_INCOME_MON;
+const SALE_INCOME_POST  = SURPLUS_KWH_YEAR > 0
+  ? Math.round(SURPLUS_KWH_YEAR * POST_FIT_RATE / 12)  : SALE_INCOME_MON;
+/* 後方互換: POST_FIT_SALE_MON は SALE_INCOME_POST に統一 */
+const POST_FIT_SALE_MON = SALE_INCOME_POST;
+
+/* fy2026/under10 スケジュール対応: 年→月額売電収入 */
+function fitSaleForYear(yr) {
+  if (SURPLUS_KWH_YEAR <= 0) return SALE_INCOME_MON; // 固定モード
+  if (yr > FIT_YEARS)                                 return SALE_INCOME_POST;
+  if (FIT_EARLY_YEARS > 0 && yr > FIT_EARLY_YEARS)   return SALE_INCOME_LATE;
+  return SALE_INCOME_EARLY;
+}
 
 /* 補助金が0の場合はスライド3をDOMから削除 */
 if (!hasSubsidy) {
@@ -624,17 +640,17 @@ const annualSaving20  = (CURRENT - RESIDUAL) * 12;
 const monthlySavePost = CURRENT - RESIDUAL;
 
 /* ── Shared cashflow calculations (used in Slides 3 & 4) ── */
-const jissitsuMonthly = pmt + RESIDUAL - SALE_INCOME_MON;
+const jissitsuMonthly = pmt + RESIDUAL - SALE_INCOME_EARLY;
 const saving4         = Math.max(0, CURRENT - jissitsuMonthly);
 const loanYears       = Math.round(MONTHS / 12);
-const effectivePost   = RESIDUAL - SALE_INCOME_MON;
+const effectivePost   = RESIDUAL - SALE_INCOME_EARLY;
 const jissitsuAnnual  = jissitsuMonthly * 12;
 
-/* 卒FIT考慮: year-by-year cumulative solar cost */
+/* 卒FIT考慮 3段階: year-by-year cumulative solar cost */
 function calcSolarCum(upToYear) {
   let total = 0;
   for (let yr = 1; yr <= upToYear; yr++) {
-    const saleM = (SURPLUS_KWH_YEAR > 0 && yr > FIT_YEARS) ? POST_FIT_SALE_MON : SALE_INCOME_MON;
+    const saleM = fitSaleForYear(yr);
     total += (yr <= loanYears ? pmt + RESIDUAL - saleM : RESIDUAL - saleM) * 12;
   }
   return total;

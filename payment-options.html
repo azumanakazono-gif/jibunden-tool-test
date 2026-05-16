@@ -543,13 +543,39 @@ function renderChart(inputs, monthly, loanCount) {
   if (totalMan <= 0) { return; }
   const YEARS = 20;
   if (!_monthlyRemainingCost) _monthlyRemainingCost = parseFloat(_urlParams.get('monthlyRemainingCost')) || 6224;
+  const loanYrs = loanCount > 0 ? Math.round(loanCount / 12) : 0;
+
+  /* 年ごとの売電収入（円）を返すヘルパー */
+  function annualSaleIncome(yr) {
+    if (_surplusKwhYear > 0) return _surplusKwhYear * getSellPriceForYear(yr);
+    return (parseFloat(_urlSaleIncome) || 0) * 12;
+  }
+
   const labels = [], nowD = [], cashD = [], loanD = [];
+  let cashNetCumYen = 0; // 残電気代 − 売電収入（累積、下限0クランプ）
+  let loanCumYen    = 0; // ローン累積実質コスト（万円→円換算前）
+
   for (let y = 0; y <= YEARS; y++) {
     labels.push(y + '年');
     nowD.push(Math.round(monthlyBill * 12 * y / 10000));
-    cashD.push(Math.round(totalMan + ((_monthlyRemainingCost * 12 * y) - getCumulativeSaleIncomeYen(y)) / 10000));
+
+    if (y > 0) {
+      const annSale    = annualSaleIncome(y);
+      const annResidual = _monthlyRemainingCost * 12;
+      /* 現金一括: 残り電気代は必ず加算、売電は残電気代を下回らない範囲で控除 */
+      cashNetCumYen += Math.max(0, annResidual - annSale);
+      /* ローン活用: loan-presentation.html の calcSolarCum と同じロジック */
+      if (monthly > 0 && loanCount > 0) {
+        const saleMonthly = annSale / 12;
+        loanCumYen += (y <= loanYrs
+          ? (monthly + _monthlyRemainingCost - saleMonthly) * 12
+          : (_monthlyRemainingCost - saleMonthly) * 12);
+      }
+    }
+
+    cashD.push(Math.round(totalMan + cashNetCumYen / 10000));
     if (monthly > 0 && loanCount > 0) {
-      loanD.push(Math.round(dpMan + ((Math.min(y * 12, loanCount) * monthly) + (_monthlyRemainingCost * 12 * y) - getCumulativeSaleIncomeYen(y)) / 10000));
+      loanD.push(Math.round(dpMan + loanCumYen / 10000));
     }
   }
   const showLoan = loanD.length > 0;
