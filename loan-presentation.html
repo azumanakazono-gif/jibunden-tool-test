@@ -328,15 +328,15 @@ html,body{
 .bc-unit{font-size:17px;color:var(--gold);font-weight:700;margin-bottom:10px}
 .bc-desc{font-size:16px;color:var(--w60);line-height:1.65}
 .s7-bot{
-  margin-top:24px;
+  margin-top:16px;
   background:linear-gradient(90deg,rgba(27,67,50,.06),rgba(27,67,50,.12),rgba(27,67,50,.06));
   border:1px solid rgba(27,67,50,.2);border-radius:12px;
-  padding:18px 40px;display:flex;justify-content:space-between;align-items:flex-start;
+  padding:16px 40px;display:flex;justify-content:space-between;align-items:flex-start;gap:24px;
 }
-.sb-left .sb-ttl{font-size:19px;font-weight:700;color:var(--w)}
-.sb-left .sb-note{font-size:16px;color:var(--w60);margin-top:4px}
-.sb-left .sb-caution{font-size:12px;color:var(--w60);margin-top:6px;line-height:1.6}
-.sb-val{font-size:41px;font-weight:900;color:var(--gold-light)}
+.sb-left .sb-ttl{font-size:18px;font-weight:700;color:var(--w)}
+.sb-left .sb-note{font-size:15px;color:var(--w60);margin-top:4px}
+.sb-left .sb-notice{font-size:11px;color:var(--w30);margin-top:6px;line-height:1.55}
+.sb-val{font-size:38px;font-weight:900;color:var(--gold-light);white-space:nowrap;padding-top:4px}
 </style>
 </head>
 <body>
@@ -557,7 +557,7 @@ html,body{
           <div class="sb-left">
             <div class="sb-ttl">完済後20年間（16〜35年目）の総節約額</div>
             <div class="sb-note">電気代の負担を大幅軽減 × 導入から20年間の長期メーカー保証</div>
-            <div class="sb-caution">※20年目までは長期保証で守られます。20年以降の機器更新や故障対応費用についても、この466万円の節約メリットの中からスマートに準備可能です。</div>
+            <div class="sb-notice">※20年目までは長期保証で守られます。20年以降の機器更新や故障対応費用についても、この<span id="s7-bot-note-val">466万円</span>の節約メリットの中からスマートに準備可能です。</div>
           </div>
           <div class="sb-val" id="s7-20y">466万円</div>
         </div>
@@ -718,7 +718,8 @@ const twenty7  = Math.round(annual7 * 20 / 10000);
 document.getElementById('s7-monthly').textContent = fmt(monthlySavePost);
 document.getElementById('s7-annual').textContent  = (annual7 / 10000).toFixed(1);
 document.getElementById('s7-10y').textContent     = ten7;
-document.getElementById('s7-20y').textContent     = twenty7 + '万円';
+document.getElementById('s7-20y').textContent          = twenty7 + '万円';
+document.getElementById('s7-bot-note-val').textContent = twenty7 + '万円';
 
 /* ─────────────────────────────────────────
    20-Year Chart (Slide 6)
@@ -1066,9 +1067,11 @@ async function exportToPPTX() {
       sl.addText(card.desc,{x:cx+0.1,y:3.2,w:2.68,h:1.18,fontSize:12,color:MUT,align:'center',fontFace:'Meiryo',paraSpaceBefore:4});
       sl.addShape(pres.ShapeType.rect,{x:cx,y:4.55,w:2.88,h:0.02,fill:{color:GLD},line:{color:GLD}});
     });
-    sl.addShape(pres.ShapeType.rect,{x:0.4,y:4.78,w:9.2,h:0.7,fill:{color:'d1fae5'},line:{color:GLD}});
-    sl.addText('完済後20年間（16〜35年目）の総節約額',{x:0.6,y:4.78,w:5.8,h:0.7,fontSize:15,bold:true,color:WHT,fontFace:'Meiryo',valign:'middle'});
-    sl.addText(`${Math.round(postAnn*20/10000)}万円`,{x:6.5,y:4.78,w:2.9,h:0.7,fontSize:28,bold:true,color:GLD2,fontFace:'Meiryo',align:'right',valign:'middle'});
+    sl.addShape(pres.ShapeType.rect,{x:0.4,y:4.62,w:9.2,h:1.0,fill:{color:'d1fae5'},line:{color:GLD}});
+    sl.addText('完済後20年間（16〜35年目）の総節約額',{x:0.6,y:4.66,w:6.5,h:0.3,fontSize:14,bold:true,color:WHT,fontFace:'Meiryo',valign:'middle'});
+    sl.addText('電気代の負担を大幅軽減 × 導入から20年間の長期メーカー保証',{x:0.6,y:4.95,w:6.5,h:0.24,fontSize:11,color:GLD2,fontFace:'Meiryo'});
+    sl.addText(`※20年以降の機器更新・故障対応費用も、この${Math.round(postAnn*20/10000)}万円の節約メリットでスマートに準備可能です。`,{x:0.6,y:5.17,w:6.5,h:0.22,fontSize:9,color:MUT,fontFace:'Meiryo'});
+    sl.addText(`${Math.round(postAnn*20/10000)}万円`,{x:7.0,y:4.72,w:2.4,h:0.8,fontSize:28,bold:true,color:GLD2,fontFace:'Meiryo',align:'right',valign:'middle'});
   }
 
   await pres.writeFile({fileName:'ローン戦略プラン.pptx'});
