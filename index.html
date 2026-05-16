@@ -179,6 +179,28 @@ canvas#mini-chart { height: 220px !important; }
   .tab-btn { font-size: 15px; }
   .prev-card .p-label { font-size: 13px; }
   .prev-card .p-val { font-size: 32px; }
+
+  /* ── モバイル：コンテナ余白を縮小してグラフ表示エリアを最大化 ── */
+  .form-body { padding: 20px 12px; }
+  .section-card { padding: 14px 12px; }
+
+  /* ── グラフ：section-card の12px LRパディングを打ち消してフル幅化 ── */
+  .cum-chart-wrap {
+    margin: 10px -12px 0;
+    padding: 8px 0 6px;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+  .cum-chart-wrap .ct { padding: 0 14px; font-size: 11px; margin-bottom: 6px; }
+
+  /* ── グラフ高さ：視認性向上のため拡張 ── */
+  canvas#mini-chart { height: 240px !important; }
+
+  /* ── 凡例：下部でコンパクトに2列折り返し ── */
+  .legend { padding: 6px 14px 0; gap: 4px 12px; flex-wrap: wrap; }
+  .legend span { font-size: 10px; }
+  #rise-note { padding: 2px 14px; font-size: 9.5px; }
 }
 /* ── 太陽光の活用割合 sticky card ── */
 #solar-util-card {
@@ -4150,6 +4172,7 @@ function renderMiniChart() {
   if (window.myChart instanceof Chart) {
     window.myChart.destroy();
   }
+  const isMobile = window.innerWidth <= 520;
   window.myChart = new Chart(ctx, {
     type: 'line',
     data: { labels: window.chartLabels || [], datasets: window.chartDatasets || [] },
@@ -4161,8 +4184,21 @@ function renderMiniChart() {
       maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        x: { ticks: { maxTicksLimit: 5, font: { size: 10 } } },
-        y: { beginAtZero: true, ticks: { callback: v => v + '万', font: { size: 10 } } }
+        x: {
+          ticks: {
+            maxTicksLimit: isMobile ? 8 : 5,
+            font: { size: isMobile ? 9 : 10 },
+            maxRotation: isMobile ? 40 : 0,
+            minRotation: isMobile ? 40 : 0,
+          }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: v => v + '万',
+            font: { size: isMobile ? 9 : 10 }
+          }
+        }
       }
     }
   });
