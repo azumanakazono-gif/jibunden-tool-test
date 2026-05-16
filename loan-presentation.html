@@ -406,12 +406,12 @@ html,body{
       <div class="cf-row">
         <div class="cf-box cur">
           <div class="cf-lbl">▲ 現在の月額電気代</div>
-          <div><span class="cf-amount">2.1</span><span class="cf-unit">万円</span></div>
+          <div><span class="cf-amount" id="s4-cur-amount">2.1</span><span class="cf-unit">万円</span></div>
           <div class="cf-note">電力会社への支払いが<br>毎月ずっと続くコスト</div>
           <div class="cf-bk">
-            <div class="cf-bk-row"><span>月額電気代</span><span>21,000円</span></div>
-            <div class="cf-bk-row"><span>年間コスト</span><span>252,000円</span></div>
-            <div class="cf-bk-row"><span>20年累計</span><span>504万円</span></div>
+            <div class="cf-bk-row"><span>月額電気代</span><span id="s4-cur-monthly">21,000円</span></div>
+            <div class="cf-bk-row"><span>年間コスト</span><span id="s4-cur-annual">252,000円</span></div>
+            <div class="cf-bk-row"><span>20年累計</span><span id="s4-cur-20y">504万円</span></div>
           </div>
         </div>
         <div class="cf-mid">
@@ -431,7 +431,7 @@ html,body{
           <div class="cf-note">ローン返済＋電気代の<br>合計支払い額</div>
           <div class="cf-bk">
             <div class="cf-bk-row"><span>ローン返済</span><span id="s4-loan-row">17,900円</span></div>
-            <div class="cf-bk-row"><span>電気代（残）</span><span>1,600円</span></div>
+            <div class="cf-bk-row"><span>電気代（残）</span><span id="s4-residual">1,600円</span></div>
             <div class="cf-bk-row" style="border-top:1px solid var(--w10);margin-top:4px;padding-top:10px">
               <span style="font-weight:700;color:var(--w)">合計</span>
               <span id="s4-total-row" style="color:var(--gold-light);font-weight:700">19,500円</span>
@@ -562,15 +562,23 @@ function calcPMT(principal) {
 }
 
 function fmt(n) {
-  return n.toLocaleString('ja-JP');
+  return Math.round(n).toLocaleString('ja-JP');
 }
 function fmtMan(n) {
   return (n / 10000).toFixed(1);
 }
 
+/* 万円/円どちらで渡されても円に正規化（10000未満 → 万円と判定して×10000） */
+function parseToYen(raw, defaultYen) {
+  const n = parseFloat(raw);
+  if (isNaN(n)) return defaultYen;
+  if (n === 0)  return 0;
+  return n < 10000 ? Math.round(n * 10000) : Math.round(n);
+}
+
 const params       = new URLSearchParams(location.search);
-const totalCostRaw = parseInt(params.get('totalCost')) || 2800000;
-const subsidyRaw   = parseInt(params.get('subsidy'))   || 0;   // 0 = 補助金なし
+const totalCostRaw = parseToYen(params.get('totalCost'), 2800000);
+const subsidyRaw   = parseToYen(params.get('subsidy'), 0);   // 0 = 補助金なし
 const hasSubsidy   = subsidyRaw > 0;
 const netCost         = totalCostRaw - subsidyRaw;
 const RESIDUAL        = parseFloat(params.get('monthlyRemainingCost')) || 1600;
@@ -603,11 +611,15 @@ if (hasSubsidy) {
 }
 
 /* ── Slide 4 ── */
-const totalManStr = (newMonthly / 10000).toFixed(2);
-document.getElementById('s4-saving').textContent    = fmt(saving);
-document.getElementById('s4-total-man').textContent = totalManStr;
-document.getElementById('s4-loan-row').textContent  = fmt(pmt) + '円';
-document.getElementById('s4-total-row').textContent = fmt(newMonthly) + '円';
+document.getElementById('s4-cur-amount').textContent  = (CURRENT / 10000).toFixed(1);
+document.getElementById('s4-cur-monthly').textContent = fmt(CURRENT) + '円';
+document.getElementById('s4-cur-annual').textContent  = fmt(CURRENT * 12) + '円';
+document.getElementById('s4-cur-20y').textContent     = Math.round(CURRENT * 12 * 20 / 10000) + '万円';
+document.getElementById('s4-residual').textContent    = fmt(RESIDUAL) + '円';
+document.getElementById('s4-saving').textContent      = fmt(Math.max(0, saving));
+document.getElementById('s4-total-man').textContent   = (newMonthly / 10000).toFixed(2);
+document.getElementById('s4-loan-row').textContent    = fmt(pmt) + '円';
+document.getElementById('s4-total-row').textContent   = fmt(newMonthly) + '円';
 
 /* ── Slide 5 ── */
 document.getElementById('s5-pmt').textContent     = fmt(pmt);
