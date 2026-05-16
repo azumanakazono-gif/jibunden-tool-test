@@ -55,6 +55,7 @@ body{
   border:1px solid rgba(116,198,157,.35);
   border-radius:6px;
   transition:all .18s;
+  cursor:pointer;
 }
 .back-btn:hover{
   background:rgba(116,198,157,.12);
@@ -127,11 +128,12 @@ body{
   padding:28px 28px 24px;
   margin-bottom:24px;
   box-shadow:0 2px 16px rgba(0,0,0,.05);
+  overflow:hidden;
 }
 .chart-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap}
 .chart-title{font-size:clamp(16px,2.5vw,20px);font-weight:700;color:var(--navy-2)}
 .chart-title span{color:var(--navy-3)}
-.chart-legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-top:6px}
+.chart-legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-top:8px}
 .legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:500}
 .legend-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
 .legend-dot.current{background:rgba(220,38,38,.45)}
@@ -196,7 +198,7 @@ body{
 .summary-row{
   display:grid;
   grid-template-columns:1fr auto;
-  gap:20px;
+  gap:0;
   align-items:stretch;
   background:var(--white);
   border-radius:16px;
@@ -216,7 +218,7 @@ body{
   background:var(--navy-2);color:#fff;
   font-size:11px;font-weight:700;
   display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;margin-top:1px;
+  flex-shrink:0;margin-top:2px;
 }
 .merit-item strong{color:var(--navy-2);font-weight:700}
 .summary-note{
@@ -225,16 +227,16 @@ body{
   border:1px solid var(--border);
   border-radius:8px;
   padding:12px 14px;
-  line-height:1.7;
+  line-height:1.8;
 }
 
 .summary-right{
   background:linear-gradient(160deg,var(--navy) 0%,var(--navy-2) 50%,var(--navy-3) 100%);
-  padding:32px 36px;
+  padding:36px 40px;
   display:flex;flex-direction:column;
   align-items:center;justify-content:center;
   text-align:center;
-  min-width:260px;
+  min-width:280px;
   position:relative;
   overflow:hidden;
 }
@@ -246,50 +248,66 @@ body{
     linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);
   background-size:40px 40px;
 }
-.sr-inner{position:relative;z-index:1}
+.sr-inner{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center}
 .sr-label{
-  font-size:11px;font-weight:700;letter-spacing:.15em;
-  color:var(--green-lt);margin-bottom:12px;
-  display:block;
+  font-size:10px;font-weight:700;letter-spacing:.2em;
+  color:var(--green-lt);margin-bottom:16px;
+  display:inline-block;
+  border:1px solid rgba(116,198,157,.35);
+  padding:4px 14px;border-radius:20px;
 }
-.sr-sub{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px}
+.sr-context{font-size:12px;color:rgba(255,255,255,.55);margin-bottom:4px;letter-spacing:.03em}
 .sr-period{
-  font-size:13px;font-weight:700;color:rgba(255,255,255,.75);
-  margin-bottom:8px;letter-spacing:.03em;
+  font-size:14px;font-weight:700;color:rgba(255,255,255,.8);
+  margin-bottom:14px;letter-spacing:.02em;
 }
 .sr-num{
-  display:flex;align-items:baseline;justify-content:center;gap:4px;
-  margin-bottom:10px;
+  display:flex;align-items:baseline;justify-content:center;gap:2px;
+  margin-bottom:12px;
 }
 .sr-num .num{
-  font-size:clamp(52px,8vw,80px);
+  font-size:clamp(56px,9vw,88px);
   font-weight:900;line-height:1;
   background:linear-gradient(160deg,#D8F3DC,#fff,#74C69D);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  letter-spacing:-.02em;
 }
-.sr-num .man{font-size:clamp(22px,3.5vw,32px);font-weight:900;color:var(--green-pl)}
-.sr-num .en{font-size:clamp(16px,2.5vw,22px);font-weight:700;color:rgba(255,255,255,.7)}
-.sr-desc{font-size:12px;color:rgba(255,255,255,.5);line-height:1.7;max-width:200px}
-.sr-divider{width:40px;height:1px;background:rgba(116,198,157,.4);margin:10px auto}
+.sr-num .man{font-size:clamp(24px,3.5vw,36px);font-weight:900;color:var(--green-pl);margin-left:2px}
+.sr-num .en{font-size:clamp(18px,2.5vw,24px);font-weight:700;color:rgba(255,255,255,.7)}
+.sr-divider{width:48px;height:1px;background:rgba(116,198,157,.4);margin:12px auto}
+.sr-desc{font-size:12px;color:rgba(255,255,255,.5);line-height:1.8;max-width:200px}
 
 /* ── Responsive ── */
+@media (max-width:900px){
+  .kpi-row{grid-template-columns:1fr 1fr;gap:12px}
+  .kpi-row .kpi-card:last-child{grid-column:1 / -1}
+}
 @media (max-width:768px){
   .back-bar{padding:10px 16px}
   .page-header{padding:24px 20px 28px}
   .page-body{padding:20px 16px 40px}
   .chart-card{padding:20px 16px 16px}
   .chart-wrap{height:240px}
-  .kpi-row{grid-template-columns:1fr 1fr;gap:12px}
-  .kpi-row .kpi-card:last-child{grid-column:1 / -1}
-  .summary-row{grid-template-columns:1fr;grid-template-rows:auto auto}
-  .summary-right{min-width:auto;padding:28px 24px;border-top:1px solid rgba(255,255,255,.1)}
-  .sr-num .num{font-size:64px}
+  .summary-row{
+    grid-template-columns:1fr;
+    grid-template-rows:auto auto;
+  }
+  .summary-right{
+    min-width:auto;
+    padding:32px 24px;
+    border-top:1px solid rgba(255,255,255,.08);
+  }
 }
 @media (max-width:480px){
   .kpi-row{grid-template-columns:1fr}
   .kpi-row .kpi-card:last-child{grid-column:auto}
   .chart-wrap{height:200px}
   .chart-legend{gap:10px}
+  .chart-annotation{font-size:10px;padding:5px 9px}
+  .chart-annotation .ann-val{font-size:13px}
+  .summary-left{padding:20px 16px}
+  .merit-item{font-size:13px}
+  .sr-num .num{font-size:72px}
 }
 
 /* ── Desktop scale wrapper (1280×720 baseline) ── */
@@ -302,7 +320,7 @@ body{
 
 <!-- Back Button Bar -->
 <div class="back-bar">
-  <a href="index.html" class="back-btn">
+  <a href="#" class="back-btn" id="backBtn">
     <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
     条件入力に戻る
   </a>
@@ -333,7 +351,7 @@ body{
   <div class="chart-card">
     <div class="chart-header">
       <div>
-        <div class="chart-title">完済後<span>20年間</span>の累積メリット分析</div>
+        <div class="chart-title">20年間の<span>累積メリット分析</span></div>
         <div class="chart-legend">
           <div class="legend-item"><div class="legend-dot current"></div>現状の電気代支出（累積）</div>
           <div class="legend-item"><div class="legend-dot merit"></div>導入後の累積節約メリット</div>
@@ -354,9 +372,9 @@ body{
       <div class="kpi-note">完済時点での累積節約額 約141万円</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">月々の支払い差額</div>
-      <div class="kpi-val">+<span id="monthlySaving">約0</span><span class="unit">円</span></div>
-      <div class="kpi-note">ローン返済中も電気代が大幅軽減</div>
+      <div class="kpi-label">導入後の変化</div>
+      <div class="kpi-val" style="font-size:clamp(18px,3vw,26px);padding-top:4px">電気代を<span class="unit" style="font-size:inherit;color:var(--navy-3)">大幅軽減</span></div>
+      <div class="kpi-note">ローン返済中も自家発電で毎月の電力コストを継続圧縮</div>
     </div>
     <div class="kpi-card accent">
       <div class="kpi-label">完済後20年間の総節約額</div>
@@ -392,7 +410,7 @@ body{
     <div class="summary-right">
       <div class="sr-inner">
         <span class="sr-label">FINAL GOAL</span>
-        <div class="sr-sub">完済後20年間の</div>
+        <div class="sr-context">完済後20年間の</div>
         <div class="sr-period">総節約額（試算）</div>
         <div class="sr-num">
           <span class="num">466</span><span class="man">万</span><span class="en">円</span>
@@ -406,42 +424,53 @@ body{
 </div><!-- /page-body -->
 
 <script>
+/* ── Back Button: history.back() with URL param fallback ── */
+(function(){
+  var btn = document.getElementById('backBtn');
+  btn.addEventListener('click', function(e){
+    e.preventDefault();
+    if(window.history.length > 1){
+      window.history.back();
+    } else {
+      var params = window.location.search;
+      window.location.href = 'index.html' + params;
+    }
+  });
+})();
+
 /* ── Date ── */
 (function(){
-  const d = new Date();
-  const y = d.getFullYear(), m = d.getMonth()+1, day = d.getDate();
-  document.getElementById('headerDate').textContent = `${y}年${m}月${day}日 作成`;
+  var d = new Date();
+  var y = d.getFullYear(), m = d.getMonth()+1, day = d.getDate();
+  document.getElementById('headerDate').textContent = y+'年'+m+'月'+day+'日 作成';
 })();
 
 /* ── Chart ── */
 (function(){
-  const YEARS = Array.from({length:36},(_,i)=>i);
+  var YEARS = Array.from({length:36}, function(_,i){return i;});
 
-  // 現状の電気代累積（インフレ考慮：年率2%上昇、月2万円スタート）
-  const currentCost = YEARS.map(y=>{
-    let total = 0;
-    for(let i=0;i<y;i++){
-      total += 24 * Math.pow(1.02, i);
-    }
-    return Math.round(total) / 100; // 万円単位
+  /* 現状の電気代累積（年率2%上昇・月2万円スタート） */
+  var currentCost = YEARS.map(function(y){
+    var total = 0;
+    for(var i=0;i<y;i++){ total += 24 * Math.pow(1.02, i); }
+    return Math.round(total) / 100;
   });
 
-  // 導入後の累積節約メリット（ローン返済コストを差し引いた正味メリット）
-  // 15年目=141万円、35年目=466万円 に合わせたデータ
-  const meritData = [
+  /* 導入後の累積節約メリット — 15年目=141万円、35年目=466万円 */
+  var meritData = [
     0, 2, 5, 10, 18, 30, 45, 62, 80, 98,
     117, 126, 132, 137, 141, 141, 155, 175, 200, 225,
     255, 285, 315, 345, 375, 400, 420, 435, 448, 458,
     463, 465, 466, 466, 466, 466
   ];
 
-  const isMobile = window.innerWidth < 600;
+  var isMobile = window.innerWidth < 600;
+  var ctx = document.getElementById('meritChart').getContext('2d');
 
-  const ctx = document.getElementById('meritChart').getContext('2d');
-  const chart = new Chart(ctx, {
+  var chart = new Chart(ctx, {
     type:'line',
     data:{
-      labels: YEARS.map(y => y === 0 ? '導入時' : `${y}年目`),
+      labels: YEARS.map(function(y){ return y === 0 ? '導入時' : y+'年目'; }),
       datasets:[
         {
           label:'現状の電気代支出（累積）',
@@ -480,7 +509,7 @@ body{
           padding:10,
           cornerRadius:8,
           callbacks:{
-            label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}万円`
+            label:function(c){return c.dataset.label+': '+c.parsed.y.toFixed(1)+'万円';}
           }
         }
       },
@@ -489,16 +518,21 @@ body{
           grid:{
             color:'rgba(0,0,0,0.04)',
             drawTicks:false,
+            display: !isMobile,
           },
           border:{display:false},
           ticks:{
-            font:{family:'Noto Sans JP',size: isMobile ? 11 : 11},
+            font:{family:'Noto Sans JP', size: isMobile ? 12 : 11},
             color:'#94a3b8',
-            maxTicksLimit: isMobile ? 8 : 13,
+            maxTicksLimit: isMobile ? 6 : 13,
             maxRotation:0,
             callback:function(val,idx){
-              const yr = YEARS[idx];
-              if(yr===0||yr===5||yr===10||yr===15||yr===20||yr===25||yr===30||yr===35) return `${yr}年`;
+              var yr = YEARS[idx];
+              if(isMobile){
+                if(yr===0||yr===10||yr===20||yr===30||yr===35) return yr===0?'導入':yr+'年';
+                return '';
+              }
+              if(yr===0||yr===5||yr===10||yr===15||yr===20||yr===25||yr===30||yr===35) return yr+'年';
               return '';
             }
           }
@@ -507,62 +541,57 @@ body{
           grid:{
             color:'rgba(0,0,0,0.05)',
             drawTicks:false,
-            drawOnChartArea: !isMobile ? true : false,
+            display: !isMobile,
           },
           border:{display:false},
           ticks:{
-            font:{family:'Noto Sans JP',size: isMobile ? 11 : 11},
+            font:{family:'Noto Sans JP', size: isMobile ? 12 : 11},
             color:'#94a3b8',
-            maxTicksLimit: isMobile ? 5 : 8,
-            callback:v=>`${v}万`
+            maxTicksLimit: isMobile ? 4 : 8,
+            callback:function(v){return v+'万';}
           }
         }
       }
     }
   });
 
-  /* ── Annotations overlay ── */
+  /* ── アノテーション（吹き出し）── */
   function drawAnnotations(){
-    const wrap = document.getElementById('chartWrap');
-    wrap.querySelectorAll('.chart-annotation').forEach(el=>el.remove());
+    var wrap = document.getElementById('chartWrap');
+    wrap.querySelectorAll('.chart-annotation').forEach(function(el){el.remove();});
 
-    const meta = chart.getDatasetMeta(1);
+    var meta = chart.getDatasetMeta(1);
     if(!meta.data.length) return;
 
     function makeAnnotation(pointIndex, cls, html){
-      const pt = meta.data[pointIndex];
+      var pt = meta.data[pointIndex];
       if(!pt) return;
-      const rect = wrap.getBoundingClientRect();
-      const canvasRect = ctx.canvas.getBoundingClientRect();
-      const x = pt.x;
-      const y = pt.y;
+      var canvasRect = ctx.canvas.getBoundingClientRect();
+      var wrapRect = wrap.getBoundingClientRect();
+      var offsetX = canvasRect.left - wrapRect.left;
+      var offsetY = canvasRect.top - wrapRect.top;
 
-      const ann = document.createElement('div');
-      ann.className = `chart-annotation ${cls}`;
+      var ann = document.createElement('div');
+      ann.className = 'chart-annotation' + (cls ? ' '+cls : '');
       ann.innerHTML = html;
-
-      const offsetX = canvasRect.left - wrap.getBoundingClientRect().left;
-      const offsetY = canvasRect.top - wrap.getBoundingClientRect().top;
-
       ann.style.position = 'absolute';
-      ann.style.left = (offsetX + x) + 'px';
-      ann.style.top = (offsetY + y - 52) + 'px';
+      ann.style.left = (offsetX + pt.x) + 'px';
+      ann.style.top = (offsetY + pt.y - 56) + 'px';
       ann.style.transform = 'translateX(-50%)';
-
       wrap.appendChild(ann);
     }
 
-    makeAnnotation(15, '', `<span class="ann-val">141万円</span>15年目 完済タイミング`);
-    makeAnnotation(35, 'green', `<span class="ann-val">466万円</span>35年目（完済後20年）`);
+    makeAnnotation(15, '', '<span class="ann-val">141万円</span>15年目 完済タイミング');
+    makeAnnotation(35, 'green', '<span class="ann-val">466万円</span>35年目（完済後20年）');
   }
 
-  chart.options.animation = {
-    onComplete: drawAnnotations
-  };
+  chart.options.animation = {onComplete: drawAnnotations};
 
-  window.addEventListener('resize', ()=>{
-    wrap.querySelectorAll && document.getElementById('chartWrap').querySelectorAll('.chart-annotation').forEach(el=>el.remove());
-    setTimeout(drawAnnotations, 100);
+  var resizeTimer;
+  window.addEventListener('resize', function(){
+    clearTimeout(resizeTimer);
+    document.getElementById('chartWrap').querySelectorAll('.chart-annotation').forEach(function(el){el.remove();});
+    resizeTimer = setTimeout(drawAnnotations, 120);
   });
 })();
 </script>
