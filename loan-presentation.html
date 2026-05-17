@@ -380,6 +380,25 @@ html,body{
 }
 .btn-back-arrow{font-size:16px;line-height:1}
 
+/* ── PPTX Export Button ── */
+.btn-pptx{
+  position:fixed;top:16px;left:110px;z-index:1000;
+  display:flex;align-items:center;gap:7px;
+  background:rgba(180,0,0,0.82);
+  border:1px solid rgba(220,60,60,0.55);
+  color:#fff;font-size:13px;font-weight:600;
+  padding:7px 15px 7px 11px;border-radius:20px;
+  cursor:pointer;backdrop-filter:blur(8px);
+  letter-spacing:.04em;
+  transition:background .2s,border-color .2s;
+  appearance:none;-webkit-appearance:none;
+}
+.btn-pptx:hover{
+  background:rgba(220,30,30,0.95);
+  border-color:#ff6b6b;
+}
+.btn-pptx-icon{font-size:15px;line-height:1}
+
 /* ══════════════════════════════════════════
    RESPONSIVE — MOBILE (≤767px)
 ══════════════════════════════════════════ */
@@ -481,6 +500,7 @@ html,body{
 
   /* Back button on mobile */
   .btn-back{font-size:12px;padding:6px 12px 6px 10px;top:12px;left:12px}
+  .btn-pptx{font-size:12px;padding:6px 12px 6px 10px;top:12px;left:90px}
 
   /* Nav bar */
   .nav{padding:7px 14px;gap:10px}
@@ -538,6 +558,9 @@ html,body{
 <div class="viewer">
   <button class="btn-back" onclick="window.open('','_self').close()">
 閉じる
+  </button>
+  <button class="btn-pptx" onclick="exportToPPTX()">
+    <span class="btn-pptx-icon">📥</span>PPTX出力
   </button>
   <div class="slides-wrap" id="slidesWrap">
 
