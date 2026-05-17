@@ -141,6 +141,23 @@ canvas#mini-chart { height: 220px !important; }
   color: #fff !important;
   animation: reest-pulse 1s ease-in-out infinite;
 }
+@keyframes highlight-error-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.8); }
+  50%      { box-shadow: 0 0 0 8px rgba(220,38,38,0); }
+}
+.highlight-error {
+  background: #dc2626 !important;
+  border-color: #b91c1c !important;
+  color: #fff !important;
+  animation: highlight-error-pulse 0.9s ease-in-out infinite;
+}
+#warning-msg {
+  display: none;
+  font-size: 11px;
+  color: #dc2626;
+  font-weight: 700;
+  margin-top: 6px;
+}
 
 /* ── トースト ── */
 .toast { position: fixed; bottom: 24px; right: 24px; background: var(--dg); color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 14px; transform: translateY(80px); opacity: 0; transition: all .3s; z-index: 200; display: flex; align-items: center; gap: 8px; }
@@ -451,8 +468,8 @@ canvas#mini-chart { height: 220px !important; }
             <label>月間使用量（kWh）<span id="mkwh-label-note" style="font-size:10px;margin-left:4px;color:var(--muted)"></span></label>
             <input type="number" id="mkwh" value="667" min="1" max="5000" step="10" oninput="onMkwhInput()">
             <span id="mkwh-est-note" style="font-size:11px;color:#0369a1;display:none">📊 電気代から自動推定
-              <button id="btn-reestimate" onclick="reEstimateJyuryoKwh()" style="margin-left:4px;font-size:12px;padding:3px 10px;border:2px solid #2563eb;border-radius:6px;background:#2563eb;color:#fff;cursor:pointer;font-family:inherit;font-weight:700;transition:background 0.15s">再推定</button>
-              <span id="mb-changed-warn" style="display:none;font-size:10px;color:#dc2626;font-weight:700;margin-left:6px">※電気代を変更した場合は、必ず[再推定]を押してください</span>
+              <button id="reestimate-btn" onclick="reEstimateJyuryoKwh()" style="margin-left:4px;font-size:12px;padding:3px 10px;border:2px solid #2563eb;border-radius:6px;background:#2563eb;color:#fff;cursor:pointer;font-family:inherit;font-weight:700;transition:background 0.15s">再推定</button>
+              <span id="warning-msg">⚠️ 数値が変更されました。再推定ボタンを押してください</span>
             </span>
           </div>
         </div>
@@ -529,7 +546,7 @@ canvas#mini-chart { height: 220px !important; }
             <select id="kyuden-plan" onchange="onKyudenPlanChange()" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;background:#fff;font-family:inherit">
               <option value="">── プランを選択 ──</option>
               <optgroup label="▼ 標準家庭プラン（目安単価）">
-                <option value="30">スタンダードプラン（目安 30円/kWh）</option>
+                <option value="30">スタンダードプラン（目安 30円/kWh / 新電力など）</option>
                 <option value="32">プレミアム・エコプラン / 新電力標準（目安 32円/kWh）</option>
                 <option value="29">ガス・電気セット割引プラン（目安 29円/kWh）</option>
               </optgroup>
@@ -1643,9 +1660,10 @@ function autoEstimateKwhFromBill(force) {
     if (kp === 'kyushu_juuryo_c' && basic <= 0) return; // kVA未入力
     est = estimateJyuryoKwhFromBill(mb, basic);
   } else {
-    // 他プラン：表示中の平均単価で線形推定、なければ30円/kWhで試算
+    // 固定単価プラン（value が数値）はそのまま使用、それ以外は up-auto の表示値を参照
+    const fixedUp = parseFloat(kp);
     const upText = document.getElementById('up-auto')?.textContent || '';
-    const up = parseFloat(upText) || parseFloat(kp) || 30;
+    const up = (fixedUp > 0) ? fixedUp : (parseFloat(upText) || 30);
     const basic = _juuryoBasicCharge(kp);
     est = Math.max(1, Math.min(3000, Math.round((mb - basic) / up)));
   }
@@ -1660,12 +1678,21 @@ function autoEstimateKwhFromBill(force) {
 // 後方互換エイリアス（juuryo-amp/kva onchange から呼ばれる）
 function autoEstimateJyuryoKwh(force) { autoEstimateKwhFromBill(force); }
 
+function _showReestimateWarning() {
+  const btnEl = document.getElementById('reestimate-btn');
+  if (btnEl) btnEl.classList.add('highlight-error');
+  const warnEl = document.getElementById('warning-msg');
+  if (warnEl) warnEl.style.display = 'block';
+}
+function _hideReestimateWarning() {
+  const btnEl = document.getElementById('reestimate-btn');
+  if (btnEl) btnEl.classList.remove('highlight-error');
+  const warnEl = document.getElementById('warning-msg');
+  if (warnEl) warnEl.style.display = 'none';
+}
 function reEstimateJyuryoKwh() {
   mkwhManualEdited = false;
-  const btnEl = document.getElementById('btn-reestimate');
-  if (btnEl) btnEl.classList.remove('reest-alert');
-  const warnEl = document.getElementById('mb-changed-warn');
-  if (warnEl) warnEl.style.display = 'none';
+  _hideReestimateWarning();
   autoEstimateKwhFromBill(true);
 }
 function onMbInput() {
@@ -1673,10 +1700,7 @@ function onMbInput() {
   if (mkwhManualEdited) {
     const noteEl = document.getElementById('mkwh-est-note');
     if (noteEl) noteEl.style.display = '';
-    const btnEl = document.getElementById('btn-reestimate');
-    if (btnEl) btnEl.classList.add('reest-alert');
-    const warnEl = document.getElementById('mb-changed-warn');
-    if (warnEl) warnEl.style.display = '';
+    _showReestimateWarning();
   }
   calc();
 }
@@ -2550,6 +2574,11 @@ function onKyudenPlanChange() {
   }
   renderPostPlanBreakdown();
   if (monthlyDetailOpen) _updateMonthlyTouLabels();
+  if (mkwhManualEdited) {
+    const noteEl = document.getElementById('mkwh-est-note');
+    if (noteEl) noteEl.style.display = '';
+    _showReestimateWarning();
+  }
 }
 
 function onPostKyudenPlanChange() {
