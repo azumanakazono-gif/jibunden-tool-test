@@ -61,6 +61,17 @@ html,body{
 .dots{display:flex;gap:7px}
 .dot{width:7px;height:7px;border-radius:50%;background:rgba(82,183,136,0.3);border:1px solid var(--accent);cursor:pointer;transition:all .2s}
 .dot.active{background:var(--accent);transform:scale(1.3)}
+/* PC: side arrow buttons */
+#btnPrev,#btnNext{
+  position:fixed;top:50%;transform:translateY(-50%);z-index:1000;
+  width:44px;height:44px;background:rgba(15,23,42,0.80);backdrop-filter:blur(8px);
+}
+#btnPrev{left:16px}
+#btnNext{right:16px}
+/* touch devices: hide side arrows (swipe instead) */
+@media(pointer:coarse){
+  #btnPrev,#btnNext{display:none}
+}
 
 /* ── shared ── */
 .slide-num{font-size:13px;color:var(--gold);font-weight:700;letter-spacing:.2em;margin-bottom:6px}
@@ -757,11 +768,11 @@ html,body{
   </div><!-- /slides-wrap -->
 
   <!-- Navigation -->
+  <button class="nbtn" id="btnPrev">◀</button>
+  <button class="nbtn" id="btnNext">▶</button>
   <div class="nav">
-    <button class="nbtn" id="btnPrev">◀</button>
     <div class="dots" id="dotsEl"></div>
     <span class="counter" id="counterEl">1 / 7</span>
-    <button class="nbtn" id="btnNext">▶</button>
     <button class="nbtn" onclick="exportToPPTX()" title="PPTXダウンロード" style="background:rgba(82,183,136,.18);font-size:14px">📥</button>
   </div>
 </div>
@@ -1097,6 +1108,15 @@ document.addEventListener('keydown', e => {
   if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') goTo(current + 1);
   if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')                    goTo(current - 1);
 });
+
+/* swipe navigation */
+let _tx = 0;
+document.addEventListener('touchstart', e => { _tx = e.changedTouches[0].clientX; }, {passive:true});
+document.addEventListener('touchend',   e => {
+  const dx = e.changedTouches[0].clientX - _tx;
+  if (dx < -50) goTo(current + 1);
+  if (dx >  50) goTo(current - 1);
+}, {passive:true});
 
 /* ─────────────────────────────────────────
    PPTX Export
