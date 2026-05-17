@@ -371,6 +371,7 @@ html,body{
   cursor:pointer;backdrop-filter:blur(8px);
   text-decoration:none;letter-spacing:.04em;
   transition:background .2s,border-color .2s,color .2s;
+  appearance:none;-webkit-appearance:none;
 }
 .btn-back:hover{
   background:rgba(82,183,136,0.18);
@@ -535,9 +536,9 @@ html,body{
 </head>
 <body>
 <div class="viewer">
-  <a href="index.html" class="btn-back">
+  <button class="btn-back" onclick="window.open('','_self').close()">
 閉じる
-  </a>
+  </button>
   <div class="slides-wrap" id="slidesWrap">
 
     <!-- ── SLIDE 1 ── -->
