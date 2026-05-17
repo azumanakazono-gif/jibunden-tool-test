@@ -18,9 +18,11 @@ body { font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; backgroun
 .section-card { background: var(--card); border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; border: 1px solid var(--border); }
 .section-title { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--mg); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--pg); }
 .option-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
-.option-card { background: var(--pg); border-radius: 10px; padding: 18px 20px; border: 1.5px solid var(--border); }
+.option-card { background: var(--pg); border-radius: 10px; padding: 18px 20px; border: 1.5px solid var(--border); cursor: pointer; transition: opacity .2s, border-color .2s, border-width .15s; user-select: none; }
 .option-card h3 { font-size: 15px; font-weight: 700; color: var(--dg); margin-bottom: 8px; }
 .option-card p { font-size: 13px; color: var(--muted); line-height: 1.7; }
+.option-card.tab-active { border: 2px solid var(--dg); box-shadow: 0 0 0 2px rgba(27,67,50,.12); opacity: 1; }
+.option-card.tab-inactive { opacity: 0.4; background: #f3f4f6; border-color: #d1d5db; }
 .option-card .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-bottom: 8px; }
 .badge-cash { background: #d1fae5; color: #065f46; }
 .badge-loan { background: #ede9fe; color: #4c1d95; }
@@ -80,12 +82,12 @@ body { font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; backgroun
   <div class="section-card">
     <div class="section-title">💡 導入手段の比較</div>
     <div class="option-grid" style="grid-template-columns:1fr 1fr">
-      <div class="option-card">
+      <div class="option-card" id="tab-cash" onclick="selectPaymentTab('cash')" role="button" aria-pressed="true">
         <span class="badge badge-cash">現金購入</span>
         <h3>💴 現金一括購入</h3>
         <p>初期費用を全額自己負担。金利負担がなく長期的に最もコストが低い。補助金の適用も容易。</p>
       </div>
-      <div class="option-card">
+      <div class="option-card" id="tab-loan" onclick="selectPaymentTab('loan')" role="button" aria-pressed="false">
         <span class="badge badge-loan">ローン</span>
         <h3>🏦 ローン活用</h3>
         <p>金融機関から借入し、月々返済。初期費用を抑えられるが、総支払額は増加。金利・返済期間に注意。</p>
@@ -539,10 +541,35 @@ function updateSlideLink() {
   document.getElementById('slide-link').href = 'loan-presentation.html' + (qs ? '?' + qs : '');
 }
 
+// ── 支払い方法タブ切り替え ──
+function selectPaymentTab(tab) {
+  const cashCard   = document.getElementById('tab-cash');
+  const loanCard   = document.getElementById('tab-loan');
+  const loanSection = document.getElementById('loan-section');
+  if (tab === 'cash') {
+    cashCard.classList.add('tab-active');
+    cashCard.classList.remove('tab-inactive');
+    cashCard.setAttribute('aria-pressed', 'true');
+    loanCard.classList.add('tab-inactive');
+    loanCard.classList.remove('tab-active');
+    loanCard.setAttribute('aria-pressed', 'false');
+    loanSection.style.display = 'none';
+  } else {
+    loanCard.classList.add('tab-active');
+    loanCard.classList.remove('tab-inactive');
+    loanCard.setAttribute('aria-pressed', 'true');
+    cashCard.classList.add('tab-inactive');
+    cashCard.classList.remove('tab-active');
+    cashCard.setAttribute('aria-pressed', 'false');
+    loanSection.style.display = '';
+  }
+}
+
 // ── 初期化 ──
 updateLoan();
 
 window.onload = () => {
+  selectPaymentTab('cash');
   // URL から downPayment を取得して po-dp に反映
   const urlDp = parseFloat(_urlParams.get('downPayment')) || 0;
   if (urlDp > 0) {
