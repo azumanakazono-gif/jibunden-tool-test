@@ -546,7 +546,7 @@ canvas#mini-chart { height: 220px !important; }
             <select id="kyuden-plan" onchange="onKyudenPlanChange()" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;background:#fff;font-family:inherit">
               <option value="">── プランを選択 ──</option>
               <optgroup label="▼ 標準家庭プラン（目安単価）">
-                <option value="30">スタンダードプラン（目安 30円/kWh）</option>
+                <option value="30">スタンダードプラン（目安 30円/kWh / 新電力など）</option>
                 <option value="32">プレミアム・エコプラン / 新電力標準（目安 32円/kWh）</option>
                 <option value="29">ガス・電気セット割引プラン（目安 29円/kWh）</option>
               </optgroup>
@@ -1660,9 +1660,10 @@ function autoEstimateKwhFromBill(force) {
     if (kp === 'kyushu_juuryo_c' && basic <= 0) return; // kVA未入力
     est = estimateJyuryoKwhFromBill(mb, basic);
   } else {
-    // 他プラン：表示中の平均単価で線形推定、なければ30円/kWhで試算
+    // 固定単価プラン（value が数値）はそのまま使用、それ以外は up-auto の表示値を参照
+    const fixedUp = parseFloat(kp);
     const upText = document.getElementById('up-auto')?.textContent || '';
-    const up = parseFloat(upText) || parseFloat(kp) || 30;
+    const up = (fixedUp > 0) ? fixedUp : (parseFloat(upText) || 30);
     const basic = _juuryoBasicCharge(kp);
     est = Math.max(1, Math.min(3000, Math.round((mb - basic) / up)));
   }
