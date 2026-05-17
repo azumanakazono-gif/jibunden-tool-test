@@ -576,6 +576,12 @@ window.onload = () => {
     const dpInput = document.getElementById('po-dp');
     if (dpInput) dpInput.value = urlDp;
   }
+  // URL から currentBill を取得して po-mb に反映
+  const urlBill = parseFloat(_urlParams.get('currentBill')) || 0;
+  if (urlBill > 0) {
+    const mbInput = document.getElementById('po-mb');
+    if (mbInput) mbInput.value = urlBill;
+  }
   // slide-link を更新（downPayment 含む）
   updateSlideLink();
   setTimeout(() => {
