@@ -52,5 +52,29 @@ body { font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; backgroun
 
 </div>
 
+<script>
+  if (window.location.href.includes('jibunden-tool-test') || window.location.hostname === 'localhost') {
+    const ribbon = document.createElement('div');
+    ribbon.id = 'test-environment-ribbon';
+    ribbon.innerText = 'TEST版';
+    Object.assign(ribbon.style, {
+      position: 'fixed',
+      top: '25px',
+      left: '-35px',
+      width: '120px',
+      backgroundColor: '#d9534f',
+      color: '#ffffff',
+      textAlign: 'center',
+      lineHeight: '25px',
+      fontSize: '12px',
+      fontWeight: 'bold',
+      transform: 'rotate(-45deg)',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+      zIndex: '9999',
+      pointerEvents: 'none'
+    });
+    document.body.appendChild(ribbon);
+  }
+</script>
 </body>
 </html>
